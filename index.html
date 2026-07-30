@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>e-Gerak SPR</title>
+  <title>e-Gerak PPD Dalat</title>
 
   <!-- PWA: manifest, theme color, icons (installability requires https or localhost) -->
   <link rel="manifest" href="manifest.json">
@@ -25,18 +25,18 @@
   <style>
     /* Global Variables & Professional Slate Color Palette */
     :root {
-      --bg-dark: #090d16;
-      --bg-card: rgba(17, 24, 39, 0.75);
-      --border-color: rgba(255, 255, 255, 0.06);
-      --primary-blue: #2563eb;
-      --secondary-blue: #3b82f6;
-      --accent-cyan: #06b6d4;
-      --accent-pink: #f43f5e;
+      --bg-dark: #f0f4f8;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --primary-blue: #003580;
+      --secondary-blue: #1d4ed8;
+      --accent-cyan: #0ea5e9;
+      --accent-pink: #ef4444;
       --success-green: #10b981;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --glow-blue: 0 0 15px rgba(37, 99, 235, 0.4);
-      --glow-cyan: 0 0 15px rgba(6, 182, 212, 0.4);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --glow-blue: 0 2px 8px rgba(0,53,128,0.15);
+      --glow-cyan: 0 2px 8px rgba(14,165,233,0.2);
     }
 
     /* Reset & Base Styles */
@@ -49,10 +49,6 @@
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(9, 13, 22, 1) 0%, #05070c 100%);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
@@ -116,50 +112,44 @@
 
     /* Layout Header & Navigation */
     header {
-      padding: 2rem 1.5rem 1rem 1.5rem;
-      text-align: center;
-      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 68px;
+      background: var(--primary-blue);
+      box-shadow: 0 2px 8px rgba(0,53,128,0.18);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .logo-container {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 0.5rem;
-    }
-
-    .logo-container i {
-      font-size: 2rem;
-      background: linear-gradient(45deg, var(--accent-cyan), var(--primary-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.4));
-      animation: float-fast 4s ease-in-out infinite;
     }
 
     .logo-img {
-      height: 44px;
+      height: 42px;
       width: auto;
       border-radius: 6px;
-      filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.4));
-      animation: float-fast 4s ease-in-out infinite;
+      background: #fff;
+      padding: 3px;
     }
 
     h1 {
       font-family: 'Outfit', sans-serif;
-      font-size: 1.8rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-transform: uppercase;
-      text-shadow: 0px 4px 10px rgba(0,0,0,0.4);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #ffffff;
+      text-transform: none;
     }
 
     .subtitle {
       font-size: 0.9rem;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.7);
       margin-top: 4px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -167,59 +157,56 @@
 
     /* Active User Dashboard Session Tag */
     .user-profile-tag {
-      position: absolute;
-      top: 20px;
-      right: 24px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid var(--border-color);
+      gap: 10px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
       border-radius: 50px;
-      padding: 6px 16px;
-      font-size: 0.85rem;
+      padding: 5px 14px 5px 10px;
+      font-size: 0.82rem;
       backdrop-filter: blur(8px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
     .user-profile-tag span {
-      font-weight: 500;
-      color: var(--text-main);
+      font-weight: 600;
+      color: #ffffff;
     }
 
     .user-profile-tag .user-position {
-      color: var(--accent-cyan);
-      font-size: 0.75rem;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      font-weight: 600;
-      border-left: 1px solid rgba(255,255,255,0.15);
+      font-weight: 500;
+      border-left: 1px solid rgba(255,255,255,0.25);
       padding-left: 10px;
     }
 
     .logout-btn {
-      background: transparent;
+      background: rgba(255,255,255,0.15);
       border: none;
-      color: var(--text-muted);
+      color: #fff;
       cursor: pointer;
-      font-size: 0.9rem;
-      transition: color 0.2s ease;
+      font-size: 0.85rem;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
-      margin-left: 5px;
+      justify-content: center;
+      transition: background 0.2s;
+      margin-left: 2px;
     }
 
     .logout-btn:hover {
-      color: var(--accent-pink);
+      background: rgba(239,68,68,0.7);
     }
 
     @media (max-width: 768px) {
-      .user-profile-tag {
-        position: static;
-        margin: 10px auto;
-        justify-content: center;
-        max-width: 400px;
-      }
+      header { height: auto; padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+      .user-profile-tag { font-size: 0.75rem; padding: 4px 10px 4px 8px; }
+      h1 { font-size: 1.05rem; }
     }
 
     /* Navigation Menu */
@@ -228,9 +215,15 @@
       justify-content: center;
       flex-wrap: wrap;
       gap: 12px;
-      margin: 1.2rem auto 2rem auto;
+      margin: 0 auto;
       max-width: 900px;
-      padding: 0 1rem;
+      padding: 0.75rem 1rem;
+      position: sticky;
+      top: 68px;
+      z-index: 99;
+      background: var(--bg-dark);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
     .nav-btn {
@@ -586,6 +579,92 @@
     .portal-section {
       text-align: center;
       margin-top: 1.5rem;
+    }
+
+    .clickable-stat { cursor: pointer; position: relative; }
+    .clickable-stat:hover { border-color: var(--secondary-blue) !important; }
+    .stat-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; }
+
+    .stat-detail-panel {
+      background: rgba(var(--detail-panel-rgb, 0,53,128), 0.08);
+      border: 1.5px solid rgba(var(--detail-panel-rgb, 0,53,128), 0.3);
+      border-radius: 12px;
+      margin-top: 1rem;
+      overflow: hidden;
+    }
+    .stat-detail-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem 1rem;
+      background: rgba(var(--detail-panel-rgb, 0,53,128), 0.18);
+      font-size: 0.9rem; font-weight: 600; color: #fff;
+      border-bottom: 1px solid rgba(var(--detail-panel-rgb, 0,53,128), 0.2);
+    }
+    .stat-detail-close {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      cursor: pointer; font-size: 1rem; padding: 2px 6px;
+    }
+    .stat-detail-close:hover { color: #fff; }
+    .stat-detail-body {
+      max-height: 320px; overflow-y: auto; padding: 0.75rem 1rem;
+    }
+    .stat-detail-body table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .stat-detail-body th {
+      text-align: left; padding: 6px 8px;
+      color: rgba(var(--detail-panel-rgb, 0,53,128), 1);
+      border-bottom: 1px solid rgba(var(--detail-panel-rgb, 0,53,128), 0.2);
+      font-weight: 700; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .stat-detail-body td { padding: 6px 8px; border-bottom: 1px solid rgba(var(--detail-panel-rgb, 0,53,128), 0.1); color: var(--text-main); }
+    .stat-detail-body tr:last-child td { border-bottom: none; }
+    .stat-detail-body tr:hover td { background: rgba(var(--detail-panel-rgb, 0,53,128), 0.08); }
+    .detail-empty { text-align: center; color: var(--text-muted); padding: 1.5rem; font-size: 0.85rem; }
+
+    .section-title-row {
+      font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 0.75rem; text-align: left;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tujuan-breakdown { display: flex; flex-direction: column; gap: 5px; }
+    .tj-card {
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 8px;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: default;
+    }
+    .tj-card:hover { transform: translateX(3px); box-shadow: 0 3px 12px rgba(0,53,128,0.10); }
+    .tj-fill {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: var(--fill);
+      background: var(--clr-bg);
+      border-right: 2.5px solid var(--clr);
+      transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .tj-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--clr); flex-shrink: 0;
+      position: relative; z-index: 1;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--clr) 20%, transparent);
+    }
+    .tj-name {
+      flex: 1; font-size: 0.8rem; font-weight: 600;
+      color: var(--text-main); position: relative; z-index: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tj-num {
+      font-size: 0.88rem; font-weight: 700; color: var(--text-main);
+      position: relative; z-index: 1; flex-shrink: 0;
+      background: white; border: 1px solid #e2e8f0;
+      border-radius: 6px; padding: 1px 7px; font-family: 'Outfit', sans-serif;
+    }
+    .tj-pct {
+      font-size: 0.72rem; font-weight: 600; color: var(--clr);
+      position: relative; z-index: 1; flex-shrink: 0;
+      min-width: 34px; text-align: right;
     }
 
     /* KALENDAR PAGE */
@@ -1005,23 +1084,26 @@
     }
 
     .badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       padding: 3px 9px;
-      border-radius: 20px;
+      border-radius: 4px;
       font-size: 0.72rem;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
     }
 
-    .badge-mesyuarat { background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.35); color: #93c5fd; }
-    .badge-bengkel { background: rgba(161, 85, 255, 0.15); border: 1px solid rgba(161, 85, 255, 0.35); color: #e9d5ff; }
-    .badge-kursus { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fde68a; }
-    .badge-pemantauan { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #a7f3d0; }
-    .badge-cuti-umum { background: rgba(100, 116, 139, 0.2); border: 1px solid rgba(100, 116, 139, 0.4); color: #cbd5e1; }
-    .badge-pelepasan { background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.35); color: #a5f3fc; }
-    .badge-lain { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fecdd3; }
-    .badge-cuti { background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.35); color: #fef08a; }
+    .badge-mesyuarat  { background: #dbeafe; border: 1px solid #93c5fd; color: #1e40af; }
+    .badge-bengkel    { background: #ede9fe; border: 1px solid #c4b5fd; color: #5b21b6; }
+    .badge-kursus     { background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; }
+    .badge-pemantauan { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; }
+    .badge-cuti-umum  { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; }
+    .badge-pelepasan  { background: #cffafe; border: 1px solid #67e8f9; color: #164e63; }
+    .badge-lain       { background: #fee2e2; border: 1px solid #fca5a5; color: #9f1239; }
+    .badge-cuti       { background: #fef9c3; border: 1px solid #fde047; color: #78350f; }
+    .badge-pejabat    { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
 
     .action-btn {
       background: transparent;
@@ -1088,18 +1170,20 @@
     }
 
     .insight-bar-lbl {
-      width: 130px;
+      width: 140px;
       font-size: 0.8rem;
-      color: var(--text-muted);
+      color: var(--text-main);
+      font-weight: 500;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex-shrink: 0;
     }
 
     .insight-bar-outer {
       flex: 1;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.04);
+      height: 10px;
+      background: #e2e8f0;
       border-radius: 10px;
       overflow: hidden;
       position: relative;
@@ -1113,11 +1197,11 @@
     }
 
     .insight-bar-val {
-      width: 25px;
+      width: 32px;
       text-align: right;
       font-size: 0.8rem;
-      font-weight: 600;
-      color: #fff;
+      font-weight: 700;
+      color: var(--text-main);
     }
 
     /* JANA PERGERAKAN (DOWNLOAD) */
@@ -1271,6 +1355,56 @@
 
     /* Responsive adjustments */
 
+    /* --- Desktop (≥1100px) --- */
+    @media (min-width: 1100px) {
+      /* Widen main content area */
+      main {
+        max-width: 1440px;
+        padding: 0 2.5rem 3rem 2.5rem;
+      }
+      nav {
+        max-width: 100%;
+        padding: 0.75rem 2.5rem;
+      }
+
+      /* Better card padding on wide screens */
+      .glass-card {
+        padding: 2.5rem 3rem;
+      }
+
+      /* Utama: stats wider on desktop, breakdown below full-width */
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      /* Borang: wider form, centered */
+      .form-container {
+        max-width: 720px;
+      }
+
+      /* Kalendar: slightly wider clock area */
+      .time-grid {
+        grid-template-columns: 1fr 1.5fr;
+      }
+
+      /* Analisis: restore Nota column (hidden on tablet) and show it again */
+      #movement-table th:nth-child(5),
+      #movement-table td:nth-child(5) {
+        display: table-cell;
+      }
+
+      /* Jana Fail: wider download section, sections side by side */
+      .generate-bay {
+        max-width: 900px;
+      }
+      .downloads-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+    }
+
     /* --- Tablet (≤768px) --- */
     @media (max-width: 768px) {
       .analysis-header {
@@ -1403,6 +1537,197 @@
         gap: 8px;
       }
     }
+    /* ===== Light MOE Professional Theme Overrides ===== */
+    .space-background { display: none !important; }
+    .float-s, .float-m, .float-f { animation: none; }
+    h1 { background: none; -webkit-background-clip: unset; -webkit-text-fill-color: #ffffff; }
+    .glass-card { background: var(--bg-card); box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .glass-card::after { background: linear-gradient(90deg, transparent, var(--primary-blue), var(--secondary-blue), transparent); }
+    .auth-card { background: var(--bg-card); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .auth-card::after { background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue)); }
+    .auth-header h2 { color: var(--text-main); }
+    .nav-btn { background: var(--bg-card); box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    .nav-btn:hover { background: #f0f4f8; color: var(--primary-blue); }
+    .nav-btn.active { background: var(--primary-blue); color: #fff; box-shadow: var(--glow-blue); }
+    .form-input, .form-select, .form-textarea { background: #f8fafc; color: var(--text-main); border-color: var(--border-color); }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { background: #fff; }
+    .form-select option { color: var(--text-main); background: #fff; }
+    .search-input { background: #f8fafc; color: var(--text-main); border-color: var(--border-color); }
+    .search-input:focus { background: #fff; box-shadow: var(--glow-blue); }
+    .stat-card { background: #f8fafc; border-color: var(--border-color); }
+    .stat-val { color: var(--text-main); }
+    .table-container { background: #fff; border-color: var(--border-color); }
+    td { color: var(--text-main); border-bottom-color: var(--border-color); }
+    tr:hover td { background: #f8fafc; }
+    th { background: #eef2ff; color: var(--primary-blue); border-bottom-color: var(--border-color); }
+    .clock-container { background: #f8fafc; border-color: var(--border-color); }
+    .digital-clock { color: var(--text-main); text-shadow: none; }
+    .digital-date { color: var(--text-muted); }
+    .calendar-container { background: #f8fafc; border-color: var(--border-color); }
+    .calendar-header h3 { color: var(--text-main); }
+    .calendar-nav-btn { border-color: var(--border-color); color: var(--text-main); background: #fff; }
+    .calendar-nav-btn:hover { background: var(--primary-blue); border-color: var(--primary-blue); color: #fff; }
+    .calendar-day { color: var(--text-main); }
+    .calendar-day:hover { background: #e0e7ff; }
+    .calendar-day.other-month { color: #cbd5e1; pointer-events: none; }
+    .cal-popup { background: #fff; border-color: #bfdbfe; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .cal-popup-nama { color: var(--text-main); }
+    .cal-popup-item { border-bottom-color: var(--border-color); }
+    .day-events-container { background: #f0f4f8; border-left-color: var(--primary-blue); }
+    .day-events-title { color: var(--text-main); }
+    .day-event-name { color: var(--primary-blue); font-weight: 600; }
+    .insights-panel { background: #f8fafc; border-color: var(--border-color); }
+    .insights-title { color: var(--text-main); }
+    .teleport-terminal { background: #f8fafc; border-color: var(--border-color); }
+    .teleport-metric { background: #fff; border-color: var(--border-color); }
+    .teleport-metric-val { color: var(--text-main); }
+    .toast { background: #fff; color: var(--text-main); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .character-guide { background: #f8fafc; border-color: var(--border-color); }
+    .character-speech { color: var(--text-main); }
+    .character-avatar { filter: none; }
+    .user-profile-tag span { color: #ffffff; }
+    .insight-bar-outer { background: #e2e8f0; }
+    footer { border-top-color: var(--border-color); color: var(--text-muted); }
+    .hero-title { color: var(--text-main); }
+    .hero-title span { background: linear-gradient(45deg, var(--primary-blue), var(--secondary-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .form-title { background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .analysis-title { color: var(--text-main); }
+    .reset-orbit-container { border-top-color: var(--border-color); }
+    .error-msg { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); color: #b91c1c; }
+    .digital-day { background: #e0e7ff; border-color: #c7d2fe; color: var(--primary-blue); }
+    .action-btn { color: var(--text-muted); }
+    .action-btn:hover { color: var(--accent-pink); background: rgba(239,68,68,0.08); }
+    .empty-state { color: var(--text-muted); }
+    .period-btn { background: #f8fafc; border-color: var(--border-color); color: var(--text-muted); }
+    .period-btn:hover { color: var(--primary-blue); border-color: var(--primary-blue); }
+    .period-btn.active { background: var(--primary-blue); border-color: var(--primary-blue); color: #fff; box-shadow: var(--glow-blue); }
+    .clock-title { color: var(--primary-blue); }
+
+    /* ===== Jana Fail Download Cards ===== */
+    .download-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin: 1.5rem 0 0.75rem;
+    }
+    .download-section-title:first-child { margin-top: 0; }
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .download-card {
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: #f8fafc;
+      text-align: center;
+    }
+    .download-card:hover { border-color: var(--primary-blue); background: #eef2ff; }
+    .download-card i { font-size: 1.8rem; }
+    .download-card.pdf i { color: #dc2626; }
+    .download-card.xlsx i { color: #16a34a; }
+    .download-card .dc-label { font-weight: 700; font-size: 0.82rem; color: var(--text-main); }
+    .download-card .dc-sub { font-size: 0.72rem; color: var(--text-muted); }
+    .pdf-btn { display:flex; align-items:center; gap:6px; padding:7px 14px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:background 0.2s; }
+    .pdf-btn:hover { background:#b91c1c; }
+
+    /* ===== Auth Background Image ===== */
+    #auth-panel {
+      background: url('images/ppd-building.jpg') center center / cover no-repeat;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 0;
+      max-width: 100%;
+    }
+    #auth-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 53, 128, 0.55);
+    }
+    #auth-panel .auth-container-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+      padding: 1.5rem;
+    }
+
+    /* ===== Sector Selection View ===== */
+    .sector-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      margin: 1.25rem 0;
+    }
+    .sector-btn {
+      background: #f0f4f8;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 0.75rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      color: var(--text-main);
+    }
+    .sector-btn:hover {
+      border-color: var(--primary-blue);
+      background: #e0e7ff;
+    }
+    .sector-btn.selected {
+      color: #fff;
+    }
+    .sector-btn i {
+      display: block;
+      font-size: 1.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .sector-btn .sector-code {
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .sector-btn .sector-name {
+      font-size: 0.72rem;
+      opacity: 0.85;
+      margin-top: 0.2rem;
+    }
+    .sector-continue-btn {
+      width: 100%;
+      padding: 0.875rem;
+      background: var(--primary-blue);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+    .sector-continue-btn:hover { background: var(--secondary-blue); }
+    .sector-continue-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Per-sector hover & selected colours */
+    .sector-btn[data-sektor="SPr"]:hover,  .sector-btn[data-sektor="SPr"].selected  { background:#003580; border-color:#003580; color:#fff; }
+    .sector-btn[data-sektor="SPb"]:hover,  .sector-btn[data-sektor="SPb"].selected  { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .sector-btn[data-sektor="SPbM"]:hover, .sector-btn[data-sektor="SPbM"].selected { background:#d97706; border-color:#d97706; color:#fff; }
+    .sector-btn[data-sektor="SP"]:hover,   .sector-btn[data-sektor="SP"].selected   { background:#7c3aed; border-color:#7c3aed; color:#fff; }
+    .sector-btn[data-sektor="SPS"]:hover,  .sector-btn[data-sektor="SPS"].selected  { background:#0891b2; border-color:#0891b2; color:#fff; }
+    .sector-btn[data-sektor="SPP/SPsK"]:hover, .sector-btn[data-sektor="SPP/SPsK"].selected { background:#db2777; border-color:#db2777; color:#fff; }
+    .sector-btn[data-sektor="PTIS"]:hover, .sector-btn[data-sektor="PTIS"].selected { background:#dc2626; border-color:#dc2626; color:#fff; }
   </style>
 </head>
 <body>
@@ -1413,10 +1738,9 @@
   <!-- Header Section -->
   <header>
     <div class="logo-container">
-      <img src="data:image/jpeg;base64,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AAAAAAAAAAAAAAAAAAAADAhAQAABAAAAAABAAAAAAAAAAAAAAAAAAAAAAAADAwAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQgAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/xAAC/9oADAMBAAIAAwAAABDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzO33/wB888888888888888888888888888888888c/8A+nvfPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPN/wD9/wA9o+8888888888888888888888888888888/68888Lf88888888888888888888888888888s0/wBPPPPP3PPPPPPPPPPPPPPPPvuccc+N/OsMMMAf3PPPPPPPOMPPPPPP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" alt="SPR Logo" class="logo-img">
-      <h1>e-Gerak SPR</h1>
+      <img src="images/logo-ppd.jpg" alt="Logo PPD Dalat" class="logo-img" style="height:50px; background:#fff; border-radius:6px; padding:2px;">
+      <h1 id="app-title">e-Gerak PPD Dalat</h1>
     </div>
-    <div class="subtitle">PPD Dalat</div>
 
     <!-- Active User Session Badge (Updated dynamically in JS) -->
     <div class="user-profile-tag" id="header-user-tag" style="display: none;">
@@ -1432,7 +1756,7 @@
   <!-- Navigation Menu (Shown only when authenticated) -->
   <nav id="app-nav">
     <button class="nav-btn active float-s" onclick="switchTab('utama')">
-      <i class="fa-solid fa-rocket"></i> Utama
+      <i class="fa-solid fa-house"></i> Utama
     </button>
     <button class="nav-btn float-m" onclick="switchTab('kalendar')">
       <i class="fa-solid fa-calendar-days"></i> Kalendar
@@ -1452,8 +1776,63 @@
   <main>
 
     <!-- AUTHENTICATION PANEL: SIMPLE IDENTIFICATION (no password, no external service) -->
-    <div class="auth-container" id="auth-panel">
-      <div class="auth-card" id="view-identify">
+    <div id="auth-panel">
+    <div class="auth-container-inner">
+
+      <!-- VIEW: SECTOR SELECTION -->
+      <div class="auth-card" id="view-sector-select">
+        <div class="auth-header">
+          <h2>Pilih Sektor</h2>
+          <p>Sila pilih sektor anda di PPD Dalat</p>
+        </div>
+        <div class="sector-grid">
+          <button class="sector-btn" data-sektor="SPr" onclick="selectSector('SPr','Sektor Perancangan',this)">
+            <i class="fa-solid fa-sitemap"></i>
+            <div class="sector-code">SPr</div>
+            <div class="sector-name">Sektor Perancangan</div>
+          </button>
+          <button class="sector-btn" data-sektor="SPb" onclick="selectSector('SPb','Sektor Pembelajaran',this)">
+            <i class="fa-solid fa-book-open"></i>
+            <div class="sector-code">SPb</div>
+            <div class="sector-name">Sektor Pembelajaran</div>
+          </button>
+          <button class="sector-btn" data-sektor="SPbM" onclick="selectSector('SPbM','Sektor Pembangunan Murid',this)">
+            <i class="fa-solid fa-child-reaching"></i>
+            <div class="sector-code">SPbM</div>
+            <div class="sector-name">Sektor Pembangunan Murid</div>
+          </button>
+          <button class="sector-btn" data-sektor="SP" onclick="selectSector('SP','Sektor Pengurusan',this)">
+            <i class="fa-solid fa-briefcase"></i>
+            <div class="sector-code">SP</div>
+            <div class="sector-name">Sektor Pengurusan</div>
+          </button>
+          <button class="sector-btn" data-sektor="SPS" onclick="selectSector('SPS','Sektor Pengurusan Sekolah',this)">
+            <i class="fa-solid fa-school"></i>
+            <div class="sector-code">SPS</div>
+            <div class="sector-name">Sektor Pengurusan Sekolah</div>
+          </button>
+          <button class="sector-btn" data-sektor="SPP/SPsK" onclick="selectSector('SPP/SPsK','Sektor Pentaksiran &amp; Psikologi Kaunseling',this)">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <div class="sector-code">SPP/SPsK</div>
+            <div class="sector-name">Pentaksiran &amp; Psikologi Kaunseling</div>
+          </button>
+          <button class="sector-btn" data-sektor="PTIS" onclick="selectSector('PTIS','Pasukan Teknikal ICT Sekolah',this)">
+            <i class="fa-solid fa-computer"></i>
+            <div class="sector-code">PTIS</div>
+            <div class="sector-name">Pasukan Teknikal ICT Sekolah</div>
+          </button>
+        </div>
+        <button class="sector-continue-btn" id="sector-continue-btn" onclick="proceedFromSector()" disabled>
+          <i class="fa-solid fa-arrow-right"></i> Teruskan
+        </button>
+        <div style="text-align:center;margin-top:1rem;">
+          <a href="#" onclick="showAdminPinView(event)" style="font-size:0.78rem;color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:5px;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="fa-solid fa-shield-halved" style="font-size:0.72rem;"></i> Log Masuk Admin
+          </a>
+        </div>
+      </div>
+
+      <div class="auth-card" id="view-identify" style="display:none;">
         <div class="auth-header">
           <h2>Kenal Pasti Pegawai</h2>
           <p>Sila nyatakan maklumat ringkas anda untuk meneruskan</p>
@@ -1493,7 +1872,7 @@
           </div>
 
           <button type="submit" class="submit-btn">
-            <i class="fa-solid fa-right-to-bracket"></i> Masuk ke Pangkalan Orbit
+            <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
           </button>
         </form>
 
@@ -1528,7 +1907,7 @@
           </div>
 
           <button type="submit" class="submit-btn">
-            <i class="fa-solid fa-right-to-bracket"></i> Masuk ke Pangkalan Orbit
+            <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
           </button>
         </form>
 
@@ -1570,7 +1949,8 @@
           <a href="#" class="auth-toggle-link" onclick="showIdentifyView(event)">Kembali ke Log Masuk Staf</a>
         </p>
       </div>
-    </div>
+    </div><!-- end auth-container-inner -->
+    </div><!-- end auth-panel -->
 
     <!-- ADMIN PANEL (unlocked via PIN, entirely separate from the staff session) -->
     <div id="admin-panel" style="display: none; width: 100%;">
@@ -1653,14 +2033,38 @@
           </div>
         </div>
 
-        <!-- Urus Sebarang Rekod (admin boleh padam rekod sesiapa sahaja) -->
+        <!-- Analisis Per Sektor -->
         <div class="insights-panel">
-          <div class="insights-title"><i class="fa-solid fa-table-list"></i> Urus Sebarang Rekod Pergerakan</div>
+          <div class="insights-title"><i class="fa-solid fa-chart-bar"></i> Analisis Pergerakan Mengikut Sektor</div>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Klik sektor untuk tapis rekod di bawah.</p>
+          <div class="tujuan-breakdown" id="admin-sector-breakdown"></div>
+        </div>
+
+        <!-- Urus Sebarang Rekod (admin boleh padam rekod sesiapa sahaja) -->
+        <div class="insights-panel" id="admin-records-panel">
+          <div class="insights-title"><i class="fa-solid fa-table-list"></i> Semua Rekod Pergerakan</div>
+          <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+            <select id="admin-sector-filter" class="form-select" style="padding-left:12px;max-width:180px;" onchange="filterAdminRecords()">
+              <option value="">Semua Sektor</option>
+              <option value="SPr">SPr — Sektor Perancangan</option>
+              <option value="SPb">SPb — Sektor Pembelajaran</option>
+              <option value="SPbM">SPbM — Pembangunan Murid</option>
+              <option value="SP">SP — Sektor Pengurusan</option>
+              <option value="SPS">SPS — Pengurusan Sekolah</option>
+              <option value="SPP/SPsK">SPP/SPsK — Pentaksiran</option>
+              <option value="PTIS">PTIS — ICT Sekolah</option>
+            </select>
+            <div class="search-box" style="flex:1;min-width:200px;">
+              <input type="text" class="search-input" id="admin-record-search" onkeyup="filterAdminRecords()" placeholder="Cari nama, destinasi, tujuan...">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+          </div>
           <div class="table-container">
             <table>
               <thead>
                 <tr>
                   <th>Nama Pegawai</th>
+                  <th>Sektor</th>
                   <th>Tarikh</th>
                   <th>Destinasi</th>
                   <th>Tujuan</th>
@@ -1685,30 +2089,44 @@
 
       <!-- SECTION: UTAMA (HOME) -->
       <div class="glass-card active" id="tab-utama">
-        <div class="home-hero">
-          <h2 class="hero-title">Pusat Kawalan <span>Pergerakan Sektor</span></h2>
-          <p class="hero-desc">
-            Sistem ini merekodkan pergerakan keluar masuk pegawai Sektor Perancangan PPD Dalat secara digital. Memastikan tiada kerosakan komunikasi ketika menjalankan tugas rasmi di stesen bumi mahupun stesen angkasa.
-          </p>
-        </div>
 
         <!-- Dashboard Statistics Grid -->
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card clickable-stat" onclick="toggleStatDetail('log')">
             <i class="fa-solid fa-gauge-high"></i>
             <div class="stat-val" id="stat-total-logs">0</div>
             <div class="stat-lbl">Jumlah Log Pergerakan</div>
+            <div class="stat-hint"><i class="fa-solid fa-chevron-down"></i></div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card clickable-stat" onclick="toggleStatDetail('today')">
             <i class="fa-solid fa-user-astronaut"></i>
             <div class="stat-val" id="stat-active-today">0</div>
             <div class="stat-lbl">Pergerakan Hari Ini</div>
+            <div class="stat-hint"><i class="fa-solid fa-chevron-down"></i></div>
           </div>
-          <div class="stat-card">
+          <div class="stat-card clickable-stat" onclick="toggleStatDetail('pegawai')">
             <i class="fa-solid fa-network-wired"></i>
             <div class="stat-val" id="stat-unique-officers">0</div>
             <div class="stat-lbl">Pegawai Terlibat</div>
+            <div class="stat-hint"><i class="fa-solid fa-chevron-down"></i></div>
           </div>
+        </div>
+
+        <!-- Stat detail panels -->
+        <div id="stat-detail-panel" class="stat-detail-panel" style="display:none;">
+          <div class="stat-detail-header">
+            <span id="stat-detail-title"></span>
+            <button class="stat-detail-close" onclick="closeStatDetail()"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div id="stat-detail-body" class="stat-detail-body"></div>
+        </div>
+
+        <!-- Analisis Jenis Pergerakan -->
+        <div class="portal-section" style="margin-top: 1.5rem;">
+          <div class="section-title-row">
+            <i class="fa-solid fa-chart-bar"></i> Analisis Pergerakan Mengikut Jenis
+          </div>
+          <div id="tujuan-breakdown" class="tujuan-breakdown"></div>
         </div>
 
         <div class="portal-section">
@@ -1723,7 +2141,7 @@
         <div class="time-grid">
           <!-- Galaxy Clock -->
           <div class="clock-container">
-            <div class="clock-title"><i class="fa-solid fa-circle-notch fa-spin"></i> Waktu Angkasa PPD</div>
+            <div class="clock-title"><i class="fa-solid fa-circle-notch fa-spin"></i> Waktu Semasa</div>
             <div class="digital-clock" id="digital-clock">00:00:00</div>
             <div class="digital-date" id="digital-date">Selasa, 7 Julai 2026</div>
             <div class="digital-day" id="digital-day">Modul Kalendar Aktif</div>
@@ -1757,7 +2175,7 @@
       <!-- SECTION: BORANG PERGERAKAN -->
       <div class="glass-card" id="tab-borang">
         <div class="form-container">
-          <h2 class="form-title" id="borang-title">Daftar Misi Pergerakan Pegawai</h2>
+          <h2 class="form-title" id="borang-title">Daftar Pergerakan Pegawai</h2>
 
           <!-- Post-submit action panel (hidden until first record is saved) -->
           <div id="post-submit-panel" style="display:none; margin-bottom: 1.5rem;">
@@ -1828,7 +2246,7 @@
               <label class="form-label" for="tujuan">Tujuan Pergerakan</label>
               <div class="input-wrapper">
                 <select class="form-select" id="tujuan" required onchange="handleTujuanChange(this.value)">
-                  <option value="" disabled selected>Pilih Tujuan Misi...</option>
+                  <option value="" disabled selected>Pilih Tujuan...</option>
                   <option value="Berada di Pejabat">Berada di Pejabat</option>
                   <option value="Mesyuarat">Mesyuarat / Perbincangan</option>
                   <option value="Bengkel">Bengkel Kerja</option>
@@ -1867,7 +2285,7 @@
             </div>
 
             <button type="submit" class="submit-btn">
-              <i class="fa-solid fa-paper-plane"></i> Hantar Ke Pangkalan Orbit
+              <i class="fa-solid fa-paper-plane"></i> Hantar Rekod
             </button>
           </form>
         </div>
@@ -1915,7 +2333,7 @@
           <div class="empty-state" id="table-empty-state" style="display: none;">
             <i class="fa-solid fa-ghost"></i>
             <h3>Tiada Log Pergerakan Dijumpai</h3>
-            <p id="table-empty-desc">Semua pegawai berada di pangkalan utama (PPD Dalat) atau carian anda tiada padanan.</p>
+            <p id="table-empty-desc">Tiada rekod pergerakan untuk tempoh ini atau carian anda tiada padanan.</p>
           </div>
         </div>
 
@@ -1924,7 +2342,7 @@
           <div class="insights-title">
             <i class="fa-solid fa-chart-pie"></i> Analisis Taburan Tujuan Misi
           </div>
-          <div class="bars-container" id="insights-bars">
+          <div class="bars-container tujuan-breakdown" id="insights-bars">
             <!-- Dynamically populated -->
           </div>
         </div>
@@ -1934,44 +2352,73 @@
       <div class="glass-card" id="tab-jana">
         <div class="generate-bay">
           <div class="teleport-terminal">
-            <i class="fa-solid fa-satellite fa-3x" style="color: var(--accent-cyan); margin-bottom: 1rem; animation: float-fast 5s ease-in-out infinite;"></i>
-            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.5rem; color:#fff;">Pemancar Dokumen Excel</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-              Fail Excel yang dijana mengandungi log data pergerakan sektor perancangan bagi tempoh yang dipilih di bawah.
-            </p>
+            <h2 style="font-family:'Outfit',sans-serif; margin-bottom:0.25rem; color:var(--text-main);">Jana Fail Laporan</h2>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.25rem;">Muat turun laporan pergerakan pegawai dalam format PDF atau Excel.</p>
 
-            <!-- Export Period Filter (independent of the Analisis tab's filter) -->
-            <div class="period-filter" id="export-period-filter" style="justify-content: center; margin-bottom: 0.5rem;">
+            <!-- Export Period Filter -->
+            <div class="period-filter" id="export-period-filter" style="justify-content:center; margin-bottom:0.5rem;">
               <button class="period-btn" data-period="day" onclick="setExportPeriod('day')">Hari</button>
               <button class="period-btn" data-period="week" onclick="setExportPeriod('week')">Minggu</button>
               <button class="period-btn" data-period="month" onclick="setExportPeriod('month')">Bulan</button>
               <button class="period-btn" data-period="year" onclick="setExportPeriod('year')">Tahun</button>
               <button class="period-btn" data-period="all" onclick="setExportPeriod('all')">Semua</button>
             </div>
-            <div class="period-range" id="export-range-label" style="display: block; margin-bottom: 1.25rem;"></div>
+            <div class="period-range" id="export-range-label" style="display:block; margin-bottom:1.25rem;"></div>
 
-            <div class="teleport-grid">
+            <div class="teleport-grid" style="margin-bottom:1.25rem;">
               <div class="teleport-metric">
-                <div class="teleport-metric-lbl">Saiz Rekod</div>
+                <div class="teleport-metric-lbl">Rekod Sektor</div>
                 <div class="teleport-metric-val" id="metric-record-count">0 Rekod</div>
               </div>
               <div class="teleport-metric">
-                <div class="teleport-metric-lbl">Status Enjin</div>
-                <div class="teleport-metric-val" style="color: var(--success-green);"><i class="fa-solid fa-circle-check"></i> Sedia</div>
+                <div class="teleport-metric-lbl">Status</div>
+                <div class="teleport-metric-val" style="color:var(--success-green);"><i class="fa-solid fa-circle-check"></i> Sedia</div>
               </div>
             </div>
 
-            <button class="beam-btn" onclick="exportToExcel()">
-              <i class="fa-solid fa-file-excel"></i> Beam Ke Excel (.xlsx)
-            </button>
+            <div class="downloads-layout">
+              <!-- Sektor downloads -->
+              <div>
+                <p class="download-section-title"><i class="fa-solid fa-layer-group"></i> Sektor Semasa</p>
+                <div class="download-grid">
+                  <div class="download-card pdf" onclick="generatePDF('sector')">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div class="dc-label">Muat Turun PDF</div>
+                    <div class="dc-sub">Laporan sektor semasa</div>
+                  </div>
+                  <div class="download-card xlsx" onclick="exportToExcel('sector')">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <div class="dc-label">Muat Turun Excel</div>
+                    <div class="dc-sub">Data sektor semasa</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Whole PPD downloads -->
+              <div>
+                <p class="download-section-title"><i class="fa-solid fa-building-columns"></i> Keseluruhan PPD</p>
+                <div class="download-grid">
+                  <div class="download-card pdf" onclick="generatePDF('all')">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div class="dc-label">Muat Turun PDF</div>
+                    <div class="dc-sub">Semua sektor PPD</div>
+                  </div>
+                  <div class="download-card xlsx" onclick="exportToExcel('all')">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <div class="dc-label">Muat Turun Excel</div>
+                    <div class="dc-sub">Semua sektor PPD</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="reset-orbit-container">
-            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 10px;">
-              Perhatian: Menetapkan semula orbit akan memadamkan kesemua pergerakan yang tersimpan dalam pelayar ini secara kekal.
+            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:10px;">
+              Perhatian: Tindakan ini akan memadamkan kesemua data pergerakan secara kekal. Sila pastikan anda telah membuat sandaran terlebih dahulu.
             </p>
             <button class="reset-btn" onclick="resetSystemData()">
-              <i class="fa-solid fa-radiation"></i> Tetap Semula Orbit (Clear Data)
+              <i class="fa-solid fa-trash"></i> Padam Semua Data
             </button>
           </div>
         </div>
@@ -1985,9 +2432,11 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Footer Section -->
+  <!-- Footer -->
   <footer style="text-align: center;">
-    <p style="font-weight: 600; margin-bottom: 2px;">Sektor Perancangan</p>
-    <p>Pejabat Pendidikan Daerah Dalat</p>
+    <p style="margin-bottom: 2px;">e-Gerak PPD Dalat</p>
+    <p style="margin-bottom: 4px;">Sistem Pengurusan Rekod Pergerakan Pegawai</p>
+    <p style="font-weight: 700; color: var(--text-main);">Pejabat Pendidikan Daerah Dalat</p>
   </footer>
 
   <script>
@@ -2026,10 +2475,47 @@
 
     // Data Stores
     let currentUserSession = null;
+    let selectedSector = null;
+
+    // Warna unik setiap sektor — primary, secondary, header bg, header text glow
+    const SECTOR_COLORS = {
+      'SPr':      { primary: '#003580', secondary: '#1d4ed8', header: '#003580', headerBtn: '#1a56c4', navActive: '#003580', rgb: '0,53,128' },
+      'SPb':      { primary: '#15803d', secondary: '#16a34a', header: '#166534', headerBtn: '#15803d', navActive: '#15803d', rgb: '21,128,61' },
+      'SPbM':     { primary: '#b45309', secondary: '#d97706', header: '#92400e', headerBtn: '#b45309', navActive: '#b45309', rgb: '180,83,9' },
+      'SP':       { primary: '#6d28d9', secondary: '#7c3aed', header: '#4c1d95', headerBtn: '#6d28d9', navActive: '#6d28d9', rgb: '109,40,217' },
+      'SPS':      { primary: '#0e7490', secondary: '#0891b2', header: '#164e63', headerBtn: '#0e7490', navActive: '#0e7490', rgb: '14,116,144' },
+      'SPP/SPsK': { primary: '#be185d', secondary: '#db2777', header: '#831843', headerBtn: '#be185d', navActive: '#be185d', rgb: '190,24,93' },
+      'PTIS':     { primary: '#b91c1c', secondary: '#dc2626', header: '#7f1d1d', headerBtn: '#b91c1c', navActive: '#b91c1c', rgb: '185,28,28' },
+    };
+
+    function applySectorTheme(code) {
+      const c = SECTOR_COLORS[code] || SECTOR_COLORS['SPr'];
+      const root = document.documentElement;
+      root.style.setProperty('--primary-blue', c.primary);
+      root.style.setProperty('--secondary-blue', c.secondary);
+      root.style.setProperty('--glow-blue', `0 2px 8px ${c.primary}40`);
+      root.style.setProperty('--detail-panel-rgb', c.rgb || '0,53,128');
+      // Header bar colour
+      document.querySelector('header').style.background = c.header;
+      // Sector continue button
+      const contBtn = document.getElementById('sector-continue-btn');
+      if (contBtn) contBtn.style.background = c.primary;
+    }
+
+    function resetSectorTheme() {
+      const root = document.documentElement;
+      root.style.removeProperty('--primary-blue');
+      root.style.removeProperty('--secondary-blue');
+      root.style.removeProperty('--glow-blue');
+      root.style.removeProperty('--detail-panel-rgb');
+      document.querySelector('header').style.background = '';
+    }
     let movementRecords = [];
+    let allMovementRecords = []; // all sectors — used by calendar only
+    let adminMovementData = []; // all records loaded with admin token
     let currentAnalysisPeriod = 'all';
     let currentExportPeriod = 'all';
-    let adminPin = null; // set once the admin PIN is verified with the server, kept in memory only
+    let adminToken = null; // T-01: server-issued session token — PIN never stored in JS memory
 
     // Custom CSS blink styles
     const styleSheet = document.createElement("style");
@@ -2045,13 +2531,38 @@
       return 'rec_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
     }
 
+    // ===== SECTOR SELECTION =====
+    function selectSector(code, name, el) {
+      selectedSector = { code, name };
+      document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('sector-continue-btn').disabled = false;
+      // Preview sector colour on the continue button
+      const c = SECTOR_COLORS[code] || SECTOR_COLORS['SPr'];
+      document.getElementById('sector-continue-btn').style.background = c.primary;
+    }
+
+    function proceedFromSector() {
+      if (!selectedSector) return;
+      document.getElementById('view-sector-select').style.display = 'none';
+      const hasRegistered = !!localStorage.getItem('ppd_dalat_remembered_email');
+      document.getElementById('view-identify').style.display = hasRegistered ? 'none' : 'block';
+      document.getElementById('view-email-login').style.display = hasRegistered ? 'block' : 'none';
+    }
+
     // Fetches the shared record list from the local backend. Every device
     // pointed at the same backend sees the same data this way.
     async function loadMovementsFromServer(silent) {
       try {
-        const res = await fetch(`${API_BASE}/movements`);
-        if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        movementRecords = await res.json();
+        const emailQ = currentUserSession ? `email=${encodeURIComponent(currentUserSession.email)}` : '';
+        const sektorQ = selectedSector ? `sektor=${encodeURIComponent(selectedSector.code)}&${emailQ}` : emailQ;
+        const [sectorRes, allRes] = await Promise.all([
+          fetch(`${API_BASE}/movements?${sektorQ}`),
+          fetch(`${API_BASE}/movements?${emailQ}`)
+        ]);
+        if (!sectorRes.ok) throw new Error(`Server returned ${sectorRes.status}`);
+        movementRecords = await sectorRes.json();
+        allMovementRecords = allRes.ok ? await allRes.json() : movementRecords;
         return true;
       } catch (err) {
         console.error('Failed to reach backend:', err);
@@ -2091,7 +2602,11 @@
       // Load session
       const session = localStorage.getItem('ppd_dalat_session');
       if (session) {
-        currentUserSession = JSON.parse(session);
+        try {
+          currentUserSession = JSON.parse(session);
+        } catch (e) {
+          localStorage.removeItem('ppd_dalat_session');
+        }
       }
 
       // Load the shared record list from the backend (fresh installs start empty)
@@ -2175,12 +2690,13 @@
 
     // AUTH HANDLING: Log Keluar
     function handleLogout() {
-      if (confirm("Adakah anda ingin log keluar dari sesi peranti ini?")) {
-        localStorage.removeItem('ppd_dalat_session');
-        currentUserSession = null;
-        showToast("Anda telah berjaya log keluar dari orbit.", "success");
-        evaluateSessionView();
-      }
+      localStorage.removeItem('ppd_dalat_session');
+      currentUserSession = null;
+      selectedSector = null;
+      document.getElementById('app-title').textContent = 'e-Gerak PPD Dalat';
+      resetSectorTheme();
+      showToast("Anda telah berjaya log keluar.", "success");
+      evaluateSessionView();
     }
 
     // ===== ADMIN PANEL =====
@@ -2190,6 +2706,7 @@
 
     function showAdminPinView(event) {
       event.preventDefault();
+      document.getElementById('view-sector-select').style.display = 'none';
       document.getElementById('view-identify').style.display = 'none';
       document.getElementById('view-email-login').style.display = 'none';
       document.getElementById('view-admin-pin').style.display = 'block';
@@ -2200,13 +2717,15 @@
       event.preventDefault();
       document.getElementById('view-admin-pin').style.display = 'none';
       document.getElementById('view-email-login').style.display = 'none';
-      document.getElementById('view-identify').style.display = 'block';
+      document.getElementById('view-identify').style.display = 'none';
+      document.getElementById('view-sector-select').style.display = 'block';
     }
 
     function showFullRegisterView(event) {
       event.preventDefault();
       document.getElementById('view-email-login').style.display = 'none';
       document.getElementById('view-admin-pin').style.display = 'none';
+      document.getElementById('view-sector-select').style.display = 'none';
       document.getElementById('view-identify').style.display = 'block';
     }
 
@@ -2260,14 +2779,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pin })
         });
-        const { ok } = await res.json();
+        const data = await res.json();
 
-        if (!ok) {
+        if (!data.ok) {
           errorDiv.style.display = 'flex';
           return;
         }
 
-        adminPin = pin;
+        adminToken = data.token;
         document.getElementById('admin-pin-input').value = '';
         document.getElementById('auth-panel').style.display = 'none';
         document.getElementById('app-nav').style.display = 'none';
@@ -2281,17 +2800,28 @@
     }
 
     function handleAdminLogout() {
-      adminPin = null;
+      adminToken = null;
       document.getElementById('admin-panel').style.display = 'none';
       showIdentifyView({ preventDefault: () => {} });
       evaluateSessionView();
     }
 
+    async function loadAllMovementsForAdmin() {
+      const res = await fetch(`${API_BASE}/movements`, {
+        headers: { 'X-Admin-Token': adminToken }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      adminMovementData = await res.json();
+      return adminMovementData;
+    }
+
     async function loadAdminDashboard() {
+      await loadAllMovementsForAdmin();
       await Promise.all([
         renderStaffTable(),
         loadJawatanOptions('staff-jawatan').then(renderJawatanList),
         renderUserStats(),
+        renderSectorAnalysis(),
         renderAdminRecordsTable(),
         renderAuditLog()
       ]);
@@ -2301,18 +2831,23 @@
     async function renderStaffTable() {
       const tbody = document.getElementById('staff-table-body');
       try {
-        const res = await fetch(`${API_BASE}/admin/staff?pin=${encodeURIComponent(adminPin)}`);
+        const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
         const staffList = await res.json();
 
         tbody.innerHTML = staffList.map((s) => `
           <tr>
-            <td style="font-weight:600; color:#fff;">${escapeHtml(s.nama)}</td>
+            <td style="font-weight:600; color:var(--text-main);">${escapeHtml(s.nama)}</td>
             <td>${escapeHtml(s.email)}</td>
             <td>${escapeHtml(s.jawatan)}</td>
             <td style="text-align:center;">
-              <button class="action-btn" onclick="deleteStaffMember('${s.email}')" title="Padam Pengguna">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
+              <div style="display:flex;gap:4px;justify-content:center;">
+                <button class="action-btn" onclick="resetStaffMember('${s.email}','${escapeHtml(s.nama)}')" title="Reset Pendaftaran" style="background:rgba(180,83,9,0.25);border-color:rgba(180,83,9,0.4);">
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button class="action-btn" onclick="deleteStaffMember('${s.email}')" title="Padam Pengguna">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
             </td>
           </tr>
         `).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Tiada staf didaftarkan lagi.</td></tr>';
@@ -2331,8 +2866,8 @@
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: adminPin, nama, email, jawatan })
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
+          body: JSON.stringify({ nama, email, jawatan })
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
@@ -2353,8 +2888,9 @@
       if (!confirm(`Padam akses staf ${email}? Mereka tidak akan dapat log masuk lagi.`)) return;
 
       try {
-        const res = await fetch(`${API_BASE}/admin/staff/${encodeURIComponent(email)}?pin=${encodeURIComponent(adminPin)}`, {
-          method: 'DELETE'
+        const res = await fetch(`${API_BASE}/admin/staff/${encodeURIComponent(email)}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Token': adminToken }
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
@@ -2396,7 +2932,8 @@
         const res = await fetch(`${API_BASE}/admin/jawatan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: adminPin, jawatan })
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
+          body: JSON.stringify({ jawatan })
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
@@ -2415,8 +2952,9 @@
       if (!confirm(`Padam pilihan jawatan "${jawatan}"?`)) return;
 
       try {
-        const res = await fetch(`${API_BASE}/admin/jawatan/${encodeURIComponent(jawatan)}?pin=${encodeURIComponent(adminPin)}`, {
-          method: 'DELETE'
+        const res = await fetch(`${API_BASE}/admin/jawatan/${encodeURIComponent(jawatan)}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Token': adminToken }
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
@@ -2433,10 +2971,11 @@
     // --- Statistik setiap pengguna (dikira daripada data pergerakan sedia ada) ---
     async function renderUserStats() {
       const tbody = document.getElementById('user-stats-table-body');
-      await loadMovementsFromServer(true);
+      // use adminMovementData (fetched with admin token) instead of movementRecords
+      const data = adminMovementData;
 
       const byUser = {};
-      movementRecords.forEach((r) => {
+      data.forEach((r) => {
         const key = r.submittedBy || 'tidak diketahui';
         if (!byUser[key]) byUser[key] = { nama: r.nama, email: key, count: 0, tujuanCounts: {} };
         byUser[key].count++;
@@ -2449,7 +2988,7 @@
         const topTujuan = Object.entries(u.tujuanCounts).sort((a, b) => b[1] - a[1])[0];
         return `
           <tr>
-            <td style="font-weight:600; color:#fff;">${escapeHtml(u.nama)}</td>
+            <td style="font-weight:600; color:var(--text-main);">${escapeHtml(u.nama)}</td>
             <td>${escapeHtml(u.email)}</td>
             <td>${u.count}</td>
             <td>${topTujuan ? escapeHtml(topTujuan[0]) + ` (${topTujuan[1]})` : '-'}</td>
@@ -2459,45 +2998,70 @@
     }
 
     // --- Urus sebarang rekod (admin boleh padam rekod sesiapa sahaja) ---
+    let adminRecordFilterSektor = '';
+    let adminRecordSearch = '';
+
+    function filterAdminRecords() {
+      adminRecordSearch = (document.getElementById('admin-record-search')?.value || '').toLowerCase();
+      adminRecordFilterSektor = document.getElementById('admin-sector-filter')?.value || '';
+      renderAdminRecordsTable();
+    }
+
+    function getTujuanBadgeClass(tujuan) {
+      const tj = (tujuan||'').toLowerCase();
+      if (tj.includes('pejabat')) return 'badge-pejabat';
+      if (tj.includes('mesyuarat')) return 'badge-mesyuarat';
+      if (tj.includes('bengkel')) return 'badge-bengkel';
+      if (tj.includes('kursus')) return 'badge-kursus';
+      if (tj.includes('pemantauan')) return 'badge-pemantauan';
+      if (tj.includes('cuti umum')) return 'badge-cuti-umum';
+      if (tj.includes('pelepasan')) return 'badge-pelepasan';
+      if (tj.includes('cuti')) return 'badge-cuti';
+      return 'badge-lain';
+    }
+
     async function renderAdminRecordsTable() {
       const tbody = document.getElementById('admin-records-table-body');
-      const sorted = [...movementRecords].sort((a, b) => new Date(b.tarikh) - new Date(a.tarikh));
+      let records = adminMovementData;
+      if (adminRecordFilterSektor) records = records.filter(r => r.sektor === adminRecordFilterSektor);
+      if (adminRecordSearch) records = records.filter(r =>
+        (r.nama||'').toLowerCase().includes(adminRecordSearch) ||
+        (r.destinasi||'').toLowerCase().includes(adminRecordSearch) ||
+        (r.tujuan||'').toLowerCase().includes(adminRecordSearch)
+      );
+      const sorted = [...records].sort((a, b) => b.tarikh.localeCompare(a.tarikh));
 
       tbody.innerHTML = sorted.map((r) => {
         let displayDate = r.tarikh;
-        try {
-          const parts = r.tarikh.split('-');
-          if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        } catch (e) {}
-
-        return `
-          <tr>
-            <td style="font-weight:600; color:#fff;">${escapeHtml(r.nama)}</td>
-            <td>${displayDate}</td>
-            <td>${escapeHtml(r.destinasi)}</td>
-            <td>${escapeHtml(r.tujuan)}</td>
-            <td style="text-align:center;">
-              <button class="action-btn" onclick="adminDeleteRecord('${r.id}')" title="Padam Rekod">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('') || '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tiada rekod pergerakan lagi.</td></tr>';
+        try { const p = r.tarikh.split('-'); if (p.length===3) displayDate = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+        const badgeClass = getTujuanBadgeClass(r.tujuan);
+        return `<tr>
+          <td style="font-weight:600;color:var(--text-main);">${escapeHtml(r.nama)}</td>
+          <td><span style="font-size:0.75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:2px 7px;color:var(--text-muted);font-weight:600;">${escapeHtml(r.sektor||'-')}</span></td>
+          <td>${displayDate}</td>
+          <td>${escapeHtml(r.destinasi)}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(r.tujuan)}</span></td>
+          <td style="text-align:center;">
+            <button class="action-btn" onclick="adminDeleteRecord('${r.id}')" title="Padam Rekod"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Tiada rekod pergerakan.</td></tr>';
     }
 
     async function adminDeleteRecord(id) {
       if (!confirm('Padam rekod ini secara kekal? Tindakan ini akan dicatat dalam log audit.')) return;
 
       try {
-        const res = await fetch(`${API_BASE}/movements/${encodeURIComponent(id)}?pin=${encodeURIComponent(adminPin)}`, {
-          method: 'DELETE'
+        const res = await fetch(`${API_BASE}/movements/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Token': adminToken }
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
         showToast('Rekod telah dipadamkan oleh admin.', 'warning');
-        await loadMovementsFromServer(true);
+        await loadAllMovementsForAdmin();
         renderAdminRecordsTable();
+        renderSectorAnalysis();
         renderUserStats();
         renderAuditLog();
       } catch (err) {
@@ -2506,11 +3070,46 @@
       }
     }
 
+    // --- Analisis Per Sektor ---
+    function renderSectorAnalysis() {
+      const container = document.getElementById('admin-sector-breakdown');
+      if (!container) return;
+      const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
+      const counts = {};
+      SEKTORS.forEach(s => counts[s] = 0);
+      adminMovementData.forEach(r => { if (r.sektor && counts[r.sektor] !== undefined) counts[r.sektor]++; });
+      const max = Math.max(...Object.values(counts), 1);
+      const total = Object.values(counts).reduce((a,b) => a+b, 0);
+      const COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488'];
+
+      container.innerHTML = SEKTORS.map((s, i) => {
+        const count = counts[s];
+        const pct = total > 0 ? Math.round(count/total*100) : 0;
+        const barW = Math.round(count/max*100);
+        const color = COLORS[i % COLORS.length];
+        return `<div class="tj-card" style="--fill:${barW}%;--clr:${color};--clr-bg:${color}1a;cursor:pointer;" onclick="setAdminSectorFilter('${s}')">
+          <div class="tj-fill"></div>
+          <div class="tj-dot"></div>
+          <div class="tj-name" title="${s}">${s}</div>
+          <div class="tj-num">${count}</div>
+          <div class="tj-pct">${pct}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    function setAdminSectorFilter(sektor) {
+      const el = document.getElementById('admin-sector-filter');
+      if (!el) return;
+      el.value = (el.value === sektor) ? '' : sektor; // toggle
+      filterAdminRecords();
+      document.getElementById('admin-records-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     // --- Log Audit ---
     async function renderAuditLog() {
       const list = document.getElementById('audit-log-list');
       try {
-        const res = await fetch(`${API_BASE}/admin/audit?pin=${encodeURIComponent(adminPin)}`);
+        const res = await fetch(`${API_BASE}/admin/audit`, { headers: { 'X-Admin-Token': adminToken } });
         const entries = await res.json();
 
         list.innerHTML = entries.map((e) => {
@@ -2545,6 +3144,13 @@
         mainContent.style.display = 'block';
         appNav.style.display = 'flex';
 
+        // Update title to sector code (short) and apply sector theme
+        const titleEl = document.getElementById('app-title');
+        if (titleEl && selectedSector) {
+          titleEl.textContent = `e-Gerak ${selectedSector.code}`;
+          applySectorTheme(selectedSector.code);
+        }
+
         // Show session banner
         headerUserTag.style.display = 'flex';
         document.getElementById('header-user-name').textContent = currentUserSession.name;
@@ -2560,16 +3166,20 @@
         updateSelectedDayEvents(localDateStr());
         switchTab('utama');
       } else {
-        // Not identified yet — show the right login view
-        authPanel.style.display = 'block';
+        // Not identified yet — show sector selection first
+        authPanel.style.display = 'flex';
         mainContent.style.display = 'none';
         appNav.style.display = 'none';
         headerUserTag.style.display = 'none';
 
-        const hasRegistered = !!localStorage.getItem('ppd_dalat_remembered_email');
-        document.getElementById('view-identify').style.display = hasRegistered ? 'none' : 'block';
-        document.getElementById('view-email-login').style.display = hasRegistered ? 'block' : 'none';
+        document.getElementById('view-sector-select').style.display = 'block';
+        document.getElementById('view-identify').style.display = 'none';
+        document.getElementById('view-email-login').style.display = 'none';
         document.getElementById('view-admin-pin').style.display = 'none';
+        // Reset sector selection state
+        selectedSector = null;
+        document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('sector-continue-btn').disabled = true;
       }
     }
 
@@ -2581,7 +3191,7 @@
       if (tabName !== 'borang' && borangSessionCount > 0) {
         borangSessionCount = 0;
         borangSessionDate = '';
-        document.getElementById('borang-title').textContent = 'Daftar Misi Pergerakan Pegawai';
+        document.getElementById('borang-title').textContent = 'Daftar Pergerakan Pegawai';
         document.getElementById('post-submit-panel').style.display = 'none';
         document.getElementById('multiday-toggle').checked = false;
         toggleMultiday(false);
@@ -2644,8 +3254,121 @@
       const activeTodayCount = movementRecords.filter(r => r.tarikh === todayString).length;
       document.getElementById('stat-active-today').textContent = activeTodayCount;
 
-      const uniqueNames = [...new Set(movementRecords.map(r => r.nama.toLowerCase().trim()))];
-      document.getElementById('stat-unique-officers').textContent = uniqueNames.length;
+      const sektor = selectedSector ? selectedSector.code : '';
+      fetch(`/api/staff/list${sektor ? `?sektor=${encodeURIComponent(sektor)}` : ''}`)
+        .then(r => r.json())
+        .then(data => {
+          const registeredNames = new Set((data.staff || []).map(s => s.nama.toLowerCase().trim()));
+          movementRecords.forEach(r => registeredNames.add(r.nama.toLowerCase().trim()));
+          document.getElementById('stat-unique-officers').textContent = registeredNames.size;
+        })
+        .catch(() => {
+          const uniqueNames = [...new Set(movementRecords.map(r => r.nama.toLowerCase().trim()))];
+          document.getElementById('stat-unique-officers').textContent = uniqueNames.length;
+        });
+
+      updateTujuanBreakdown();
+    }
+
+    function updateTujuanBreakdown() {
+      const container = document.getElementById('tujuan-breakdown');
+      if (!container) return;
+      if (!movementRecords.length) { container.innerHTML = '<div class="detail-empty">Tiada rekod pergerakan.</div>'; return; }
+
+      const counts = {};
+      movementRecords.forEach(r => { const t = r.tujuan || 'Lain-lain'; counts[t] = (counts[t] || 0) + 1; });
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      const max = sorted[0][1];
+
+      const colors = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#dc2626','#0e9488','#ea580c'];
+      const total = sorted.reduce((s, [, c]) => s + c, 0);
+      container.innerHTML = sorted.map(([tujuan, count], i) => {
+        const pct = total > 0 ? Math.round(count / total * 100) : 0;
+        const barW = Math.round(count / max * 100);
+        const color = colors[i % colors.length];
+        return `<div class="tj-card" style="--fill:${barW}%;--clr:${color};--clr-bg:${color}1a;">
+          <div class="tj-fill"></div>
+          <div class="tj-dot"></div>
+          <div class="tj-name" title="${escapeHtml(tujuan)}">${escapeHtml(tujuan)}</div>
+          <div class="tj-num">${count}</div>
+          <div class="tj-pct">${pct}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    let activeStatDetail = null;
+    function toggleStatDetail(type) {
+      const panel = document.getElementById('stat-detail-panel');
+      if (activeStatDetail === type) { closeStatDetail(); return; }
+      activeStatDetail = type;
+      panel.style.display = 'block';
+
+      const todayString = localDateStr();
+      if (type === 'log') {
+        document.getElementById('stat-detail-title').textContent = 'Semua Log Pergerakan';
+        renderMovementTable(movementRecords);
+      } else if (type === 'today') {
+        document.getElementById('stat-detail-title').textContent = `Pergerakan Hari Ini (${todayString})`;
+        renderMovementTable(movementRecords.filter(r => r.tarikh === todayString));
+      } else if (type === 'pegawai') {
+        document.getElementById('stat-detail-title').textContent = 'Senarai Pegawai Terlibat';
+        renderStaffList();
+      }
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function closeStatDetail() {
+      activeStatDetail = null;
+      document.getElementById('stat-detail-panel').style.display = 'none';
+    }
+
+    function renderMovementTable(records) {
+      const body = document.getElementById('stat-detail-body');
+      if (!records.length) { body.innerHTML = '<div class="detail-empty">Tiada rekod.</div>'; return; }
+      body.innerHTML = `<table>
+        <thead><tr><th>#</th><th>Tarikh</th><th>Nama</th><th>Tujuan</th><th>Destinasi</th></tr></thead>
+        <tbody>${records.slice().reverse().map((r, i) => `
+          <tr>
+            <td>${records.length - i}</td>
+            <td>${r.tarikh || '-'}</td>
+            <td>${escapeHtml(r.nama || '-')}</td>
+            <td>${escapeHtml(r.tujuan || '-')}</td>
+            <td>${escapeHtml(r.destinasi || '-')}</td>
+          </tr>`).join('')}
+        </tbody></table>`;
+    }
+
+    function renderStaffList() {
+      const body = document.getElementById('stat-detail-body');
+      body.innerHTML = '<div class="detail-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuatkan...</div>';
+      const sektor = selectedSector ? selectedSector.code : '';
+      fetch(`/api/staff/list${sektor ? `?sektor=${encodeURIComponent(sektor)}` : ''}`)
+        .then(r => r.json())
+        .then(data => {
+          // Build merged list: start with registered staff, then add anyone who made movements but isn't listed
+          const registered = data.staff || [];
+          const registeredNamesLower = new Set(registered.map(s => s.nama.toLowerCase().trim()));
+          const fromMovements = [];
+          movementRecords.forEach(r => {
+            const key = r.nama.toLowerCase().trim();
+            if (!registeredNamesLower.has(key)) {
+              registeredNamesLower.add(key);
+              fromMovements.push({ nama: r.nama, jawatan: '-', sektor: sektor || '-', fromMovement: true });
+            }
+          });
+          const list = [...registered, ...fromMovements];
+          if (!list.length) { body.innerHTML = '<div class="detail-empty">Tiada pegawai terlibat.</div>'; return; }
+          body.innerHTML = `<table>
+            <thead><tr><th>#</th><th>Nama</th><th>Jawatan</th></tr></thead>
+            <tbody>${list.map((s, i) => `
+              <tr>
+                <td>${i+1}</td>
+                <td>${escapeHtml(s.nama || '-')}</td>
+                <td>${escapeHtml(s.jawatan || '-')}</td>
+              </tr>`).join('')}
+            </tbody></table>`;
+        })
+        .catch(() => { body.innerHTML = '<div class="detail-empty">Gagal memuatkan data.</div>'; });
     }
 
     function setExportPeriod(period) {
@@ -2740,7 +3463,8 @@
 
       try {
         const records = dates.map(tarikh => ({
-          id: generateId(), nama, tarikh, destinasi, tujuan, nota, masa, submittedBy: currentUserSession.email
+          id: generateId(), nama, tarikh, destinasi, tujuan, nota, masa, submittedBy: currentUserSession.email,
+          sektor: selectedSector ? selectedSector.code : 'SPr'
         }));
 
         for (const record of records) {
@@ -2751,6 +3475,7 @@
           });
           if (!res.ok) throw new Error(`Server returned ${res.status}`);
           movementRecords.push(record);
+          allMovementRecords.push(record);
         }
 
         updateDashboardStats();
@@ -2794,7 +3519,7 @@
     function finishMovements() {
       borangSessionCount = 0;
       borangSessionDate = '';
-      document.getElementById('borang-title').textContent = 'Daftar Misi Pergerakan Pegawai';
+      document.getElementById('borang-title').textContent = 'Daftar Pergerakan Pegawai';
       document.getElementById('post-submit-panel').style.display = 'none';
       document.getElementById('destinasi').value = '';
       document.getElementById('tujuan').value = '';
@@ -2958,7 +3683,7 @@
         document.getElementById('insights-panel').style.display = 'none';
         if (emptyDesc) {
           emptyDesc.textContent = movementRecords.length === 0
-            ? 'Semua pegawai berada di pangkalan utama (PPD Dalat).'
+            ? 'Tiada rekod pergerakan untuk tempoh ini.'
             : `Tiada log pergerakan bagi tempoh ini (${formatPeriodRangeLabel(currentAnalysisPeriod)}).`;
         }
         return;
@@ -2975,7 +3700,8 @@
 
         let badgeClass = 'badge-lain';
         const tj = record.tujuan.toLowerCase();
-        if (tj.includes('mesyuarat')) badgeClass = 'badge-mesyuarat';
+        if (tj.includes('pejabat')) badgeClass = 'badge-pejabat';
+        else if (tj.includes('mesyuarat')) badgeClass = 'badge-mesyuarat';
         else if (tj.includes('bengkel')) badgeClass = 'badge-bengkel';
         else if (tj.includes('kursus')) badgeClass = 'badge-kursus';
         else if (tj.includes('pemantauan')) badgeClass = 'badge-pemantauan';
@@ -2992,16 +3718,21 @@
         const isOwnRecord = record.submittedBy && currentUserSession && record.submittedBy === currentUserSession.email;
         const ids = JSON.stringify(group.map(r => r.id));
         const deleteCell = isOwnRecord
-          ? `<button class="action-btn" onclick="deleteRecordGroup(${ids.replace(/"/g, "'")})" title="Padam Rekod">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>`
+          ? `<div style="display:flex;gap:4px;justify-content:center;">
+              <button class="action-btn" onclick="openEditModal('${record.id}')" title="Edit Rekod" style="background:rgba(14,116,144,0.25);border-color:rgba(14,116,144,0.4);">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="action-btn" onclick="deleteRecordGroup(${ids.replace(/"/g, "'")})" title="Padam Rekod">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>`
           : `<i class="fa-solid fa-lock" style="color: rgba(255,255,255,0.15);" title="Hanya penghantar asal boleh memadam rekod ini"></i>`;
 
         tr.innerHTML = `
-          <td style="font-weight:600; color: #fff;">${escapeHtml(record.nama)}</td>
+          <td style="font-weight:600; color: var(--text-main);">${escapeHtml(record.nama)}</td>
           <td>${displayDate}</td>
           <td><i class="fa-solid fa-location-dot" style="color:var(--accent-cyan); margin-right:6px;"></i> ${escapeHtml(record.destinasi)}</td>
-          <td><span class="badge ${badgeClass}">${record.tujuan}</span></td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(record.tujuan)}</span></td>
           <td style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(record.nota || '-')}</td>
           <td style="text-align: center;">
             ${deleteCell}
@@ -3097,36 +3828,45 @@
       });
 
       const maxCount = Math.max(...Object.values(counts), 1);
+      const totalCount = Object.values(counts).reduce((a, b) => a + b, 0);
+      const COLORS = {
+        'Berada di Pejabat': '#16a34a',
+        'Mesyuarat': '#1d4ed8',
+        'Bengkel': '#7c3aed',
+        'Kursus': '#d97706',
+        'Pemantauan': '#0891b2',
+        'Cuti Umum': '#64748b',
+        'Pelepasan': '#0e9488',
+        'Cuti': '#dc2626',
+        'Tugas Rasmi Lain': '#db2777',
+      };
 
-      tujuans.forEach(t => {
+      const active = tujuans.filter(t => counts[t] > 0).sort((a, b) => counts[b] - counts[a]);
+      if (!active.length) {
+        container.innerHTML = '<div class="detail-empty">Tiada rekod untuk tempoh ini.</div>';
+        return;
+      }
+
+      active.forEach(t => {
         const count = counts[t];
-        const pct = (count / maxCount) * 100;
-
-        let color = '#2563eb';
-        if (t === "Mesyuarat") color = '#3b82f6';
-        else if (t === "Bengkel") color = '#a855f7';
-        else if (t === "Kursus") color = '#f59e0b';
-        else if (t === "Pemantauan") color = '#10b981';
-        else if (t === "Cuti Umum") color = '#64748b';
-        else if (t === "Pelepasan") color = '#06b6d4';
-        else if (t === "Cuti") color = '#eab308';
-        else color = '#f43f5e';
+        const barPct = Math.round((count / maxCount) * 100);
+        const totalPct = Math.round((count / totalCount) * 100);
+        const color = COLORS[t] || '#475569';
+        const id = `insight-bar-${t.replace(/\s/g,'-')}`;
 
         const group = document.createElement('div');
-        group.className = 'insight-bar-group';
+        group.className = 'tj-card';
+        group.style.cssText = `--fill:0%;--clr:${color};--clr-bg:${color}1a;`;
         group.innerHTML = `
-          <div class="insight-bar-lbl">${t}</div>
-          <div class="insight-bar-outer">
-            <div class="insight-bar-inner" style="width: 0%; background: ${color};" id="insight-bar-${t}"></div>
-          </div>
-          <div class="insight-bar-val">${count}</div>
+          <div class="tj-fill"></div>
+          <div class="tj-dot"></div>
+          <div class="tj-name" title="${escapeHtml(t)}">${escapeHtml(t)}</div>
+          <div class="tj-num" id="${id}">${count}</div>
+          <div class="tj-pct">${totalPct}%</div>
         `;
         container.appendChild(group);
 
-        setTimeout(() => {
-          const bar = document.getElementById(`insight-bar-${t}`);
-          if (bar) bar.style.width = `${pct}%`;
-        }, 100);
+        setTimeout(() => { group.style.setProperty('--fill', `${barPct}%`); }, 80);
       });
     }
 
@@ -3175,7 +3915,7 @@
           div.classList.add('today');
         }
 
-        const dayMovements = movementRecords.filter(r => r.tarikh === checkDateString);
+        const dayMovements = allMovementRecords.filter(r => r.tarikh === checkDateString);
         if (dayMovements.length > 0) {
           div.classList.add('has-movement');
 
@@ -3205,8 +3945,8 @@
                 <div class="cal-popup-item">
                   <span class="cal-popup-nama"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.6;"></i>${escapeHtml(r.nama)}</span>
                   <span class="cal-popup-dest"><i class="fa-solid fa-location-dot" style="margin-right:4px;color:var(--accent-cyan);"></i>${escapeHtml(r.destinasi || 'PPD Dalat')}</span>
-                  <span class="cal-popup-badge" style="color:${badgeColor(r.tujuan)};background:${badgeColor(r.tujuan)}18;border-color:${badgeColor(r.tujuan)}33;">${r.tujuan}</span>
-                  ${r.masa ? `<span style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>${r.masa}</span>` : ''}
+                  <span class="cal-popup-badge" style="color:${badgeColor(r.tujuan)};background:${badgeColor(r.tujuan)}18;border-color:${badgeColor(r.tujuan)}33;">${escapeHtml(r.tujuan)}</span>
+                  ${r.masa ? `<span style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>${escapeHtml(r.masa)}</span>` : ''}
                 </div>`).join('')}
             `;
             // Position popup: prefer above/below the cell, avoid viewport edges
@@ -3267,7 +4007,7 @@
       title.textContent = `Pergerakan Tarikh: ${displayDate}`;
       list.innerHTML = '';
 
-      const matched = movementRecords.filter(r => r.tarikh === dateString);
+      const matched = allMovementRecords.filter(r => r.tarikh === dateString);
 
       if (matched.length === 0) {
         list.innerHTML = '<li style="padding: 10px 0; text-align:center;">Tiada pergerakan berjadual pada tarikh ini. Semua berada di pangkalan.</li>';
@@ -3285,10 +4025,137 @@
       });
     }
 
-    // Export to Excel using SheetJS
-    function exportToExcel() {
-      const exportRecords = movementRecords.filter((r) => isRecordInPeriod(r, currentExportPeriod));
+    // Generate PDF report — scope: 'sector' (current sector) or 'all' (whole PPD)
+    async function generatePDF(scope) {
+      scope = scope || 'sector';
+      let records = movementRecords;
+      let scopeLabel = selectedSector ? selectedSector.name : 'PPD Dalat';
 
+      if (scope === 'all') {
+        try {
+          showToast('Memuatkan rekod keseluruhan PPD...', 'info');
+          const emailQ2 = currentUserSession ? `email=${encodeURIComponent(currentUserSession.email)}` : '';
+          const res = await fetch(`${API_BASE}/movements?${emailQ2}`);
+          records = await res.json();
+          scopeLabel = 'Keseluruhan PPD Dalat';
+        } catch(e) {
+          showToast('Gagal memuatkan rekod PPD.', 'error');
+          return;
+        }
+      }
+
+      const periodRecords = records.filter(r => isRecordInPeriod(r, currentExportPeriod));
+      if (periodRecords.length === 0) {
+        showToast('Tiada rekod untuk dijana sebagai PDF.', 'error');
+        return;
+      }
+
+      const periodSuffix = { day:'Harian', week:'Mingguan', month:'Bulanan', year:'Tahunan', all:'Semua' }[currentExportPeriod] || 'Semua';
+      const now = new Date();
+      const tarikhCetak = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+      const masaCetak = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+      // Group by officer
+      const byName = {};
+      const nameOrder = [];
+      periodRecords.forEach(r => {
+        if (!byName[r.nama]) { byName[r.nama] = []; nameOrder.push(r.nama); }
+        byName[r.nama].push(r);
+      });
+
+      const isAllScope = scope === 'all';
+      let rowsHtml = '';
+      let bil = 1;
+      nameOrder.forEach(nama => {
+        const recs = byName[nama].sort((a,b) => a.tarikh.localeCompare(b.tarikh));
+        recs.forEach(r => {
+          let tarikh = r.tarikh;
+          try { const p = r.tarikh.split('-'); tarikh = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+          const sektorCell = isAllScope ? `<td>${escapeHtml(r.sektor || '-')}</td>` : '';
+          rowsHtml += `<tr>
+            <td style="text-align:center">${bil++}</td>
+            <td>${escapeHtml(r.nama)}</td>
+            ${sektorCell}
+            <td style="text-align:center">${tarikh}</td>
+            <td>${escapeHtml(r.destinasi)}</td>
+            <td>${escapeHtml(r.tujuan)}</td>
+            <td>${escapeHtml(r.masa || '-')}</td>
+            <td>${escapeHtml(r.nota || '-')}</td>
+          </tr>`;
+        });
+      });
+
+      const html = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8">
+<title>Laporan Pergerakan ${scopeLabel}</title>
+<style>
+  @page { size: A4 landscape; margin: 15mm 12mm 15mm 12mm; }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: Arial, sans-serif; font-size: 9.5pt; color: #111; }
+  .doc-header { display:flex; align-items:center; gap:14px; border-bottom:3px solid #003580; padding-bottom:10px; margin-bottom:12px; }
+  .doc-header img { height:52px; }
+  .doc-org { font-size:8pt; font-weight:bold; color:#003580; text-transform:uppercase; letter-spacing:0.5px; }
+  .doc-title { font-size:14pt; font-weight:bold; color:#003580; margin:3px 0; }
+  .doc-meta { font-size:8pt; color:#555; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  th { background:#003580; color:#fff; padding:6px 8px; text-align:left; font-size:8.5pt; }
+  td { padding:5px 8px; border-bottom:1px solid #e2e8f0; font-size:8.5pt; vertical-align:top; }
+  tr:nth-child(even) td { background:#f8fafc; }
+  .footer-note { margin-top:14px; font-size:7.5pt; color:#666; text-align:right; }
+  @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+</style></head><body>
+<div class="doc-header">
+  <div>
+    <div class="doc-org">Kementerian Pendidikan Malaysia</div>
+    <div class="doc-title">Laporan Pergerakan Pegawai</div>
+    <div class="doc-meta">${scopeLabel} &nbsp;|&nbsp; Tempoh: ${periodSuffix} &nbsp;|&nbsp; Jumlah Rekod: ${periodRecords.length}</div>
+    <div class="doc-meta">Pejabat Pendidikan Daerah Dalat, 96300 Dalat, Sarawak</div>
+  </div>
+</div>
+<table>
+  <thead><tr>
+    <th style="width:30px">Bil</th>
+    <th>Nama Pegawai</th>
+    ${isAllScope ? '<th style="width:100px">Sektor</th>' : ''}
+    <th style="width:80px">Tarikh</th>
+    <th>Destinasi / Lokasi</th>
+    <th style="width:120px">Tujuan</th>
+    <th style="width:90px">Masa</th>
+    <th>Nota</th>
+  </tr></thead>
+  <tbody>${rowsHtml}</tbody>
+</table>
+<div class="footer-note">Dicetak pada: ${tarikhCetak} ${masaCetak} &nbsp;&mdash;&nbsp; e-Gerak PPD Dalat</div>
+</body></html>`;
+
+      const pw = window.open('', '_blank');
+      if (!pw) { showToast('Sila benarkan popup untuk menjana PDF.', 'error'); return; }
+      pw.document.write(html);
+      pw.document.close();
+      pw.onload = () => { pw.focus(); pw.print(); };
+      showToast('Laporan PDF sedang dijana...', 'success');
+    }
+
+    // Export to Excel — scope: 'sector' (current) or 'all' (whole PPD)
+    async function exportToExcel(scope) {
+      scope = scope || 'sector';
+      let records = movementRecords;
+      let scopeCode = selectedSector ? selectedSector.code : 'PPD';
+      let scopeLabel = selectedSector ? selectedSector.name : 'PPD Dalat';
+
+      if (scope === 'all') {
+        try {
+          showToast('Memuatkan rekod keseluruhan PPD...', 'info');
+          const res = await fetch(`${API_BASE}/movements`);
+          records = await res.json();
+          scopeCode = 'PPD';
+          scopeLabel = 'Keseluruhan PPD Dalat';
+        } catch(e) {
+          showToast('Gagal memuatkan rekod PPD.', 'error');
+          return;
+        }
+      }
+
+      const exportRecords = records.filter(r => isRecordInPeriod(r, currentExportPeriod));
       if (exportRecords.length === 0) {
         showToast("Tiada rekod data pergerakan untuk dieksport bagi tempoh ini!", "error");
         return;
@@ -3297,34 +4164,24 @@
       try {
         const exportData = exportRecords.map(r => {
           let dateFormatted = r.tarikh;
-          try {
-            const parts = r.tarikh.split('-');
-            dateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          } catch(e) {}
-          
+          try { const p = r.tarikh.split('-'); dateFormatted = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
           return {
+            "SEKTOR": r.sektor || scopeCode,
             "NAMA PEGAWAI": r.nama,
             "TARIKH PERGERAKAN": dateFormatted,
             "DESTINASI / LOKASI": r.destinasi,
-            "TUJUAN MISI": r.tujuan,
-            "NOTA TAMBAHAN / AGENDA": r.nota || "-"
+            "TUJUAN": r.tujuan,
+            "MASA": r.masa || '-',
+            "NOTA": r.nota || "-"
           };
         });
 
         const ws = XLSX.utils.json_to_sheet(exportData);
-        ws['!cols'] = [
-          { wch: 35 }, // Nama Pegawai
-          { wch: 18 }, // Tarikh
-          { wch: 25 }, // Destinasi
-          { wch: 18 }, // Tujuan
-          { wch: 45 }  // Nota
-        ];
-
+        ws['!cols'] = [{ wch:12 },{ wch:35 },{ wch:16 },{ wch:28 },{ wch:18 },{ wch:14 },{ wch:40 }];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Log Pergerakan");
-
-        const periodSuffix = { day: 'Harian', week: 'Mingguan', month: 'Bulanan', year: 'Tahunan', all: 'Semua' }[currentExportPeriod];
-        XLSX.writeFile(wb, `Log_Pergerakan_Sektor_Perancangan_Dalat_${periodSuffix}.xlsx`);
+        const periodSuffix = { day:'Harian', week:'Mingguan', month:'Bulanan', year:'Tahunan', all:'Semua' }[currentExportPeriod];
+        XLSX.writeFile(wb, `Log_Pergerakan_${scopeCode}_Dalat_${periodSuffix}.xlsx`);
         showToast("Fail Excel berjaya dijana dan dimuat turun!", "success");
       } catch (err) {
         console.error(err);
@@ -3339,15 +4196,18 @@
       }
 
       try {
-        const res = await fetch(`${API_BASE}/movements`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/movements`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Token': adminToken }
+        });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
         movementRecords = [];
+        allMovementRecords = [];
         updateDashboardStats();
         populateTable();
         renderCalendar();
         updateSelectedDayEvents(localDateStr());
-        updateJanaMetrics();
         showToast("Semua data pergerakan telah dipadamkan.", "warning");
       } catch (err) {
         console.error(err);
@@ -3369,6 +4229,351 @@
           console.warn('Service worker registration failed:', err);
         });
       });
+    }
+  </script>
+
+  <!-- ===== EJEN e-GERAK AVATAR & CHAT PANEL ===== -->
+  <style>
+    #ejen-avatar {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: var(--primary-blue, #003580);
+      box-shadow: 0 4px 18px rgba(0,53,128,0.45);
+      border: 3px solid rgba(255,255,255,0.25);
+      cursor: pointer; display: none; align-items: center; justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      flex-direction: column; gap: 2px;
+    }
+    #ejen-avatar:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(0,53,128,0.6); }
+    #ejen-avatar .avatar-icon { font-size: 1.5rem; line-height: 1; }
+    #ejen-avatar .avatar-label { font-size: 0.45rem; color: rgba(255,255,255,0.85); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    #ejen-avatar .ejen-badge {
+      position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #22c55e; border: 2px solid #fff;
+      animation: pulse-badge 2s infinite;
+    }
+    @keyframes pulse-badge { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.5)} 50%{box-shadow:0 0 0 5px rgba(34,197,94,0)} }
+
+    #ejen-panel {
+      position: fixed; bottom: 92px; right: 24px; z-index: 9998;
+      width: 420px; max-height: 620px;
+      background: rgba(15, 23, 42, 0.97);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px; display: none; flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+      overflow: hidden; backdrop-filter: blur(12px);
+    }
+    #ejen-panel.open { display: flex; }
+    .ejen-header {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      background: var(--primary-blue, #003580);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .ejen-header-icon { font-size: 1.4rem; }
+    .ejen-header-info { flex: 1; }
+    .ejen-header-title { font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .ejen-header-sub { font-size: 0.7rem; color: rgba(255,255,255,0.65); }
+    .ejen-close-btn { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 1rem; padding: 4px; }
+    .ejen-close-btn:hover { color: #fff; }
+
+    #ejen-messages {
+      flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .ejen-msg { display: flex; gap: 8px; align-items: flex-end; }
+    .ejen-msg.user { flex-direction: row-reverse; }
+    .ejen-bubble {
+      max-width: 82%; padding: 10px 15px; border-radius: 14px;
+      font-size: 0.88rem; line-height: 1.55; white-space: pre-wrap;
+    }
+    .ejen-msg.agent .ejen-bubble {
+      background: rgba(255,255,255,0.08); color: #e2e8f0;
+      border-bottom-left-radius: 4px;
+    }
+    .ejen-msg.user .ejen-bubble {
+      background: var(--primary-blue, #003580); color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .ejen-avatar-mini {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: var(--primary-blue, #003580);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; border: 1.5px solid rgba(255,255,255,0.15);
+    }
+    .ejen-typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+    .ejen-typing span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.4); animation: ejen-dot 1.2s infinite;
+    }
+    .ejen-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .ejen-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes ejen-dot { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+    #ejen-suggestions { padding: 0 12px 8px; display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+    .ejen-chip {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.75); border-radius: 20px; padding: 4px 11px;
+      font-size: 0.72rem; cursor: pointer; transition: background 0.15s;
+    }
+    .ejen-chip:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    .ejen-input-row {
+      display: flex; gap: 8px; padding: 10px 12px;
+      border-top: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+    }
+    #ejen-input {
+      flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; color: #fff; padding: 8px 14px; font-size: 0.82rem; outline: none;
+    }
+    #ejen-input::placeholder { color: rgba(255,255,255,0.35); }
+    #ejen-input:focus { border-color: rgba(255,255,255,0.3); }
+    #ejen-send {
+      background: var(--primary-blue, #003580); border: none; color: #fff;
+      border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+      font-size: 0.85rem; flex-shrink: 0; transition: background 0.2s;
+    }
+    #ejen-send:hover { filter: brightness(1.2); }
+    #ejen-send:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+
+  <!-- ===== EDIT REKOD MODAL ===== -->
+  <div id="edit-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;width:min(480px,95vw);box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <h3 style="color:#fff;font-size:1rem;font-weight:700;margin:0;"><i class="fa-solid fa-pen" style="margin-right:8px;color:var(--accent-cyan);"></i>Edit Rekod Pergerakan</h3>
+        <button onclick="closeEditModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1.2rem;">&times;</button>
+      </div>
+      <form id="edit-modal-form" onsubmit="submitEditModal(event)">
+        <input type="hidden" id="edit-record-id">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Tarikh</label>
+          <input type="date" id="edit-tarikh" class="form-input" required style="width:100%;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Destinasi / Lokasi</label>
+          <input type="text" id="edit-destinasi" class="form-input" required maxlength="300" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Tujuan</label>
+          <select id="edit-tujuan" class="form-select" required style="width:100%;box-sizing:border-box;">
+            <option value="Mesyuarat">Mesyuarat</option>
+            <option value="Mesyuarat / Perbincangan">Mesyuarat / Perbincangan</option>
+            <option value="Pemantauan Sekolah">Pemantauan Sekolah</option>
+            <option value="Kursus / Latihan">Kursus / Latihan</option>
+            <option value="Tugas Rasmi Lain">Tugas Rasmi Lain</option>
+            <option value="Cuti">Cuti</option>
+            <option value="Berada di Pejabat">Berada di Pejabat</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Masa Balik (pilihan)</label>
+          <input type="text" id="edit-masa" class="form-input" maxlength="50" placeholder="cth: 5:00 PTG" style="width:100%;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Nota (pilihan)</label>
+          <textarea id="edit-nota" class="form-textarea" maxlength="1000" rows="2" style="width:100%;box-sizing:border-box;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" onclick="closeEditModal()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:0.85rem;">Batal</button>
+          <button type="submit" class="submit-btn" style="width:auto;padding:8px 20px;font-size:0.85rem;"><i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i>Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Avatar button -->
+  <div id="ejen-avatar" title="Ejen e-Gerak PPD Dalat">
+    <div class="ejen-badge"></div>
+    <div class="avatar-icon">🤖</div>
+    <div class="avatar-label">Ejen</div>
+  </div>
+
+  <!-- Chat panel -->
+  <div id="ejen-panel">
+    <div class="ejen-header">
+      <div class="ejen-header-icon">🤖</div>
+      <div class="ejen-header-info">
+        <div class="ejen-header-title">Ejen e-Gerak PPD Dalat</div>
+        <div class="ejen-header-sub">Tanya saya tentang keberadaan pegawai</div>
+      </div>
+      <button class="ejen-close-btn" onclick="toggleEjenPanel()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="ejen-messages">
+      <div class="ejen-msg agent">
+        <div class="ejen-avatar-mini">🤖</div>
+        <div class="ejen-bubble">Salam! Saya Ejen e-Gerak PPD Dalat. Tanya saya tentang keberadaan pegawai, status semasa, atau statistik pergerakan.</div>
+      </div>
+    </div>
+    <div id="ejen-suggestions">
+      <div class="ejen-chip" onclick="ejenAsk('Siapa yang berada di luar pejabat hari ini?')">Di luar hari ini</div>
+      <div class="ejen-chip" onclick="ejenAsk('Berapa ramai pegawai sedang bertugas luar?')">Statistik semasa</div>
+      <div class="ejen-chip" onclick="ejenAsk('Senaraikan semua pergerakan minggu ini')">Minggu ini</div>
+    </div>
+    <div class="ejen-input-row">
+      <input id="ejen-input" type="text" placeholder="Tanya tentang pegawai..." maxlength="500"
+        onkeydown="if(event.key==='Enter')sendEjenMessage()">
+      <button id="ejen-send" onclick="sendEjenMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <script>
+    function toggleEjenPanel() {
+      const panel = document.getElementById('ejen-panel');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) {
+        document.getElementById('ejen-input').focus();
+      }
+    }
+    document.getElementById('ejen-avatar').addEventListener('click', toggleEjenPanel);
+
+    function ejenAsk(text) {
+      document.getElementById('ejen-input').value = text;
+      sendEjenMessage();
+    }
+
+    function addEjenMsg(role, text) {
+      const box = document.getElementById('ejen-messages');
+      const wrap = document.createElement('div');
+      wrap.className = `ejen-msg ${role}`;
+      const icon = role === 'agent' ? '<div class="ejen-avatar-mini">🤖</div>' : '';
+      wrap.innerHTML = `${icon}<div class="ejen-bubble">${text.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`;
+      box.appendChild(wrap);
+      box.scrollTop = box.scrollHeight;
+      return wrap;
+    }
+
+    function addEjenTyping() {
+      const box = document.getElementById('ejen-messages');
+      const wrap = document.createElement('div');
+      wrap.className = 'ejen-msg agent';
+      wrap.id = 'ejen-typing-indicator';
+      wrap.innerHTML = `<div class="ejen-avatar-mini">🤖</div><div class="ejen-bubble"><div class="ejen-typing"><span></span><span></span><span></span></div></div>`;
+      box.appendChild(wrap);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendEjenMessage() {
+      const input = document.getElementById('ejen-input');
+      const sendBtn = document.getElementById('ejen-send');
+      const message = input.value.trim();
+      if (!message) return;
+
+      // Hide suggestions after first message
+      document.getElementById('ejen-suggestions').style.display = 'none';
+
+      addEjenMsg('user', message);
+      input.value = '';
+      sendBtn.disabled = true;
+      addEjenTyping();
+
+      try {
+        const sektor = (typeof selectedSector !== 'undefined' && selectedSector) ? selectedSector.code : '';
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, sektor })
+        });
+        const data = await res.json();
+        document.getElementById('ejen-typing-indicator')?.remove();
+        addEjenMsg('agent', data.reply || data.error || 'Ralat tidak diketahui.');
+      } catch (e) {
+        document.getElementById('ejen-typing-indicator')?.remove();
+        addEjenMsg('agent', 'Gagal menghubungi ejen. Pastikan sambungan pelayan aktif.');
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    // S-07: show/hide avatar event-driven — called from evaluateSessionView instead of polling
+    function showEjenIfLoggedIn() {
+      const avatar = document.getElementById('ejen-avatar');
+      if (typeof currentUserSession !== 'undefined' && currentUserSession) {
+        avatar.style.display = 'flex';
+      } else {
+        avatar.style.display = 'none';
+        document.getElementById('ejen-panel').classList.remove('open');
+      }
+    }
+    // Patch evaluateSessionView to call showEjenIfLoggedIn after each evaluation
+    document.addEventListener('DOMContentLoaded', () => {
+      const _orig = window.evaluateSessionView;
+      if (typeof _orig === 'function') {
+        window.evaluateSessionView = function(...a) { _orig.apply(this, a); showEjenIfLoggedIn(); };
+      }
+      showEjenIfLoggedIn();
+    });
+
+    // ===== Edit Rekod Modal =====
+    function openEditModal(recordId) {
+      const record = movementRecords.find(r => r.id === recordId);
+      if (!record) return;
+      document.getElementById('edit-record-id').value = record.id;
+      document.getElementById('edit-tarikh').value = record.tarikh || '';
+      document.getElementById('edit-destinasi').value = record.destinasi || '';
+      document.getElementById('edit-nota').value = record.nota || '';
+      document.getElementById('edit-masa').value = record.masa || '';
+      const tujuanSel = document.getElementById('edit-tujuan');
+      tujuanSel.value = record.tujuan || '';
+      if (!tujuanSel.value) {
+        const opt = document.createElement('option');
+        opt.value = record.tujuan; opt.textContent = record.tujuan;
+        tujuanSel.appendChild(opt);
+        tujuanSel.value = record.tujuan;
+      }
+      const overlay = document.getElementById('edit-modal-overlay');
+      overlay.style.display = 'flex';
+    }
+    function closeEditModal() {
+      document.getElementById('edit-modal-overlay').style.display = 'none';
+    }
+    async function submitEditModal(event) {
+      event.preventDefault();
+      const id = document.getElementById('edit-record-id').value;
+      const body = {
+        tarikh: document.getElementById('edit-tarikh').value,
+        destinasi: document.getElementById('edit-destinasi').value.trim(),
+        tujuan: document.getElementById('edit-tujuan').value,
+        nota: document.getElementById('edit-nota').value.trim(),
+        masa: document.getElementById('edit-masa').value.trim(),
+      };
+      try {
+        const email = currentUserSession ? currentUserSession.email : '';
+        const res = await fetch(`${API_BASE}/movements/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || res.status); }
+        closeEditModal();
+        showToast('Rekod berjaya dikemaskini.', 'success');
+        await loadMovementsFromServer(true);
+        populateTable();
+      } catch (e) {
+        showToast(`Gagal mengemaskini: ${e.message}`, 'error');
+      }
+    }
+    // Close modal on overlay click
+    document.getElementById('edit-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeEditModal();
+    });
+
+    // ===== Admin Reset Pendaftaran =====
+    async function resetStaffMember(email, nama) {
+      if (!confirm(`Reset pendaftaran ${nama} (${email})?\n\nMereka perlu daftar semula pada log masuk seterusnya.`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/admin/staff/${encodeURIComponent(email)}/reset`, {
+          method: 'POST',
+          headers: { 'X-Admin-Token': adminToken }
+        });
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        showToast(`Pendaftaran ${nama} telah ditetapkan semula.`, 'success');
+        renderStaffTable();
+        renderAuditLog();
+      } catch (err) {
+        showToast('Gagal menetapkan semula pendaftaran.', 'error');
+      }
     }
   </script>
 </body>
