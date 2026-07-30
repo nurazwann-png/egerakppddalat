@@ -369,7 +369,7 @@ const server = http.createServer(async (req, res) => {
 
       db.prepare('DELETE FROM movements WHERE id = ?').run(id);
       if (isAdmin && !isOwner) {
-        logAudit('delete_record', `Admin removed a record for ${record.nama} (${record.tarikh}, ${record.destinasi}) submitted by ${record.submittedBy}`);
+        logAudit('delete_record', `Admin memadam rekod pergerakan ${record.nama} (${record.tarikh}, ${record.destinasi}) yang dikemukakan oleh ${record.submittedBy}`);
       }
       sendJSON(res, 200, { ok: true });
       return;
@@ -457,7 +457,7 @@ const server = http.createServer(async (req, res) => {
       const inserted = db.prepare('INSERT OR IGNORE INTO staff (email, nama, jawatan, addedAt, sektor) VALUES (?, ?, ?, ?, ?)')
         .run(email, nama, jawatan, new Date().toISOString(), sektor);
       if (inserted.changes > 0) {
-        logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) registered themselves`);
+        logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) mendaftar sebagai pengguna baharu`);
       }
       sendJSON(res, 201, { ok: true });
       return;
@@ -515,7 +515,7 @@ const server = http.createServer(async (req, res) => {
         const normalizedEmail = email.trim().toLowerCase();
         db.prepare('INSERT OR REPLACE INTO staff (email, nama, jawatan, addedAt, sektor) VALUES (?, ?, ?, ?, ?)')
           .run(normalizedEmail, nama.trim(), jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr');
-        logAudit('add_staff', `Added/updated staff ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
+        logAudit('add_staff', `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
         sendJSON(res, 201, { ok: true });
         return;
       }
@@ -526,7 +526,7 @@ const server = http.createServer(async (req, res) => {
         const staffMember = db.prepare('SELECT * FROM staff WHERE email = ?').get(email);
         db.prepare('DELETE FROM staff WHERE email = ?').run(email);
         if (staffMember) {
-          logAudit('delete_staff', `Removed staff ${staffMember.nama} (${email})`);
+          logAudit('delete_staff', `Admin memadam staf ${staffMember.nama} (${email})`);
         }
         sendJSON(res, 200, { ok: true });
         return;
@@ -540,7 +540,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         db.prepare('INSERT OR IGNORE INTO jawatan_list (jawatan) VALUES (?)').run(jawatan.trim());
-        logAudit('add_jawatan', `Added jawatan option "${jawatan.trim()}"`);
+        logAudit('add_jawatan', `Admin menambah jawatan baharu: "${jawatan.trim()}"`);
         sendJSON(res, 201, { ok: true });
         return;
       }
@@ -549,7 +549,7 @@ const server = http.createServer(async (req, res) => {
       if (url.pathname.startsWith('/api/admin/jawatan/') && req.method === 'DELETE') {
         const value = decodeURIComponent(url.pathname.split('/').pop());
         db.prepare('DELETE FROM jawatan_list WHERE jawatan = ?').run(value);
-        logAudit('delete_jawatan', `Removed jawatan option "${value}"`);
+        logAudit('delete_jawatan', `Admin membuang jawatan: "${value}"`);
         sendJSON(res, 200, { ok: true });
         return;
       }

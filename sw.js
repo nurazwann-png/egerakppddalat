@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ppd-dalat-v10';
+const CACHE_NAME = 'ppd-dalat-v11';
 
 const APP_SHELL = [
   './',
