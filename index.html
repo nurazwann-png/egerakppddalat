@@ -3257,6 +3257,8 @@
       if (session) {
         try {
           currentUserSession = JSON.parse(session);
+          const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${currentUserSession.email}`);
+          if (savedSektor) selectedSector = JSON.parse(savedSektor);
         } catch (e) {
           localStorage.removeItem('ppd_dalat_session');
         }
@@ -3336,6 +3338,7 @@
       currentUserSession = { name, email, position };
       localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
       localStorage.setItem('ppd_dalat_remembered_email', email);
+      if (selectedSector) localStorage.setItem(`ppd_dalat_sektor_${email}`, JSON.stringify(selectedSector));
 
       showToast(t('toast.welcome').replace('{name}', currentUserSession.name), 'success');
       evaluateSessionView();
@@ -3414,6 +3417,8 @@
         currentUserSession = { name: staff.nama, email: staff.email, position: staff.jawatan };
         localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
         localStorage.setItem('ppd_dalat_remembered_email', email);
+        const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${email}`);
+        if (savedSektor) { try { selectedSector = JSON.parse(savedSektor); } catch(e){} }
 
         showToast(t('toast.welcomeBack').replace('{name}', staff.nama), 'success');
         evaluateSessionView();
