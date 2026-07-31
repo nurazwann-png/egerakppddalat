@@ -3779,7 +3779,7 @@
       const total = sorted.reduce((s,[,v])=>s+v,0);
       if (!sorted.length) { container.innerHTML='<div class="detail-empty">Tiada data.</div>'; return; }
 
-      const SIZE=160, cx=SIZE/2, cy=SIZE/2, r=SIZE*0.38, ir=SIZE*0.22;
+      const SIZE=220, cx=SIZE/2, cy=SIZE/2, r=SIZE*0.38, ir=SIZE*0.22;
       let ang=-Math.PI/2;
       const slices = sorted.slice(0,8).map(([lbl,val],i) => {
         const c=PIE_COLORS[i%PIE_COLORS.length];
