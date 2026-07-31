@@ -1,11 +1,15 @@
-const CACHE_NAME = 'ppd-dalat-v14';
+const CACHE_NAME = 'ppd-dalat-v15';
 
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './fa/css/all.min.css',
+  './fa/webfonts/fa-solid-900.woff2',
+  './fa/webfonts/fa-regular-400.woff2',
+  './fa/webfonts/fa-brands-400.woff2',
 ];
 
 self.addEventListener('install', (event) => {
