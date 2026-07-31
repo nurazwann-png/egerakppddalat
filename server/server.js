@@ -32,12 +32,22 @@ const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3001;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost') ? false
-    : process.env.DATABASE_SSL === 'false' ? false
-    : { rejectUnauthorized: false }
-});
+// Cloud Run: sambung via Unix socket (INSTANCE_CONNECTION_NAME)
+// Tempatan: sambung via DATABASE_URL
+const instanceConnectionName = process.env.INSTANCE_CONNECTION_NAME;
+const pool = instanceConnectionName
+  ? new Pool({
+      host: `/cloudsql/${instanceConnectionName}`,
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASS,
+      database: process.env.DB_NAME || 'egerak',
+    })
+  : new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost') ? false
+        : process.env.DATABASE_SSL === 'false' ? false
+        : { rejectUnauthorized: false }
+    });
 
 let ADMIN_PIN = process.env.ADMIN_PIN;
 if (!ADMIN_PIN) {
