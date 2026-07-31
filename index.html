@@ -5800,6 +5800,9 @@
         chip.textContent = t(`ejen.${chipKeys[i]}`);
         chip.onclick = () => ejenAsk(t(`ejen.${chipKeys[i]}q`));
       });
+      // Update welcome bubble (first agent message)
+      const firstBubble = document.querySelector('#ejen-messages .ejen-msg.agent .ejen-bubble');
+      if (firstBubble) firstBubble.textContent = t('ejen.welcome');
     }
 
     function toggleEjenPanel() {
