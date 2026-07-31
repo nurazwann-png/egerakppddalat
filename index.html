@@ -2029,7 +2029,7 @@
           <div id="admin-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
 
           <div class="insights-panel">
-            <div style="display:grid;grid-template-columns:1fr minmax(220px,280px);gap:1.5rem;align-items:start;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
               <div>
                 <div class="insights-title"><i class="fa-solid fa-chart-line"></i> <span data-i18n="admin.trend.title">Trend Pergerakan — 6 Bulan Lepas</span></div>
                 <div class="tujuan-breakdown" id="admin-monthly-trend" style="margin-top:0.5rem;"></div>
@@ -4145,7 +4145,7 @@
 
       // Charts
       const pieData = topTujuan.slice(0,8).map(([l,v],i) => ({l,v,c:PIE_COLORS[i%PIE_COLORS.length]}));
-      const pieHtml = _svgPie(pieData, 160);
+      const pieHtml = _svgPie(pieData, 200);
       const staffBarData = Object.entries(staffMap).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([l,v],i) => ({l,v,c:PIE_COLORS[i%PIE_COLORS.length]}));
       const staffBarHtml = _svgBar(staffBarData, 380, 18);
 
@@ -4202,7 +4202,7 @@
         @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
       </style></head><body>
       <div class="header-row">
-        <img src="icons/icon-192.png" width="52" height="52" style="border-radius:8px;" onerror="this.style.display='none'">
+        <img src="images/logo-ppd.jpg" height="60" style="border-radius:6px;background:#fff;padding:2px;" onerror="this.style.display='none'">
         <div>
           <h1>Laporan Pergerakan Pegawai — ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : 'Sektor ' + sektor}</h1>
           <div class="meta">Pejabat Pendidikan Daerah Dalat &nbsp;|&nbsp; Dijana pada ${today}</div>
