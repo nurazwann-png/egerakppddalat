@@ -1773,16 +1773,18 @@
       <h1 id="app-title">e-Gerak PPD Dalat</h1>
     </div>
 
-    <!-- Active User Session Badge (Updated dynamically in JS) -->
-    <div class="user-profile-tag" id="header-user-tag" style="display: none;">
-      <i class="fa-solid fa-circle-user" style="color: var(--accent-cyan);"></i>
-      <span id="header-user-name">User</span>
-      <span class="user-position" id="header-user-pos">Penolong Pegawai Pendidikan</span>
-      <button class="logout-btn" onclick="handleLogout()" title="Log Keluar">
-        <i class="fa-solid fa-right-from-bracket"></i>
-      </button>
+    <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+      <!-- Active User Session Badge (Updated dynamically in JS) -->
+      <div class="user-profile-tag" id="header-user-tag" style="display: none;">
+        <i class="fa-solid fa-circle-user" style="color: var(--accent-cyan);"></i>
+        <span id="header-user-name">User</span>
+        <span class="user-position" id="header-user-pos">Penolong Pegawai Pendidikan</span>
+        <button class="logout-btn" onclick="handleLogout()" title="Log Keluar">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+      <button class="lang-toggle" id="lang-toggle-btn" onclick="toggleLang()">EN</button>
     </div>
-    <button class="lang-toggle" id="lang-toggle-btn" onclick="toggleLang()">EN</button>
   </header>
 
   <!-- Navigation Menu (Shown only when authenticated) -->
