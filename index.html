@@ -3158,12 +3158,16 @@
       document.getElementById('sector-continue-btn').style.background = c.primary;
     }
 
+    let _registeringNewAccount = false;
+
     function proceedFromSector() {
       if (!selectedSector) return;
       document.getElementById('view-sector-select').style.display = 'none';
       const hasRegistered = !!localStorage.getItem('ppd_dalat_remembered_email');
-      document.getElementById('view-identify').style.display = hasRegistered ? 'none' : 'block';
-      document.getElementById('view-email-login').style.display = hasRegistered ? 'block' : 'none';
+      const goToRegister = !hasRegistered || _registeringNewAccount;
+      _registeringNewAccount = false;
+      document.getElementById('view-identify').style.display = goToRegister ? 'block' : 'none';
+      document.getElementById('view-email-login').style.display = goToRegister ? 'none' : 'block';
     }
 
     // Fetches the shared record list from the local backend. Every device
@@ -3345,8 +3349,13 @@
       event.preventDefault();
       document.getElementById('view-email-login').style.display = 'none';
       document.getElementById('view-admin-pin').style.display = 'none';
-      document.getElementById('view-sector-select').style.display = 'none';
-      document.getElementById('view-identify').style.display = 'block';
+      document.getElementById('view-identify').style.display = 'none';
+      // Reset sector state then show sector selection for new account
+      _registeringNewAccount = true;
+      selectedSector = null;
+      document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('sector-continue-btn').disabled = true;
+      document.getElementById('view-sector-select').style.display = 'block';
     }
 
     async function handleEmailLoginSubmit(event) {
