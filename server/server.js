@@ -78,6 +78,13 @@ setInterval(() => {
 
 const _loginAttempts = new Map();
 const _MAX_FAILS = 5, _WINDOW_MS = 10 * 60 * 1000, _LOCKOUT_MS = 15 * 60 * 1000;
+// Bersihkan entri lama setiap 30 minit untuk elak memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, e] of _loginAttempts) {
+    if (now - e.firstAttempt > _WINDOW_MS && e.lockedUntil < now) _loginAttempts.delete(ip);
+  }
+}, 30 * 60 * 1000);
 function _rateLimitCheck(ip) {
   const now = Date.now(), e = _loginAttempts.get(ip);
   if (!e || now - e.firstAttempt > _WINDOW_MS) return { locked: false };
@@ -92,6 +99,16 @@ function _rateLimitFail(ip) {
   _loginAttempts.set(ip, e);
 }
 function _rateLimitClear(ip) { _loginAttempts.delete(ip); }
+
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) {
+    // Lakukan perbandingan palsu untuk elak timing attack berdasarkan panjang
+    crypto.timingSafeEqual(Buffer.from(b), Buffer.from(b));
+    return false;
+  }
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 const ALLOWED_EMAIL_DOMAIN = /^[^@]+@moe\.gov\.my$/;
 
@@ -112,6 +129,7 @@ const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self';",
 };
 
 function serveStatic(req, res, pathname) {
@@ -222,7 +240,9 @@ async function isStaffEmail(email) {
 
 const ALLOWED_ORIGINS = new Set([
   'http://localhost:3001',
+  'http://localhost:8118',
   `http://127.0.0.1:${process.env.PORT || 3001}`,
+  ...(process.env.CLOUD_RUN_ORIGIN ? [process.env.CLOUD_RUN_ORIGIN] : []),
 ]);
 function getCorsHeaders(req) {
   const origin = req.headers['origin'] || '';
@@ -267,6 +287,13 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, getCorsHeaders(req));
     res.end();
+    return;
+  }
+
+  // Health check untuk GCP Cloud Run
+  if (url.pathname === '/healthz' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
     return;
   }
 
@@ -471,7 +498,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const body = await readJsonBody(req);
-      const ok = body.pin === ADMIN_PIN;
+      const ok = timingSafeEqual(body.pin, ADMIN_PIN);
       if (ok) {
         _rateLimitClear(ip);
         const token = createAdminSession();
@@ -488,7 +515,7 @@ const server = http.createServer(async (req, res) => {
       const token = req.headers['x-admin-token'];
       const pin = req.headers['x-admin-pin'] || (bodyForWrite && bodyForWrite.pin);
 
-      if (!isValidAdminSession(token) && pin !== ADMIN_PIN) {
+      if (!isValidAdminSession(token) && !timingSafeEqual(pin, ADMIN_PIN)) {
         sendJSON(res, 403, { error: 'Invalid admin session' });
         return;
       }
@@ -644,6 +671,12 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const body = await readJsonBody(req);
+      // Pengesahan: hanya staf sah boleh guna Ejen
+      const chatEmail = (body.email || '').trim().toLowerCase();
+      const chatToken = req.headers['x-admin-token'];
+      if (!isValidAdminSession(chatToken) && !(await isStaffEmail(chatEmail))) {
+        sendJSON(res, 401, { error: 'Akses tidak dibenarkan.' }); return;
+      }
       const userMessage = (body.message || '').trim();
       const sektor = (body.sektor || '').trim();
       const lang = (body.lang || 'bm').trim();
@@ -732,7 +765,13 @@ CARA MENJAWAB:
           }
         });
       });
-      dsReq.on('error', (e) => sendJSON(res, 500, { error: `Ralat sambungan: ${e.message}` }));
+      dsReq.setTimeout(30000, () => {
+        dsReq.destroy();
+        sendJSON(res, 504, { error: 'Masa tamat menunggu respons DeepSeek.' });
+      });
+      dsReq.on('error', (e) => {
+        if (!res.headersSent) sendJSON(res, 500, { error: `Ralat sambungan: ${e.message}` });
+      });
       dsReq.write(deepseekBody);
       dsReq.end();
       return;
@@ -765,3 +804,10 @@ initDb()
     console.error('Pastikan DATABASE_URL dalam .env adalah betul dan PostgreSQL sedang berjalan.');
     process.exit(1);
   });
+
+// Graceful shutdown untuk GCP Cloud Run (SIGTERM)
+process.on('SIGTERM', () => {
+  server.close(() => {
+    pool.end().finally(() => process.exit(0));
+  });
+});
