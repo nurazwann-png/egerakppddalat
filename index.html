@@ -2553,9 +2553,7 @@
               <h3 id="calendar-month-year">Julai 2026</h3>
               <button class="calendar-nav-btn" onclick="adjustMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="calendar-weekdays" id="cal-weekdays">
-              <div>AH</div><div>IS</div><div>SE</div><div>RA</div><div>KH</div><div>JU</div><div>SA</div>
-            </div>
+            <div class="calendar-weekdays" id="cal-weekdays"></div>
             <div class="calendar-days" id="calendar-days-grid">
               <!-- Dynamically populated -->
             </div>
@@ -3071,6 +3069,10 @@
         'cal.clock': 'Waktu Semasa',
         'cal.modulActive': 'Modul Kalendar Aktif',
         'cal.days': 'AH,IS,SE,RA,KH,JU,SA',
+        'cal.months': 'Januari,Februari,Mac,April,Mei,Jun,Julai,Ogos,September,Oktober,November,Disember',
+        'cal.monthsShort': 'Jan,Feb,Mac,Apr,Mei,Jun,Jul,Ogo,Sep,Okt,Nov,Dis',
+        'cal.clockDays': 'Ahad,Isnin,Selasa,Rabu,Khamis,Jumaat,Sabtu',
+        'cal.movements': 'pergerakan',
         'cal.movDate': 'Pergerakan Tarikh:',
         'cal.noMov': 'Tiada pergerakan berjadual pada tarikh ini. Semua berada di pangkalan.',
         'cal.year': 'Tahun',
@@ -3313,6 +3315,10 @@
         'cal.clock': 'Current Time',
         'cal.modulActive': 'Calendar Module Active',
         'cal.days': 'SU,MO,TU,WE,TH,FR,SA',
+        'cal.months': 'January,February,March,April,May,June,July,August,September,October,November,December',
+        'cal.monthsShort': 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec',
+        'cal.clockDays': 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
+        'cal.movements': 'movements',
         'cal.movDate': 'Movements on:',
         'cal.noMov': 'No scheduled movements on this date. All officers are at base.',
         'cal.year': 'Year',
@@ -4875,8 +4881,8 @@
       const section = document.getElementById('admin-calendar-section');
       if (!section) return;
 
-      const monthsMalay = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
-      const monthsShort = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
+      const monthsMalay = t('cal.months').split(',');
+      const monthsShort = t('cal.monthsShort').split(',');
       const year = adminCalDate.getFullYear();
       const month = adminCalDate.getMonth();
       const firstDayIndex = new Date(year, month, 1).getDay();
@@ -4903,7 +4909,7 @@
             <h3 style="flex:1;text-align:center;font-size:1rem;font-weight:700;">${monthsMalay[month]} ${year}</h3>
             <button onclick="adminAdjustMonth(1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
-          <div class="calendar-weekdays"><div>AH</div><div>IS</div><div>SE</div><div>RA</div><div>KH</div><div>JU</div><div>SA</div></div>
+          <div class="calendar-weekdays">${t('cal.days').split(',').map(d=>`<div>${d}</div>`).join('')}</div>
           <div class="calendar-days" id="admin-calendar-days-grid"></div>
         </div>`;
 
@@ -4946,7 +4952,7 @@
             }
             const dateLabel = `${String(i).padStart(2,'0')} ${monthsShort[month]} ${year}`;
             popup.innerHTML = `
-              <div class="cal-popup-date"><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${dateLabel} · ${dayMovs.length} pergerakan</div>
+              <div class="cal-popup-date"><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${dateLabel} · ${dayMovs.length} ${t('cal.movements')}</div>
               ${dayMovs.map(r => `
                 <div class="cal-popup-item">
                   <span class="cal-popup-nama"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.6;"></i>${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.65rem;background:#e0e7ff;color:#3730a3;border-radius:3px;padding:0 5px;margin-left:4px;">${escapeHtml(r.sektor)}</span>`:''}</span>
@@ -5150,13 +5156,9 @@
       let seconds = String(now.getSeconds()).padStart(2, '0');
       clockElement.innerHTML = `${hours}<span style="color: var(--accent-cyan); animation: blink 1s step-end infinite;">:</span>${minutes}<span style="color: var(--accent-cyan); animation: blink 1s step-end infinite;">:</span>${seconds}`;
 
-      const daysMalay = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
-      const monthsMalay = [
-        "Januari", "Februari", "Mac", "April", "Mei", "Jun", 
-        "Julai", "Ogos", "September", "Oktober", "November", "Disember"
-      ];
-      
-      dateElement.textContent = `${daysMalay[now.getDay()]}, ${now.getDate()} ${monthsMalay[now.getMonth()]} ${now.getFullYear()}`;
+      const dayNames = t('cal.clockDays').split(',');
+      const monthNames = t('cal.months').split(',');
+      dateElement.textContent = `${dayNames[now.getDay()]}, ${now.getDate()} ${monthNames[now.getMonth()]} ${now.getFullYear()}`;
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -5799,11 +5801,11 @@
       const year = currentCalDate.getFullYear();
       const month = currentCalDate.getMonth();
 
-      const monthsMalay = [
-        "Januari", "Februari", "Mac", "April", "Mei", "Jun", 
-        "Julai", "Ogos", "September", "Oktober", "November", "Disember"
-      ];
-      title.textContent = `${monthsMalay[month]} ${year}`;
+      const monthNames = t('cal.months').split(',');
+      title.textContent = `${monthNames[month]} ${year}`;
+
+      const weekdaysEl = document.getElementById('cal-weekdays');
+      if (weekdaysEl) weekdaysEl.innerHTML = t('cal.days').split(',').map(d => `<div>${d}</div>`).join('');
 
       const firstDayIndex = new Date(year, month, 1).getDay();
       const lastDay = new Date(year, month + 1, 0).getDate();
@@ -5844,7 +5846,7 @@
               popup.className = 'cal-popup';
               document.body.appendChild(popup);
             }
-            const monthsShort = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
+            const monthsShort = t('cal.monthsShort').split(',');
             const dateLabel = `${String(i).padStart(2,'0')} ${monthsShort[month]} ${year}`;
             const badgeColor = (t) => {
               if (t.includes('Mesyuarat')) return '#4a9eff';
