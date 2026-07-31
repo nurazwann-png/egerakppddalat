@@ -2376,20 +2376,23 @@
             <div class="form-group">
               <label class="form-label" for="tujuan" data-i18n="form.tujuanLabel">Tujuan Pergerakan</label>
               <div class="input-wrapper">
-                <select class="form-select" id="tujuan" required onchange="handleTujuanChange(this.value)">
-                  <option value="" disabled selected>Pilih Tujuan...</option>
-                  <option value="Berada di Pejabat">Berada di Pejabat</option>
-                  <option value="Mesyuarat">Mesyuarat / Perbincangan</option>
-                  <option value="Bengkel">Bengkel Kerja</option>
-                  <option value="Kursus">Kursus / Latihan</option>
-                  <option value="Pemantauan">Pemantauan Sekolah</option>
-                  <option value="Cuti Umum">Cuti Umum</option>
-                  <option value="Pelepasan">Pelepasan</option>
-                  <option value="Cuti">Cuti Rehat / Cuti Sakit</option>
-                  <option value="Tugas Rasmi Lain">Tugas Rasmi Lain</option>
-                </select>
+                <input class="form-input" type="text" id="tujuan" required autocomplete="off"
+                  list="tujuan-datalist"
+                  placeholder="Pilih atau taip tujuan..."
+                  oninput="handleTujuanChange(this.value)"
+                  onchange="handleTujuanChange(this.value)">
+                <datalist id="tujuan-datalist">
+                  <option value="Berada di Pejabat">
+                  <option value="Mesyuarat / Perbincangan">
+                  <option value="Bengkel Kerja">
+                  <option value="Kursus / Latihan">
+                  <option value="Pemantauan Sekolah">
+                  <option value="Cuti Umum">
+                  <option value="Pelepasan">
+                  <option value="Cuti Rehat / Cuti Sakit">
+                  <option value="Tugas Rasmi Lain">
+                </datalist>
                 <i class="fa-solid fa-circle-question"></i>
-                <i class="fa-solid fa-chevron-down select-arrow"></i>
               </div>
             </div>
 
