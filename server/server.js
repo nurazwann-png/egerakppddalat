@@ -196,6 +196,19 @@ function purgeOldAuditLog() {
 purgeOldAuditLog();
 setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
 
+// Notices (pemakluman) - visible to all users across all sectors
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notices (
+    id TEXT PRIMARY KEY,
+    tajuk TEXT NOT NULL,
+    isi TEXT NOT NULL,
+    created_by TEXT NOT NULL,
+    nama TEXT NOT NULL,
+    sektor TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )
+`);
+
 // Simple audit trail for admin actions (record deletions via admin override,
 // and staff/jawatan roster changes) - deleted records otherwise vanish with
 // no trace of who removed them or when.
@@ -586,6 +599,47 @@ const server = http.createServer(async (req, res) => {
       }
 
       sendJSON(res, 404, { error: 'Not found' });
+      return;
+    }
+
+    // GET /api/notices - get all notices (any authenticated staff)
+    if (url.pathname === '/api/notices' && req.method === 'GET') {
+      const email = (url.searchParams.get('email') || '').trim().toLowerCase();
+      const token = req.headers['x-admin-token'];
+      if (!isValidAdminSession(token) && !isStaffEmail(email)) {
+        sendJSON(res, 401, { error: 'Akses tidak dibenarkan.' }); return;
+      }
+      const rows = db.prepare('SELECT * FROM notices ORDER BY created_at DESC').all();
+      sendJSON(res, 200, rows);
+      return;
+    }
+
+    // POST /api/notices - create a notice (any authenticated staff)
+    if (url.pathname === '/api/notices' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const { tajuk, isi, email, nama, sektor } = body;
+      if (!tajuk || !isi || !email) { sendJSON(res, 400, { error: 'Tajuk, isi dan email diperlukan.' }); return; }
+      if (!isStaffEmail(email.trim().toLowerCase())) { sendJSON(res, 403, { error: 'Akses tidak dibenarkan.' }); return; }
+      const id = crypto.randomUUID();
+      const created_at = new Date().toISOString();
+      db.prepare('INSERT INTO notices (id,tajuk,isi,created_by,nama,sektor,created_at) VALUES (?,?,?,?,?,?,?)')
+        .run(id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), (nama||email).trim(), (sektor||'').trim(), created_at);
+      sendJSON(res, 201, { id, tajuk, isi, nama, sektor, created_at });
+      return;
+    }
+
+    // DELETE /api/notices/:id - owner or admin deletes a notice
+    if (url.pathname.startsWith('/api/notices/') && req.method === 'DELETE') {
+      const id = decodeURIComponent(url.pathname.split('/').pop());
+      const email = (url.searchParams.get('email') || '').trim().toLowerCase();
+      const token = req.headers['x-admin-token'];
+      const notice = db.prepare('SELECT * FROM notices WHERE id = ?').get(id);
+      if (!notice) { sendJSON(res, 404, { error: 'Pemakluman tidak dijumpai.' }); return; }
+      if (!isValidAdminSession(token) && notice.created_by !== email) {
+        sendJSON(res, 403, { error: 'Hanya pencipta atau admin boleh padam.' }); return;
+      }
+      db.prepare('DELETE FROM notices WHERE id = ?').run(id);
+      sendJSON(res, 200, { ok: true });
       return;
     }
 

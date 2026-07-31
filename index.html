@@ -537,6 +537,38 @@
       margin-bottom: 2rem;
     }
 
+    /* Pemakluman (Notice board) */
+    .notice-board { margin-bottom: 1.5rem; }
+    .notice-board-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; }
+    .notice-board-title { font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--accent-cyan); display:flex; align-items:center; gap:6px; }
+    .notice-add-btn { background:rgba(37,99,235,0.15); border:1px solid rgba(37,99,235,0.3); color:#93c5fd; border-radius:8px; padding:5px 12px; font-size:0.78rem; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .2s; }
+    .notice-add-btn:hover { background:rgba(37,99,235,0.25); color:#fff; }
+    .notice-list { display:flex; flex-direction:column; gap:0.6rem; }
+    .notice-card { background:rgba(37,99,235,0.07); border:1px solid rgba(37,99,235,0.18); border-left:3px solid var(--primary-blue); border-radius:10px; padding:0.75rem 1rem; position:relative; }
+    .notice-card-tajuk { font-weight:700; font-size:0.92rem; color:var(--text-main); margin-bottom:3px; }
+    .notice-card-isi { font-size:0.85rem; color:var(--text-muted); line-height:1.5; white-space:pre-wrap; }
+    .notice-card-meta { font-size:0.72rem; color:var(--text-muted); margin-top:6px; opacity:.7; }
+    .notice-card-del { position:absolute; top:8px; right:8px; background:none; border:none; color:var(--text-muted); cursor:pointer; opacity:.5; font-size:0.8rem; padding:2px 6px; border-radius:4px; transition:all .2s; }
+    .notice-card-del:hover { opacity:1; color:#f87171; background:rgba(239,68,68,.1); }
+    .notice-empty { font-size:0.82rem; color:var(--text-muted); text-align:center; padding:1rem; opacity:.6; }
+    /* Notice modal */
+    .notice-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9000; align-items:center; justify-content:center; padding:1rem; }
+    .notice-modal-overlay.open { display:flex; }
+    .notice-modal { background:var(--card-bg); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:1.5rem; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+    .notice-modal h3 { margin:0 0 1rem; font-size:1rem; color:var(--text-main); }
+    .notice-modal label { display:block; font-size:0.78rem; color:var(--text-muted); margin-bottom:3px; margin-top:0.75rem; text-transform:uppercase; letter-spacing:.04em; }
+    .notice-modal input, .notice-modal textarea { width:100%; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:9px 12px; color:var(--text-main); font-size:0.88rem; font-family:inherit; box-sizing:border-box; resize:vertical; }
+    .notice-modal textarea { min-height:90px; }
+    .notice-modal-btns { display:flex; gap:8px; margin-top:1rem; justify-content:flex-end; }
+    .notice-modal-btns button { padding:8px 18px; border-radius:8px; font-size:0.85rem; cursor:pointer; border:none; }
+    .notice-cancel-btn { background:rgba(255,255,255,.07); color:var(--text-muted); }
+    .notice-submit-btn { background:var(--primary-blue); color:#fff; font-weight:600; }
+
+    /* Light mode overrides for notices */
+    .light-mode .notice-card { background:#eef2ff; border-color:#c7d2fe; border-left-color:#4f46e5; }
+    .light-mode .notice-modal { background:#fff; border-color:#e2e8f0; }
+    .light-mode .notice-modal input, .light-mode .notice-modal textarea { background:#f8fafc; border-color:#cbd5e1; color:#1e293b; }
+
     .stat-card {
       background: rgba(30, 41, 59, 0.25);
       border: 1px solid rgba(255, 255, 255, 0.04);
@@ -2280,6 +2312,15 @@
           <div id="stat-detail-body" class="stat-detail-body"></div>
         </div>
 
+        <!-- Pemakluman -->
+        <div class="notice-board" style="margin-top:1.5rem;">
+          <div class="notice-board-header">
+            <div class="notice-board-title"><i class="fa-solid fa-bullhorn"></i> <span data-i18n="notice.title">Pemakluman</span></div>
+            <button class="notice-add-btn" onclick="openNoticeModal()"><i class="fa-solid fa-plus"></i> <span data-i18n="notice.add">Tambah</span></button>
+          </div>
+          <div class="notice-list" id="notice-list"><div class="notice-empty" data-i18n="notice.empty">Tiada pemakluman.</div></div>
+        </div>
+
         <!-- Analisis Jenis Pergerakan -->
         <div class="portal-section" style="margin-top: 1.5rem;">
           <div class="section-title-row">
@@ -2789,6 +2830,14 @@
         'ejen.chip2q': 'Berapa ramai pegawai sedang bertugas luar?',
         'ejen.chip3q': 'Senaraikan semua pergerakan minggu ini',
         'ejen.placeholder': 'Tanya tentang pegawai...',
+        'notice.title': 'Pemakluman',
+        'notice.add': 'Tambah',
+        'notice.empty': 'Tiada pemakluman.',
+        'notice.modal.title': 'Tambah Pemakluman',
+        'notice.modal.tajuk': 'Tajuk',
+        'notice.modal.isi': 'Butiran / Penerangan',
+        'notice.modal.cancel': 'Batal',
+        'notice.modal.submit': 'Hantar',
         'toast.welcome': 'Selamat datang, {name}!',
         'toast.welcomeBack': 'Selamat datang semula, {name}!',
         'toast.recordSent': 'Rekod pergerakan berjaya dihantar!',
@@ -3009,6 +3058,14 @@
         'ejen.chip2q': 'How many officers are currently on field duty?',
         'ejen.chip3q': 'List all movements this week',
         'ejen.placeholder': 'Ask about officers...',
+        'notice.title': 'Notices',
+        'notice.add': 'Add',
+        'notice.empty': 'No notices.',
+        'notice.modal.title': 'Add Notice',
+        'notice.modal.tajuk': 'Title',
+        'notice.modal.isi': 'Details / Description',
+        'notice.modal.cancel': 'Cancel',
+        'notice.modal.submit': 'Submit',
         'toast.welcome': 'Welcome, {name}!',
         'toast.welcomeBack': 'Welcome back, {name}!',
         'toast.recordSent': 'Movement record submitted successfully!',
@@ -4523,6 +4580,7 @@
         populateTable();
         renderCalendar();
         updateSelectedDayEvents(localDateStr());
+        loadNotices();
         switchTab('utama');
       } else {
         // Not identified yet — show sector selection first
@@ -5750,6 +5808,21 @@
     </div>
   </div>
 
+  <!-- Notice Modal -->
+  <div class="notice-modal-overlay" id="notice-modal-overlay" onclick="if(event.target===this)closeNoticeModal()">
+    <div class="notice-modal">
+      <h3><i class="fa-solid fa-bullhorn"></i> <span data-i18n="notice.modal.title">Tambah Pemakluman</span></h3>
+      <label data-i18n="notice.modal.tajuk">Tajuk</label>
+      <input id="notice-tajuk" type="text" maxlength="120" placeholder="Contoh: Bengkel ICT 5 Ogos 2026">
+      <label data-i18n="notice.modal.isi">Butiran / Penerangan</label>
+      <textarea id="notice-isi" maxlength="800" placeholder="Tulis butiran pemakluman di sini..."></textarea>
+      <div class="notice-modal-btns">
+        <button class="notice-cancel-btn" onclick="closeNoticeModal()" data-i18n="notice.modal.cancel">Batal</button>
+        <button class="notice-submit-btn" onclick="submitNotice()" data-i18n="notice.modal.submit">Hantar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Avatar button -->
   <div id="ejen-avatar" title="Ejen e-Gerak PPD Dalat">
     <div class="ejen-badge"></div>
@@ -5803,6 +5876,95 @@
       // Update welcome bubble (first agent message)
       const firstBubble = document.querySelector('#ejen-messages .ejen-msg.agent .ejen-bubble');
       if (firstBubble) firstBubble.textContent = t('ejen.welcome');
+    }
+
+    // ===== PEMAKLUMAN (NOTICE BOARD) =====
+    let _notices = [];
+
+    async function loadNotices() {
+      if (!currentUserSession) return;
+      try {
+        const res = await fetch(`/api/notices?email=${encodeURIComponent(currentUserSession.email)}`);
+        if (!res.ok) return;
+        _notices = await res.json();
+        renderNotices();
+      } catch (e) {}
+    }
+
+    function renderNotices() {
+      const list = document.getElementById('notice-list');
+      if (!list) return;
+      if (!_notices.length) {
+        list.innerHTML = `<div class="notice-empty">${t('notice.empty')}</div>`;
+        return;
+      }
+      list.innerHTML = _notices.map(n => {
+        const d = new Date(n.created_at);
+        const dateStr = d.toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
+        const timeStr = d.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
+        const isOwner = currentUserSession && n.created_by === currentUserSession.email;
+        return `<div class="notice-card">
+          <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
+          <div class="notice-card-isi">${escHtml(n.isi)}</div>
+          <div class="notice-card-meta"><i class="fa-solid fa-user" style="opacity:.6"></i> ${escHtml(n.nama)} &nbsp;·&nbsp; ${escHtml(n.sektor)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
+          ${isOwner ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam"><i class="fa-solid fa-trash"></i></button>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function openNoticeModal() {
+      document.getElementById('notice-tajuk').value = '';
+      document.getElementById('notice-isi').value = '';
+      document.getElementById('notice-modal-overlay').classList.add('open');
+      setTimeout(() => document.getElementById('notice-tajuk').focus(), 100);
+    }
+
+    function closeNoticeModal() {
+      document.getElementById('notice-modal-overlay').classList.remove('open');
+    }
+
+    async function submitNotice() {
+      const tajuk = document.getElementById('notice-tajuk').value.trim();
+      const isi = document.getElementById('notice-isi').value.trim();
+      if (!tajuk || !isi) { showToast('Sila isi tajuk dan butiran.', 'error'); return; }
+      if (!currentUserSession) return;
+      const btn = document.querySelector('.notice-submit-btn');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/notices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tajuk, isi, email: currentUserSession.email, nama: currentUserSession.name, sektor: selectedSector?.code || '' })
+        });
+        if (!res.ok) throw new Error();
+        const notice = await res.json();
+        _notices.unshift(notice);
+        renderNotices();
+        closeNoticeModal();
+        showToast('Pemakluman berjaya dihantar!', 'success');
+      } catch (e) {
+        showToast('Gagal menghantar pemakluman.', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteNotice(id) {
+      if (!currentUserSession) return;
+      if (!confirm('Padam pemakluman ini?')) return;
+      try {
+        const res = await fetch(`/api/notices/${encodeURIComponent(id)}?email=${encodeURIComponent(currentUserSession.email)}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        _notices = _notices.filter(n => n.id !== id);
+        renderNotices();
+        showToast('Pemakluman dipadam.', 'success');
+      } catch (e) {
+        showToast('Gagal memadam pemakluman.', 'error');
+      }
     }
 
     function toggleEjenPanel() {
