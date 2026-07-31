@@ -537,37 +537,73 @@
       margin-bottom: 2rem;
     }
 
-    /* Pemakluman (Notice board) */
-    .notice-board { margin-bottom: 1.5rem; }
-    .notice-board-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem; }
-    .notice-board-title { font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--accent-cyan); display:flex; align-items:center; gap:6px; }
-    .notice-add-btn { background:rgba(37,99,235,0.15); border:1px solid rgba(37,99,235,0.3); color:#93c5fd; border-radius:8px; padding:5px 12px; font-size:0.78rem; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all .2s; }
-    .notice-add-btn:hover { background:rgba(37,99,235,0.25); color:#fff; }
-    .notice-list { display:flex; flex-direction:column; gap:0.6rem; }
-    .notice-card { background:rgba(37,99,235,0.07); border:1px solid rgba(37,99,235,0.18); border-left:3px solid var(--primary-blue); border-radius:10px; padding:0.75rem 1rem; position:relative; }
-    .notice-card-tajuk { font-weight:700; font-size:0.92rem; color:var(--text-main); margin-bottom:3px; }
-    .notice-card-isi { font-size:0.85rem; color:var(--text-muted); line-height:1.5; white-space:pre-wrap; }
-    .notice-card-meta { font-size:0.72rem; color:var(--text-muted); margin-top:6px; opacity:.7; }
-    .notice-card-del { position:absolute; top:8px; right:8px; background:none; border:none; color:var(--text-muted); cursor:pointer; opacity:.5; font-size:0.8rem; padding:2px 6px; border-radius:4px; transition:all .2s; }
-    .notice-card-del:hover { opacity:1; color:#f87171; background:rgba(239,68,68,.1); }
-    .notice-empty { font-size:0.82rem; color:var(--text-muted); text-align:center; padding:1rem; opacity:.6; }
-    /* Notice modal */
-    .notice-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9000; align-items:center; justify-content:center; padding:1rem; }
-    .notice-modal-overlay.open { display:flex; }
-    .notice-modal { background:var(--card-bg); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:1.5rem; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
-    .notice-modal h3 { margin:0 0 1rem; font-size:1rem; color:var(--text-main); }
-    .notice-modal label { display:block; font-size:0.78rem; color:var(--text-muted); margin-bottom:3px; margin-top:0.75rem; text-transform:uppercase; letter-spacing:.04em; }
-    .notice-modal input, .notice-modal textarea { width:100%; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:9px 12px; color:var(--text-main); font-size:0.88rem; font-family:inherit; box-sizing:border-box; resize:vertical; }
-    .notice-modal textarea { min-height:90px; }
-    .notice-modal-btns { display:flex; gap:8px; margin-top:1rem; justify-content:flex-end; }
-    .notice-modal-btns button { padding:8px 18px; border-radius:8px; font-size:0.85rem; cursor:pointer; border:none; }
-    .notice-cancel-btn { background:rgba(255,255,255,.07); color:var(--text-muted); }
-    .notice-submit-btn { background:var(--primary-blue); color:#fff; font-weight:600; }
+    /* ===== PEMAKLUMAN (NOTICE BOARD) ===== */
+    .notice-board { margin-top:1.5rem; margin-bottom:0.5rem; }
+    .notice-board-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .notice-board-title { font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-cyan); display:flex; align-items:center; gap:8px; }
+    .notice-board-title i { font-size:0.9rem; }
+    .notice-add-btn {
+      display:flex; align-items:center; gap:6px;
+      background:linear-gradient(135deg,rgba(37,99,235,0.2),rgba(14,148,136,0.15));
+      border:1px solid rgba(37,99,235,0.35); color:#93c5fd;
+      border-radius:20px; padding:6px 14px; font-size:0.78rem; font-weight:600;
+      cursor:pointer; transition:all .22s; letter-spacing:.02em;
+    }
+    .notice-add-btn:hover { background:linear-gradient(135deg,rgba(37,99,235,0.35),rgba(14,148,136,0.25)); color:#fff; transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,0.25); }
+    .notice-list { display:flex; flex-direction:column; gap:0.75rem; }
+    .notice-card {
+      background:linear-gradient(135deg,rgba(37,99,235,0.08),rgba(14,148,136,0.05));
+      border:1px solid rgba(37,99,235,0.2); border-left:4px solid var(--primary-blue);
+      border-radius:12px; padding:1rem 1.1rem 0.85rem; position:relative;
+      transition:box-shadow .2s, transform .2s;
+    }
+    .notice-card:hover { box-shadow:0 4px 20px rgba(37,99,235,0.15); transform:translateY(-1px); }
+    .notice-card-head { display:flex; align-items:flex-start; gap:10px; margin-bottom:6px; padding-right:28px; }
+    .notice-card-icon { width:30px; height:30px; border-radius:8px; background:rgba(37,99,235,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+    .notice-card-icon i { font-size:0.75rem; color:#60a5fa; }
+    .notice-card-tajuk { font-weight:700; font-size:0.95rem; color:var(--text-main); line-height:1.35; }
+    .notice-card-isi { font-size:0.84rem; color:var(--text-muted); line-height:1.6; white-space:pre-wrap; margin-left:40px; }
+    .notice-card-footer { display:flex; align-items:center; gap:6px; margin-top:10px; margin-left:40px; flex-wrap:wrap; }
+    .notice-badge-sektor { background:rgba(37,99,235,0.15); color:#60a5fa; border-radius:20px; padding:2px 9px; font-size:0.7rem; font-weight:700; letter-spacing:.03em; }
+    .notice-card-date { font-size:0.71rem; color:var(--text-muted); opacity:.65; }
+    .notice-card-author { font-size:0.71rem; color:var(--text-muted); opacity:.75; font-weight:600; }
+    .notice-card-del { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--text-muted); cursor:pointer; opacity:0; font-size:0.78rem; padding:4px 7px; border-radius:6px; transition:all .2s; }
+    .notice-card:hover .notice-card-del { opacity:.45; }
+    .notice-card-del:hover { opacity:1 !important; color:#f87171; background:rgba(239,68,68,.12); }
+    .notice-empty { font-size:0.82rem; color:var(--text-muted); text-align:center; padding:1.5rem; opacity:.5; display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .notice-empty i { font-size:1.4rem; opacity:.4; }
 
-    /* Light mode overrides for notices */
-    .light-mode .notice-card { background:#eef2ff; border-color:#c7d2fe; border-left-color:#4f46e5; }
+    /* Notice modal */
+    .notice-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:9000; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+    .notice-modal-overlay.open { display:flex; }
+    .notice-modal { background:var(--card-bg); border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:0; width:100%; max-width:460px; box-shadow:0 25px 80px rgba(0,0,0,.6); overflow:hidden; }
+    .notice-modal-header { background:linear-gradient(135deg,rgba(37,99,235,0.25),rgba(14,148,136,0.15)); padding:1.25rem 1.5rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; gap:10px; }
+    .notice-modal-header-icon { width:38px; height:38px; border-radius:10px; background:rgba(37,99,235,0.25); display:flex; align-items:center; justify-content:center; }
+    .notice-modal-header-icon i { color:#60a5fa; font-size:1rem; }
+    .notice-modal-header-text h3 { margin:0; font-size:1rem; color:var(--text-main); font-weight:700; }
+    .notice-modal-header-text p { margin:2px 0 0; font-size:0.75rem; color:var(--text-muted); }
+    .notice-modal-body { padding:1.25rem 1.5rem 1.5rem; }
+    .notice-modal-body label { display:block; font-size:0.73rem; color:var(--text-muted); margin-bottom:5px; margin-top:1rem; text-transform:uppercase; letter-spacing:.05em; font-weight:600; }
+    .notice-modal-body label:first-child { margin-top:0; }
+    .notice-modal-body input, .notice-modal-body textarea { width:100%; background:rgba(255,255,255,.05); border:1.5px solid rgba(255,255,255,.1); border-radius:10px; padding:10px 13px; color:var(--text-main); font-size:0.88rem; font-family:inherit; box-sizing:border-box; resize:vertical; transition:border-color .2s; }
+    .notice-modal-body input:focus, .notice-modal-body textarea:focus { outline:none; border-color:rgba(37,99,235,.5); background:rgba(37,99,235,.06); }
+    .notice-modal-body textarea { min-height:100px; }
+    .notice-modal-btns { display:flex; gap:8px; margin-top:1.25rem; justify-content:flex-end; }
+    .notice-modal-btns button { padding:9px 20px; border-radius:10px; font-size:0.85rem; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+    .notice-cancel-btn { background:rgba(255,255,255,.07); color:var(--text-muted); }
+    .notice-cancel-btn:hover { background:rgba(255,255,255,.12); }
+    .notice-submit-btn { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; box-shadow:0 4px 12px rgba(37,99,235,.3); }
+    .notice-submit-btn:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(37,99,235,.4); }
+    .notice-submit-btn:disabled { opacity:.5; transform:none; cursor:not-allowed; }
+
+    /* Light mode */
+    .light-mode .notice-card { background:linear-gradient(135deg,#eef2ff,#f0fdf8); border-color:#c7d2fe; border-left-color:#4f46e5; }
+    .light-mode .notice-card-icon { background:rgba(79,70,229,0.12); }
+    .light-mode .notice-badge-sektor { background:#e0e7ff; color:#4338ca; }
     .light-mode .notice-modal { background:#fff; border-color:#e2e8f0; }
-    .light-mode .notice-modal input, .light-mode .notice-modal textarea { background:#f8fafc; border-color:#cbd5e1; color:#1e293b; }
+    .light-mode .notice-modal-body input, .light-mode .notice-modal-body textarea { background:#f8fafc; border-color:#cbd5e1; color:#1e293b; }
+    .light-mode .notice-modal-body input:focus, .light-mode .notice-modal-body textarea:focus { border-color:#4f46e5; background:#f0f4ff; }
+    .light-mode .notice-modal-header { background:linear-gradient(135deg,rgba(79,70,229,0.08),rgba(14,148,136,0.06)); border-bottom-color:#e2e8f0; }
 
     .stat-card {
       background: rgba(30, 41, 59, 0.25);
@@ -2836,6 +2872,7 @@
         'notice.modal.title': 'Tambah Pemakluman',
         'notice.modal.tajuk': 'Tajuk',
         'notice.modal.isi': 'Butiran / Penerangan',
+        'notice.modal.sub': 'Pemakluman akan kelihatan kepada semua pengguna',
         'notice.modal.cancel': 'Batal',
         'notice.modal.submit': 'Hantar',
         'toast.welcome': 'Selamat datang, {name}!',
@@ -3064,6 +3101,7 @@
         'notice.modal.title': 'Add Notice',
         'notice.modal.tajuk': 'Title',
         'notice.modal.isi': 'Details / Description',
+        'notice.modal.sub': 'Notice will be visible to all users',
         'notice.modal.cancel': 'Cancel',
         'notice.modal.submit': 'Submit',
         'toast.welcome': 'Welcome, {name}!',
@@ -5811,14 +5849,22 @@
   <!-- Notice Modal -->
   <div class="notice-modal-overlay" id="notice-modal-overlay" onclick="if(event.target===this)closeNoticeModal()">
     <div class="notice-modal">
-      <h3><i class="fa-solid fa-bullhorn"></i> <span data-i18n="notice.modal.title">Tambah Pemakluman</span></h3>
-      <label data-i18n="notice.modal.tajuk">Tajuk</label>
-      <input id="notice-tajuk" type="text" maxlength="120" placeholder="Contoh: Bengkel ICT 5 Ogos 2026">
-      <label data-i18n="notice.modal.isi">Butiran / Penerangan</label>
-      <textarea id="notice-isi" maxlength="800" placeholder="Tulis butiran pemakluman di sini..."></textarea>
-      <div class="notice-modal-btns">
-        <button class="notice-cancel-btn" onclick="closeNoticeModal()" data-i18n="notice.modal.cancel">Batal</button>
-        <button class="notice-submit-btn" onclick="submitNotice()" data-i18n="notice.modal.submit">Hantar</button>
+      <div class="notice-modal-header">
+        <div class="notice-modal-header-icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <div class="notice-modal-header-text">
+          <h3 data-i18n="notice.modal.title">Tambah Pemakluman</h3>
+          <p data-i18n="notice.modal.sub">Pemakluman akan kelihatan kepada semua pengguna</p>
+        </div>
+      </div>
+      <div class="notice-modal-body">
+        <label data-i18n="notice.modal.tajuk">Tajuk</label>
+        <input id="notice-tajuk" type="text" maxlength="120" placeholder="Contoh: Bengkel ICT 5 Ogos 2026">
+        <label data-i18n="notice.modal.isi">Butiran / Penerangan</label>
+        <textarea id="notice-isi" maxlength="800" placeholder="Tulis butiran pemakluman di sini..."></textarea>
+        <div class="notice-modal-btns">
+          <button class="notice-cancel-btn" onclick="closeNoticeModal()" data-i18n="notice.modal.cancel">Batal</button>
+          <button class="notice-submit-btn" onclick="submitNotice()" data-i18n="notice.modal.submit">Hantar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -5895,7 +5941,7 @@
       const list = document.getElementById('notice-list');
       if (!list) return;
       if (!_notices.length) {
-        list.innerHTML = `<div class="notice-empty">${t('notice.empty')}</div>`;
+        list.innerHTML = `<div class="notice-empty"><i class="fa-solid fa-bell-slash"></i><span>${t('notice.empty')}</span></div>`;
         return;
       }
       list.innerHTML = _notices.map(n => {
@@ -5903,10 +5949,18 @@
         const dateStr = d.toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
         const timeStr = d.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
         const isOwner = currentUserSession && n.created_by === currentUserSession.email;
+        const displayName = n.nama && n.nama !== 'undefined' ? escHtml(n.nama) : escHtml(n.created_by);
         return `<div class="notice-card">
-          <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
+          <div class="notice-card-head">
+            <div class="notice-card-icon"><i class="fa-solid fa-bullhorn"></i></div>
+            <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
+          </div>
           <div class="notice-card-isi">${escHtml(n.isi)}</div>
-          <div class="notice-card-meta"><i class="fa-solid fa-user" style="opacity:.6"></i> ${escHtml(n.nama)} &nbsp;·&nbsp; ${escHtml(n.sektor)} &nbsp;·&nbsp; ${dateStr}, ${timeStr}</div>
+          <div class="notice-card-footer">
+            ${n.sektor ? `<span class="notice-badge-sektor">${escHtml(n.sektor)}</span>` : ''}
+            <span class="notice-card-author"><i class="fa-solid fa-circle-user" style="opacity:.6;margin-right:3px"></i>${displayName}</span>
+            <span class="notice-card-date">· ${dateStr}, ${timeStr}</span>
+          </div>
           ${isOwner ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam"><i class="fa-solid fa-trash"></i></button>` : ''}
         </div>`;
       }).join('');
