@@ -1,7 +1,7 @@
 {
-  "name": "e-Gerak SPR",
-  "short_name": "e-Gerak SPR",
-  "description": "Sistem penjejak pergerakan pegawai Sektor Perancangan PPD Dalat.",
+  "name": "e-Gerak PPD Dalat",
+  "short_name": "e-Gerak PPD",
+  "description": "Sistem pengurusan pergerakan pegawai PPD Dalat.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
