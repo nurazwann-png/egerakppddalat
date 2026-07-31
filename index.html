@@ -1643,27 +1643,45 @@
 
     /* ===== Auth Background Image ===== */
     #auth-panel {
-      background: url('images/ppd-building.jpg') center center / cover no-repeat;
-      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       margin: 0;
-      max-width: 100%;
+      padding: 1.5rem 1rem;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    #auth-panel::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url('images/ppd-building.jpg') center center / cover no-repeat;
+      z-index: -2;
     }
     #auth-panel::before {
       content: '';
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: rgba(0, 53, 128, 0.55);
+      background: rgba(0, 53, 128, 0.52);
+      z-index: -1;
     }
     #auth-panel .auth-container-inner {
       position: relative;
       z-index: 1;
       width: 100%;
       max-width: 560px;
-      padding: 1.5rem;
+      padding: 0;
+    }
+    @media (max-width: 600px) {
+      #auth-panel { padding: 1rem 0.75rem; align-items: flex-start; }
+      #auth-panel .auth-container-inner { max-width: 100%; }
+      .auth-card { padding: 1.25rem 1rem; }
+      .sector-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-height: 700px) and (orientation: portrait) {
+      #auth-panel { align-items: flex-start; padding-top: 1rem; }
     }
 
     /* ===== Sector Selection View ===== */
@@ -2011,8 +2029,16 @@
           <div id="admin-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
 
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-chart-line"></i> <span data-i18n="admin.trend.title">Trend Pergerakan — 6 Bulan Lepas</span></div>
-            <div class="tujuan-breakdown" id="admin-monthly-trend" style="margin-top:0.5rem;"></div>
+            <div style="display:grid;grid-template-columns:1fr minmax(220px,280px);gap:1.5rem;align-items:start;">
+              <div>
+                <div class="insights-title"><i class="fa-solid fa-chart-line"></i> <span data-i18n="admin.trend.title">Trend Pergerakan — 6 Bulan Lepas</span></div>
+                <div class="tujuan-breakdown" id="admin-monthly-trend" style="margin-top:0.5rem;"></div>
+              </div>
+              <div>
+                <div class="insights-title"><i class="fa-solid fa-chart-pie"></i> <span data-i18n="admin.tujuan.chart">Jenis Pergerakan</span></div>
+                <div id="admin-tujuan-pie" style="margin-top:0.5rem;display:flex;flex-direction:column;align-items:center;"></div>
+              </div>
+            </div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -2694,6 +2720,7 @@
         'admin.card.total': 'Jumlah Rekod',
         'admin.card.topSektor': 'Sektor Paling Aktif',
         'admin.trend.title': 'Trend Pergerakan — 6 Bulan Lepas',
+        'admin.tujuan.chart': 'Jenis Pergerakan',
         'admin.top5.title': 'Top 5 Destinasi',
         'admin.inactive.title': 'Pegawai Tiada Rekod',
         'admin.inactive.allActive': 'Semua staf berdaftar mempunyai rekod pergerakan.',
@@ -2903,6 +2930,7 @@
         'admin.card.total': 'Total Records',
         'admin.card.topSektor': 'Most Active Sector',
         'admin.trend.title': 'Movement Trend — Last 6 Months',
+        'admin.tujuan.chart': 'Movement Types',
         'admin.top5.title': 'Top 5 Destinations',
         'admin.inactive.title': 'Officers with No Records',
         'admin.inactive.allActive': 'All registered staff have movement records.',
@@ -3037,6 +3065,7 @@
       if (document.getElementById('admin-panel')?.style?.display === 'block') {
         if (typeof renderAdminSummaryCards === 'function') renderAdminSummaryCards();
         if (typeof renderMonthlyTrend === 'function') renderMonthlyTrend();
+        if (typeof renderTujuanPie === 'function') renderTujuanPie();
         if (typeof renderTopDestinations === 'function') renderTopDestinations();
         if (typeof renderDayOfWeek === 'function') renderDayOfWeek();
         if (typeof renderTujuanPerSektor === 'function') renderTujuanPerSektor();
@@ -3448,6 +3477,7 @@
       await loadAllMovementsForAdmin();
       renderAdminSummaryCards();
       renderMonthlyTrend();
+      renderTujuanPie();
       renderTopDestinations();
       renderDayOfWeek();
       renderTujuanPerSektor();
@@ -3738,6 +3768,46 @@
       }).join('');
     }
 
+    // --- Pie chart: jenis pergerakan mengikut tujuan ---
+    function renderTujuanPie() {
+      const container = document.getElementById('admin-tujuan-pie');
+      if (!container) return;
+      const PIE_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488','#ea580c','#4f46e5','#0284c7'];
+      const counts = {};
+      adminMovementData.forEach(r => { if (r.tujuan) counts[r.tujuan] = (counts[r.tujuan]||0)+1; });
+      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      const total = sorted.reduce((s,[,v])=>s+v,0);
+      if (!sorted.length) { container.innerHTML='<div class="detail-empty">Tiada data.</div>'; return; }
+
+      const SIZE=160, cx=SIZE/2, cy=SIZE/2, r=SIZE*0.38, ir=SIZE*0.22;
+      let ang=-Math.PI/2;
+      const slices = sorted.slice(0,8).map(([lbl,val],i) => {
+        const c=PIE_COLORS[i%PIE_COLORS.length];
+        const sw=(val/total)*2*Math.PI;
+        const x1=cx+r*Math.cos(ang),y1=cy+r*Math.sin(ang);
+        ang+=sw;
+        const x2=cx+r*Math.cos(ang),y2=cy+r*Math.sin(ang);
+        const la=sw>Math.PI?1:0;
+        const ix1=cx+ir*Math.cos(ang),iy1=cy+ir*Math.sin(ang);
+        const ix2=cx+ir*Math.cos(ang-sw),iy2=cy+ir*Math.sin(ang-sw);
+        return {lbl,val,c,path:`M${x1},${y1} A${r},${r},0,${la},1,${x2},${y2} L${ix1},${iy1} A${ir},${ir},0,${la},0,${ix2},${iy2} Z`,pct:Math.round(val/total*100)};
+      });
+
+      const legend = slices.map(s=>`<div style="display:flex;align-items:center;gap:6px;font-size:0.72rem;margin-bottom:3px;">
+        <span style="width:10px;height:10px;border-radius:2px;background:${s.c};flex-shrink:0;"></span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.lbl}</span>
+        <b style="color:${s.c};min-width:28px;text-align:right;">${s.pct}%</b>
+      </div>`).join('');
+
+      container.innerHTML=`
+        <svg width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" style="display:block;margin:0 auto 0.5rem;">
+          ${slices.map(s=>`<path d="${s.path}" fill="${s.c}" stroke="var(--bg-card,#fff)" stroke-width="2"/>`).join('')}
+          <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="15" font-weight="800" fill="var(--text-main,#1e293b)">${total}</text>
+          <text x="${cx}" y="${cy+18}" text-anchor="middle" font-size="8" fill="var(--text-muted,#64748b)">rekod</text>
+        </svg>
+        <div style="width:100%;">${legend}</div>`;
+    }
+
     // --- Top 5 destinasi ---
     function renderTopDestinations() {
       const container = document.getElementById('admin-top-destinations');
@@ -4015,7 +4085,53 @@
       }).join('');
     }
 
+    // SVG donut pie chart for PDF reports
+    function _svgPie(data, size) {
+      size = size || 180;
+      const total = data.reduce((s,d) => s+d.v, 0);
+      if (!total) return '<p style="color:#999;font-size:11px;text-align:center;">Tiada data</p>';
+      const cx = size/2, cy = size/2, r = size*0.38, ir = size*0.22;
+      let ang = -Math.PI/2;
+      const slices = data.map(d => {
+        const sw = (d.v/total)*2*Math.PI;
+        const x1=cx+r*Math.cos(ang), y1=cy+r*Math.sin(ang);
+        ang += sw;
+        const x2=cx+r*Math.cos(ang), y2=cy+r*Math.sin(ang);
+        const la = sw>Math.PI?1:0;
+        const ix1=cx+ir*Math.cos(ang), iy1=cy+ir*Math.sin(ang);
+        const ix2=cx+ir*Math.cos(ang-sw), iy2=cy+ir*Math.sin(ang-sw);
+        return `<path d="M${x1},${y1} A${r},${r},0,${la},1,${x2},${y2} L${ix1},${iy1} A${ir},${ir},0,${la},0,${ix2},${iy2} Z" fill="${d.c}" stroke="#fff" stroke-width="1.5"/>`;
+      });
+      const legend = data.slice(0,8).map(d =>
+        `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;font-size:9px;"><span style="width:9px;height:9px;background:${d.c};border-radius:2px;flex-shrink:0;display:inline-block;"></span><span style="flex:1;">${d.l}</span><b>${Math.round(d.v/total*100)}%</b></div>`
+      ).join('');
+      return `<div style="display:flex;gap:12px;align-items:center;">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="flex-shrink:0;">
+          ${slices.join('')}
+          <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">${total}</text>
+          <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="8" fill="#64748b">rekod</text>
+        </svg>
+        <div style="flex:1;">${legend}</div>
+      </div>`;
+    }
+
+    // SVG horizontal bar chart for PDF reports
+    function _svgBar(data, w, h) {
+      w = w||380; h = h||24;
+      const max = Math.max(...data.map(d=>d.v), 1);
+      const rows = data.slice(0,10).map(d => {
+        const bw = Math.round((d.v/max)*(w-90));
+        return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:9px;">
+          <span style="width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.l}</span>
+          <div style="width:${bw}px;height:${h}px;background:${d.c};border-radius:3px;flex-shrink:0;"></div>
+          <b style="color:${d.c};">${d.v}</b>
+        </div>`;
+      }).join('');
+      return `<div>${rows}</div>`;
+    }
+
     function buildSektorReport(sektor, records) {
+      const PIE_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488','#ea580c','#4f46e5','#0284c7'];
       const tujuanCounts = {};
       records.forEach(r => { tujuanCounts[r.tujuan] = (tujuanCounts[r.tujuan] || 0) + 1; });
       const topTujuan = Object.entries(tujuanCounts).sort((a,b) => b[1]-a[1]);
@@ -4027,47 +4143,70 @@
         staffMap[r.nama]++;
       });
 
-      const rows = records.map((r, i) => `
-        <tr style="background:${i%2===0?'#f8fafc':'#fff'}">
-          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${i+1}</td>
-          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.nama || '-'}</td>
-          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.tarikh || '-'}</td>
-          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.destinasi || '-'}</td>
-          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.tujuan || '-'}</td>
-          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.nota || '-'}</td>
-        </tr>`).join('');
+      // Charts
+      const pieData = topTujuan.slice(0,8).map(([l,v],i) => ({l,v,c:PIE_COLORS[i%PIE_COLORS.length]}));
+      const pieHtml = _svgPie(pieData, 160);
+      const staffBarData = Object.entries(staffMap).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([l,v],i) => ({l,v,c:PIE_COLORS[i%PIE_COLORS.length]}));
+      const staffBarHtml = _svgBar(staffBarData, 380, 18);
+
+      // Sektor comparison (for SEMUA report)
+      let sektorChartHtml = '';
+      if (sektor === 'SEMUA') {
+        const sektorCount = {};
+        records.forEach(r => { sektorCount[r.sektor||'Lain'] = (sektorCount[r.sektor||'Lain']||0)+1; });
+        const sektorBarData = Object.entries(sektorCount).sort((a,b)=>b[1]-a[1]).map(([l,v],i) => ({l,v,c:PIE_COLORS[i%PIE_COLORS.length]}));
+        sektorChartHtml = `<h2>Perbandingan Rekod Mengikut Sektor</h2>${_svgBar(sektorBarData, 380, 20)}`;
+      }
+
+      const rows = records.map((r, i) => {
+        let tarikh = r.tarikh || '-';
+        try { const p=(r.tarikh||'').split('-'); if(p.length===3) tarikh=`${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+        return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${i+1}</td>
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.nama||'-'}</td>
+          ${sektor==='SEMUA'?`<td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.sektor||'-'}</td>`:''}
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tarikh}</td>
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.destinasi||'-'}</td>
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.tujuan||'-'}</td>
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.nota||'-'}</td>
+        </tr>`;
+      }).join('');
 
       const tujuanRows = topTujuan.map(([tj, cnt]) => `
-        <tr><td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;">${tj}</td>
-        <td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;font-weight:600;">${cnt}</td>
-        <td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;">${records.length>0?Math.round(cnt/records.length*100):0}%</td></tr>`).join('');
+        <tr><td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tj}</td>
+        <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:600;">${cnt}</td>
+        <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${records.length>0?Math.round(cnt/records.length*100):0}%</td></tr>`).join('');
 
       const staffRows = Object.entries(staffMap).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([nm, cnt]) =>
-        `<tr><td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;">${nm}</td>
-         <td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;font-weight:600;">${cnt}</td></tr>`).join('');
+        `<tr><td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${nm}</td>
+         <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:600;">${cnt}</td></tr>`).join('');
 
       return `<!DOCTYPE html><html><head><meta charset="UTF-8">
       <title>Laporan ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : sektor}</title>
       <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #1e293b; }
-        h1 { font-size: 16px; margin: 0; }
-        h2 { font-size: 13px; margin: 14px 0 6px; color: #003580; border-bottom: 2px solid #003580; padding-bottom: 4px; }
+        @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
+        body { font-family: Arial, sans-serif; margin: 0; color: #1e293b; font-size: 11px; }
+        h1 { font-size: 15px; margin: 0; }
+        h2 { font-size: 12px; margin: 14px 0 6px; color: #003580; border-bottom: 2px solid #003580; padding-bottom: 4px; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 14px; }
-        th { background: #003580; color: #fff; padding: 7px 10px; font-size: 11px; text-align: left; border: 1px solid #1d4ed8; }
-        .header-row { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #003580; padding-bottom: 10px; margin-bottom: 16px; }
-        .meta { font-size: 11px; color: #64748b; margin-top: 2px; }
-        .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
-        .stat-box { background: #f0f4f8; border-radius: 8px; padding: 10px 14px; }
-        .stat-val { font-size: 20px; font-weight: 800; color: #003580; }
-        .stat-lbl { font-size: 10px; color: #64748b; margin-top: 2px; }
-        @media print { body { margin: 10px; } }
+        th { background: #003580; color: #fff; padding: 6px 8px; font-size: 10px; text-align: left; border: 1px solid #1d4ed8; }
+        .header-row { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #003580; padding-bottom: 10px; margin-bottom: 14px; }
+        .meta { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+        .stat-box { background: #f0f4f8; border-radius: 6px; padding: 8px 12px; }
+        .stat-val { font-size: 18px; font-weight: 800; color: #003580; }
+        .stat-lbl { font-size: 9px; color: #64748b; margin-top: 1px; }
+        .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .chart-box { background: #f8fafc; border-radius: 6px; padding: 10px; border: 1px solid #e2e8f0; }
+        .chart-title { font-size: 11px; font-weight: 700; color: #003580; margin-bottom: 8px; }
+        @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
       </style></head><body>
       <div class="header-row">
-        <img src="icons/icon-192.png" width="54" height="54" style="border-radius:8px;" onerror="this.style.display='none'">
+        <img src="icons/icon-192.png" width="52" height="52" style="border-radius:8px;" onerror="this.style.display='none'">
         <div>
           <h1>Laporan Pergerakan Pegawai — ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : 'Sektor ' + sektor}</h1>
           <div class="meta">Pejabat Pendidikan Daerah Dalat &nbsp;|&nbsp; Dijana pada ${today}</div>
-          <div class="meta">Jumlah rekod: <strong>${records.length}</strong></div>
+          <div class="meta">Jumlah rekod: <strong>${records.length}</strong> &nbsp;|&nbsp; Pegawai terlibat: <strong>${Object.keys(staffMap).length}</strong></div>
         </div>
       </div>
 
@@ -4075,19 +4214,36 @@
       <div class="stat-grid">
         <div class="stat-box"><div class="stat-val">${records.length}</div><div class="stat-lbl">Jumlah Rekod</div></div>
         <div class="stat-box"><div class="stat-val">${Object.keys(staffMap).length}</div><div class="stat-lbl">Pegawai Terlibat</div></div>
-        <div class="stat-box"><div class="stat-val">${topTujuan[0]?topTujuan[0][0]:'-'}</div><div class="stat-lbl">Tujuan Paling Kerap</div></div>
+        <div class="stat-box"><div class="stat-val">${topTujuan[0]?topTujuan[0][0].split(' ').slice(0,2).join(' '):'-'}</div><div class="stat-lbl">Tujuan Paling Kerap</div></div>
       </div>
 
+      <div class="chart-row">
+        <div class="chart-box">
+          <div class="chart-title">&#9685; Jenis Pergerakan (Carta Pai)</div>
+          ${pieHtml}
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">&#9646; Pegawai Paling Aktif</div>
+          ${staffBarHtml}
+        </div>
+      </div>
+
+      ${sektorChartHtml ? `<div class="chart-box" style="margin-bottom:14px;"><div class="chart-title">&#9646; ${sektorChartHtml.replace('<h2>','').replace('</h2>','')}</div></div>` : ''}
+
       <h2>Analisis Tujuan Pergerakan</h2>
-      <table><thead><tr><th>Tujuan</th><th>Bilangan</th><th>Peratusan</th></tr></thead>
+      <table><thead><tr><th>Tujuan</th><th style="width:60px">Bilangan</th><th style="width:60px">Peratusan</th></tr></thead>
       <tbody>${tujuanRows || '<tr><td colspan="3" style="padding:8px;text-align:center;">Tiada data</td></tr>'}</tbody></table>
 
       <h2>10 Pegawai Paling Aktif</h2>
-      <table><thead><tr><th>Nama Pegawai</th><th>Jumlah Rekod</th></tr></thead>
+      <table><thead><tr><th>Nama Pegawai</th><th style="width:80px">Jumlah Rekod</th></tr></thead>
       <tbody>${staffRows || '<tr><td colspan="2" style="padding:8px;text-align:center;">Tiada data</td></tr>'}</tbody></table>
 
       <h2>Senarai Rekod Pergerakan</h2>
-      <table><thead><tr><th>#</th><th>Nama Pegawai</th><th>Tarikh</th><th>Destinasi</th><th>Tujuan</th><th>Nota</th></tr></thead>
+      <table><thead><tr>
+        <th style="width:28px">#</th><th>Nama Pegawai</th>
+        ${sektor==='SEMUA'?'<th style="width:50px">Sektor</th>':''}
+        <th style="width:65px">Tarikh</th><th>Destinasi</th><th style="width:100px">Tujuan</th><th>Nota</th>
+      </tr></thead>
       <tbody>${rows || '<tr><td colspan="6" style="padding:8px;text-align:center;">Tiada rekod</td></tr>'}</tbody></table>
       </body></html>`;
     }
@@ -5274,7 +5430,7 @@
       const html = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8">
 <title>Laporan Pergerakan ${scopeLabel}</title>
 <style>
-  @page { size: A4 landscape; margin: 15mm 12mm 15mm 12mm; }
+  @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
   * { box-sizing: border-box; margin:0; padding:0; }
   body { font-family: Arial, sans-serif; font-size: 9.5pt; color: #111; }
   .doc-header { display:flex; align-items:center; gap:14px; border-bottom:3px solid #003580; padding-bottom:10px; margin-bottom:12px; }
