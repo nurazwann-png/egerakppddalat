@@ -2321,6 +2321,15 @@
       <!-- SECTION: UTAMA (HOME) -->
       <div class="glass-card active" id="tab-utama">
 
+        <!-- Pemakluman — first thing user sees -->
+        <div class="notice-board" style="margin-top:0; margin-bottom:1.5rem;">
+          <div class="notice-board-header">
+            <div class="notice-board-title"><i class="fa-solid fa-bullhorn"></i> <span data-i18n="notice.title">Pemakluman</span></div>
+            <button class="notice-add-btn" onclick="openNoticeModal()"><i class="fa-solid fa-plus"></i> <span data-i18n="notice.add">Tambah</span></button>
+          </div>
+          <div class="notice-list" id="notice-list"><div class="notice-empty"><i class="fa-solid fa-bell-slash"></i><span data-i18n="notice.empty">Tiada pemakluman.</span></div></div>
+        </div>
+
         <!-- Dashboard Statistics Grid -->
         <div class="stats-grid">
           <div class="stat-card clickable-stat" onclick="toggleStatDetail('log')">
@@ -2350,15 +2359,6 @@
             <button class="stat-detail-close" onclick="closeStatDetail()"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div id="stat-detail-body" class="stat-detail-body"></div>
-        </div>
-
-        <!-- Pemakluman -->
-        <div class="notice-board" style="margin-top:1.5rem;">
-          <div class="notice-board-header">
-            <div class="notice-board-title"><i class="fa-solid fa-bullhorn"></i> <span data-i18n="notice.title">Pemakluman</span></div>
-            <button class="notice-add-btn" onclick="openNoticeModal()"><i class="fa-solid fa-plus"></i> <span data-i18n="notice.add">Tambah</span></button>
-          </div>
-          <div class="notice-list" id="notice-list"><div class="notice-empty" data-i18n="notice.empty">Tiada pemakluman.</div></div>
         </div>
 
         <!-- Analisis Jenis Pergerakan -->
@@ -5954,7 +5954,7 @@
         const dateStr = d.toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
         const timeStr = d.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
         const isOwner = currentUserSession && n.created_by === currentUserSession.email;
-        const displayName = n.nama && n.nama !== 'undefined' ? escHtml(n.nama) : escHtml(n.created_by);
+        const displayName = (n.nama && n.nama !== 'undefined' && n.nama !== 'null') ? escHtml(n.nama) : escHtml(n.created_by.split('@')[0]);
         return `<div class="notice-card">
           <div class="notice-card-head">
             <div class="notice-card-icon"><i class="fa-solid fa-bullhorn"></i></div>

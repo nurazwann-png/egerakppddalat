@@ -622,9 +622,12 @@ const server = http.createServer(async (req, res) => {
       if (!isStaffEmail(email.trim().toLowerCase())) { sendJSON(res, 403, { error: 'Akses tidak dibenarkan.' }); return; }
       const id = crypto.randomUUID();
       const created_at = new Date().toISOString();
+      // Always use the authoritative name from staff table
+      const staffRow = db.prepare('SELECT nama FROM staff WHERE email=?').get(email.trim().toLowerCase());
+      const resolvedNama = (staffRow && staffRow.nama) ? staffRow.nama : (nama || email).trim();
       db.prepare('INSERT INTO notices (id,tajuk,isi,created_by,nama,sektor,created_at) VALUES (?,?,?,?,?,?,?)')
-        .run(id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), (nama||email).trim(), (sektor||'').trim(), created_at);
-      sendJSON(res, 201, { id, tajuk, isi, nama, sektor, created_at });
+        .run(id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), resolvedNama, (sektor||'').trim(), created_at);
+      sendJSON(res, 201, { id, tajuk, isi, nama: resolvedNama, sektor, created_at });
       return;
     }
 
