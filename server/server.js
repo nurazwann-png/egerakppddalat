@@ -489,7 +489,7 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname.startsWith('/api/admin/')) {
       // T-01: accept session token (X-Admin-Token) OR legacy PIN (X-Admin-Pin) for backward compat
-      const bodyForWrite = (req.method === 'POST') ? await readJsonBody(req) : null;
+      const bodyForWrite = (req.method === 'POST' || req.method === 'PATCH') ? await readJsonBody(req) : null;
       const token = req.headers['x-admin-token'];
       const pin = req.headers['x-admin-pin'] || (bodyForWrite && bodyForWrite.pin);
 
@@ -550,6 +550,19 @@ const server = http.createServer(async (req, res) => {
         const value = decodeURIComponent(url.pathname.split('/').pop());
         db.prepare('DELETE FROM jawatan_list WHERE jawatan = ?').run(value);
         logAudit('delete_jawatan', `Admin membuang jawatan: "${value}"`);
+        sendJSON(res, 200, { ok: true });
+        return;
+      }
+
+      // PATCH /api/admin/staff/:email/sektor - update staff sector
+      if (url.pathname.match(/^\/api\/admin\/staff\/[^/]+\/sektor$/) && req.method === 'PATCH') {
+        const email = decodeURIComponent(url.pathname.split('/')[4]);
+        const { sektor } = bodyForWrite;
+        if (!sektor) { sendJSON(res, 400, { error: 'Missing sektor' }); return; }
+        const staffMember = db.prepare('SELECT * FROM staff WHERE email = ?').get(email);
+        if (!staffMember) { sendJSON(res, 404, { error: 'Staf tidak dijumpai' }); return; }
+        db.prepare('UPDATE staff SET sektor = ? WHERE email = ?').run(sektor, email);
+        logAudit('update_sektor', `Admin menukar sektor ${staffMember.nama} (${email}) daripada ${staffMember.sektor} kepada ${sektor}`);
         sendJSON(res, 200, { ok: true });
         return;
       }
