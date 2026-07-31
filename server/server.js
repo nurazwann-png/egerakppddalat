@@ -14,6 +14,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { Pool } = require('pg');
+const nodemailer = require('nodemailer');
 
 // Load .env from project root
 (function loadEnv() {
@@ -55,6 +56,59 @@ if (!ADMIN_PIN) {
   console.warn(`\n⚠️  AMARAN: ADMIN_PIN tidak ditetapkan dalam .env`);
   console.warn(`⚠️  PIN rawak dijana untuk sesi ini: ${ADMIN_PIN}`);
   console.warn(`⚠️  Tetapkan ADMIN_PIN=${ADMIN_PIN} dalam .env untuk mengekalkan PIN ini.\n`);
+}
+
+// ── Email transporter ────────────────────────────────────────────────────────
+const emailTransporter = nodemailer.createTransport({
+  host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
+  port:   parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// In-memory store: email → { code, expiresAt, data }
+const _pendingVerifications = new Map();
+const VERIFICATION_TTL = 10 * 60 * 1000; // 10 minit
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of _pendingVerifications) {
+    if (now > v.expiresAt) _pendingVerifications.delete(k);
+  }
+}, 5 * 60 * 1000);
+
+async function sendVerificationEmail(toEmail, code, nama) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    // Development fallback — log to console
+    console.log(`\n[DEV] Kod verifikasi untuk ${toEmail}: ${code}\n`);
+    return;
+  }
+  await emailTransporter.sendMail({
+    from: `"e-Gerak PPD Dalat" <${process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: 'Kod Aktivasi e-Gerak PPD Dalat',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">
+        <div style="background:#1B3A6B;padding:24px;text-align:center">
+          <h2 style="color:#fff;margin:0">e-Gerak PPD Dalat</h2>
+        </div>
+        <div style="padding:32px">
+          <p>Salam ${nama},</p>
+          <p>Anda telah memohon untuk mendaftar akaun baharu dalam sistem <strong>e-Gerak PPD Dalat</strong>.</p>
+          <p>Kod aktivasi anda ialah:</p>
+          <div style="background:#F3F4F6;border-radius:8px;padding:20px;text-align:center;margin:24px 0">
+            <span style="font-size:36px;font-weight:bold;letter-spacing:10px;color:#1B3A6B">${code}</span>
+          </div>
+          <p style="color:#6B7280;font-size:13px">Kod ini sah selama <strong>10 minit</strong>. Jangan kongsi kod ini dengan sesiapa.</p>
+          <p style="color:#6B7280;font-size:13px">Jika anda tidak membuat permohonan ini, abaikan e-mel ini.</p>
+        </div>
+        <div style="background:#F3F4F6;padding:16px;text-align:center;font-size:12px;color:#9CA3AF">
+          PPD Dalat &bull; Sistem e-Gerak
+        </div>
+      </div>`,
+  });
 }
 
 const adminSessions = new Map();
@@ -460,7 +514,88 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // POST /api/staff/register
+    // POST /api/staff/request-verification — hantar kod aktivasi ke emel
+    if (url.pathname === '/api/staff/request-verification' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      const nama = (body.nama || '').trim();
+      const jawatan = body.jawatan || '';
+      const sektor = body.sektor || 'SPr';
+
+      if (!ALLOWED_EMAIL_DOMAIN.test(email) || !nama || !jawatan) {
+        sendJSON(res, 400, { error: 'Maklumat pendaftaran tidak lengkap.' });
+        return;
+      }
+      if (nama.length > 100 || jawatan.length > 150 || email.length > 254) {
+        sendJSON(res, 400, { error: 'Input melebihi had panjang yang dibenarkan.' });
+        return;
+      }
+
+      // Semak jika sudah berdaftar
+      const existing = await pool.query('SELECT 1 FROM staff WHERE email = $1', [email]);
+      if (existing.rows.length > 0) {
+        // Sudah berdaftar — benarkan terus tanpa perlu kod
+        sendJSON(res, 200, { ok: true, alreadyRegistered: true });
+        return;
+      }
+
+      // Jana kod 6-digit
+      const code = String(Math.floor(100000 + crypto.randomInt(900000))).padStart(6, '0');
+      _pendingVerifications.set(email, {
+        code,
+        expiresAt: Date.now() + VERIFICATION_TTL,
+        data: { email, nama, jawatan, sektor },
+      });
+
+      try {
+        await sendVerificationEmail(email, code, nama);
+      } catch (err) {
+        console.error('Gagal hantar emel verifikasi:', err.message);
+        sendJSON(res, 500, { error: 'Gagal menghantar e-mel. Sila cuba lagi.' });
+        return;
+      }
+
+      sendJSON(res, 200, { ok: true, alreadyRegistered: false });
+      return;
+    }
+
+    // POST /api/staff/verify-code — sahkan kod dan daftarkan staf
+    if (url.pathname === '/api/staff/verify-code' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      const email = (body.email || '').trim().toLowerCase();
+      const code = (body.code || '').trim();
+
+      const pending = _pendingVerifications.get(email);
+      if (!pending) {
+        sendJSON(res, 400, { error: 'Tiada permohonan verifikasi ditemui. Sila mulakan semula.' });
+        return;
+      }
+      if (Date.now() > pending.expiresAt) {
+        _pendingVerifications.delete(email);
+        sendJSON(res, 400, { error: 'Kod aktivasi telah tamat tempoh. Sila minta kod baharu.' });
+        return;
+      }
+      if (code !== pending.code) {
+        sendJSON(res, 400, { error: 'Kod aktivasi tidak sah. Sila semak e-mel anda.' });
+        return;
+      }
+
+      // Kod betul — daftarkan staf
+      const { nama, jawatan, sektor } = pending.data;
+      _pendingVerifications.delete(email);
+
+      const result = await pool.query(
+        `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
+        [email, nama, jawatan, new Date().toISOString(), sektor]
+      );
+      if (result.rowCount > 0) {
+        await logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) mendaftar sebagai pengguna baharu (disahkan melalui e-mel)`);
+      }
+      sendJSON(res, 201, { ok: true });
+      return;
+    }
+
+    // POST /api/staff/register (legacy — hanya untuk staf yang sudah berdaftar semula)
     if (url.pathname === '/api/staff/register' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const email = (body.email || '').trim().toLowerCase();

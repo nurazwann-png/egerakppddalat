@@ -2047,6 +2047,49 @@
         </p>
       </div>
 
+      <!-- VIEW: EMAIL ACTIVATION CODE -->
+      <div class="auth-card" id="view-activation" style="display:none;">
+        <div class="auth-header">
+          <h2>Pengesahan E-mel</h2>
+          <p id="activation-subtitle">Kod aktivasi 6-digit telah dihantar ke e-mel anda. Sila semak peti masuk.</p>
+        </div>
+
+        <div class="error-msg" id="activation-error" style="display:none;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span id="activation-error-text">Kod tidak sah.</span>
+        </div>
+
+        <form onsubmit="handleActivationSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">KOD AKTIVASI</label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-key"></i>
+              <input class="form-input" type="text" id="activation-code"
+                placeholder="Contoh: 123456"
+                maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                style="letter-spacing:6px;font-size:1.3rem;text-align:center;font-weight:bold;">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="activation-submit-btn">
+            <i class="fa-solid fa-check-circle"></i> Sahkan & Daftar
+          </button>
+        </form>
+
+        <div style="text-align:center;margin-top:1rem;font-size:0.82rem;color:var(--text-muted)">
+          Tidak terima e-mel?
+          <a href="#" onclick="handleResendCode(event)" style="color:var(--accent-blue);text-decoration:none">
+            Hantar semula kod
+          </a>
+        </div>
+
+        <div style="text-align:center;margin-top:0.5rem">
+          <a href="#" onclick="showIdentifyView(event)" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none">
+            &larr; Kembali
+          </a>
+        </div>
+      </div>
+
       <!-- VIEW: ADMIN PIN GATE (separate from the staff roster entirely, so the
            first admin can get in and add staff before anyone is on the roster) -->
       <div class="auth-card" id="view-admin-pin" style="display: none;">
@@ -3422,7 +3465,10 @@
       }, 10 * 1000);
     }
 
-    // AUTH HANDLING: Simple identification (no password, no external service)
+    // Simpan data pendaftaran sementara untuk digunakan selepas verifikasi
+    let _pendingRegistration = null;
+
+    // AUTH HANDLING: Identification with e-mel verification for new users
     async function handleIdentifySubmit(event) {
       event.preventDefault();
       const errorDiv = document.getElementById('login-error');
@@ -3432,42 +3478,145 @@
       const name = document.getElementById('identify-name').value.trim();
       const email = document.getElementById('identify-email').value.trim().toLowerCase();
       const position = document.getElementById('identify-position').value;
+      const sektor = selectedSector ? selectedSector.id : 'SPr';
 
       if (!ALLOWED_EMAIL_REGEX.test(email)) {
         errorTxt.textContent = t('auth.emailBlocked');
         errorDiv.style.display = 'flex';
         return;
       }
-
-      try {
-        const checkRes = await fetch(`${API_BASE}/staff/check?email=${encodeURIComponent(email)}`);
-        const { allowed } = await checkRes.json();
-
-        // First time seeing this e-mail - register them automatically. Admins
-        // can still add staff ahead of time, or remove someone, from the
-        // Admin panel regardless of this self-service path.
-        if (!allowed) {
-          const registerRes = await fetch(`${API_BASE}/staff/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, nama: name, jawatan: position })
-          });
-          if (!registerRes.ok) throw new Error(`Server returned ${registerRes.status}`);
-        }
-      } catch (err) {
-        console.error(err);
-        errorTxt.textContent = t('auth.serverError');
+      if (!name || !position) {
+        errorTxt.textContent = 'Sila lengkapkan semua medan.';
         errorDiv.style.display = 'flex';
         return;
       }
 
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghantar...';
+
+      try {
+        const res = await fetch(`${API_BASE}/staff/request-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, nama: name, jawatan: position, sektor }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorTxt.textContent = data.error || t('auth.serverError');
+          errorDiv.style.display = 'flex';
+          return;
+        }
+
+        // Simpan untuk digunakan selepas kod disahkan
+        _pendingRegistration = { name, email, position, sektor };
+
+        if (data.alreadyRegistered) {
+          // Staf sedia ada — terus log masuk tanpa kod
+          completeLogin(name, email, position);
+          return;
+        }
+
+        // Pengguna baru — tunjuk paparan kod aktivasi
+        document.getElementById('activation-subtitle').textContent =
+          `Kod aktivasi 6-digit telah dihantar ke ${email}. Sila semak peti masuk anda.`;
+        document.getElementById('activation-code').value = '';
+        document.getElementById('activation-error').style.display = 'none';
+        showActivationView();
+
+      } catch (err) {
+        console.error(err);
+        errorTxt.textContent = t('auth.serverError');
+        errorDiv.style.display = 'flex';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ' + t('auth.id.submit');
+      }
+    }
+
+    async function handleActivationSubmit(event) {
+      event.preventDefault();
+      const errorDiv = document.getElementById('activation-error');
+      const errorTxt = document.getElementById('activation-error-text');
+      errorDiv.style.display = 'none';
+
+      const code = document.getElementById('activation-code').value.trim();
+      if (!code || code.length !== 6) {
+        errorTxt.textContent = 'Sila masukkan kod 6-digit.';
+        errorDiv.style.display = 'flex';
+        return;
+      }
+
+      const submitBtn = document.getElementById('activation-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengesahkan...';
+
+      try {
+        const res = await fetch(`${API_BASE}/staff/verify-code`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: _pendingRegistration.email, code }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorTxt.textContent = data.error || 'Pengesahan gagal. Sila cuba lagi.';
+          errorDiv.style.display = 'flex';
+          return;
+        }
+
+        // Berjaya — lengkapkan log masuk
+        const { name, email, position } = _pendingRegistration;
+        _pendingRegistration = null;
+        completeLogin(name, email, position);
+
+      } catch (err) {
+        console.error(err);
+        errorTxt.textContent = t('auth.serverError');
+        errorDiv.style.display = 'flex';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Sahkan & Daftar';
+      }
+    }
+
+    async function handleResendCode(event) {
+      event.preventDefault();
+      if (!_pendingRegistration) return;
+      const { name, email, position, sektor } = _pendingRegistration;
+      const link = event.target;
+      link.textContent = 'Menghantar...';
+      try {
+        await fetch(`${API_BASE}/staff/request-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, nama: name, jawatan: position, sektor }),
+        });
+        showToast('Kod baharu telah dihantar ke e-mel anda.', 'success');
+      } catch (e) {
+        showToast('Gagal menghantar semula. Sila cuba lagi.', 'error');
+      } finally {
+        link.textContent = 'Hantar semula kod';
+      }
+    }
+
+    function completeLogin(name, email, position) {
       currentUserSession = { name, email, position };
       localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
       localStorage.setItem('ppd_dalat_remembered_email', email);
       if (selectedSector) localStorage.setItem(`ppd_dalat_sektor_${email}`, JSON.stringify(selectedSector));
-
-      showToast(t('toast.welcome').replace('{name}', currentUserSession.name), 'success');
+      showToast(t('toast.welcome').replace('{name}', name), 'success');
       evaluateSessionView();
+    }
+
+    function showActivationView() {
+      document.getElementById('view-sector-select').style.display = 'none';
+      document.getElementById('view-identify').style.display = 'none';
+      document.getElementById('view-email-login').style.display = 'none';
+      document.getElementById('view-admin-pin').style.display = 'none';
+      document.getElementById('view-activation').style.display = 'block';
+      setTimeout(() => document.getElementById('activation-code').focus(), 100);
     }
 
     // AUTH HANDLING: Log Keluar
@@ -3491,14 +3640,17 @@
       document.getElementById('view-sector-select').style.display = 'none';
       document.getElementById('view-identify').style.display = 'none';
       document.getElementById('view-email-login').style.display = 'none';
+      document.getElementById('view-activation').style.display = 'none';
       document.getElementById('view-admin-pin').style.display = 'block';
       document.getElementById('admin-pin-error').style.display = 'none';
     }
 
     function showIdentifyView(event) {
       event.preventDefault();
+      _pendingRegistration = null;
       document.getElementById('view-admin-pin').style.display = 'none';
       document.getElementById('view-email-login').style.display = 'none';
+      document.getElementById('view-activation').style.display = 'none';
       document.getElementById('view-identify').style.display = 'none';
       document.getElementById('view-sector-select').style.display = 'block';
     }

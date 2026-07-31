@@ -5,7 +5,7 @@
       "name": "backend-server",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server/server.js"],
-      "port": 3001
+      "port": 8118
     }
   ]
 }
