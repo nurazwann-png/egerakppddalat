@@ -501,6 +501,85 @@
       box-shadow: 0 0 20px rgba(37, 99, 235, 0.65);
     }
 
+    /* ── OTP ACTIVATION VIEW ─────────────────────────────────── */
+    .otp-envelope-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .otp-envelope {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+      animation: otp-bounce 2s ease-in-out infinite;
+    }
+    @keyframes otp-bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-6px); }
+    }
+    .otp-timer {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.15);
+      border-radius: 20px;
+      padding: 5px 14px;
+    }
+    .otp-timer.expiring { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.07); }
+    .otp-timer.expiring #otp-countdown { color: #ef4444; }
+    .otp-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .otp-box {
+      width: 46px;
+      height: 56px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      outline: none;
+      transition: all 0.2s ease;
+      caret-color: transparent;
+    }
+    .otp-box:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+      background: rgba(37,99,235,0.04);
+    }
+    .otp-box.filled {
+      border-color: #22c55e;
+      background: rgba(34,197,94,0.06);
+      color: #16a34a;
+    }
+    .otp-box.otp-gap {
+      margin-left: 10px;
+    }
+    .otp-box.shake {
+      animation: otp-shake 0.4s ease;
+    }
+    @keyframes otp-shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-5px); }
+      40%      { transform: translateX(5px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+
     /* UTAMA (HOME) */
     .home-hero {
       text-align: center;
@@ -2049,41 +2128,65 @@
 
       <!-- VIEW: EMAIL ACTIVATION CODE -->
       <div class="auth-card" id="view-activation" style="display:none;">
-        <div class="auth-header">
-          <h2>Pengesahan E-mel</h2>
-          <p id="activation-subtitle">Kod aktivasi 6-digit telah dihantar ke e-mel anda. Sila semak peti masuk.</p>
+
+        <!-- Animated envelope icon -->
+        <div style="text-align:center;margin-bottom:1.2rem">
+          <div class="otp-envelope-wrap">
+            <div class="otp-envelope">
+              <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+          </div>
+          <h2 style="margin:0.8rem 0 0.3rem;font-size:1.35rem;color:var(--text-primary)">Semak E-mel Anda</h2>
+          <p id="activation-subtitle" style="font-size:0.83rem;color:var(--text-muted);margin:0;line-height:1.5">
+            Kod aktivasi 6-digit telah dihantar ke<br>
+            <strong id="activation-email-display" style="color:var(--accent-blue)"></strong>
+          </p>
         </div>
 
+        <!-- Timer -->
+        <div style="text-align:center;margin-bottom:1rem">
+          <div class="otp-timer" id="otp-timer-wrap">
+            <i class="fa-regular fa-clock"></i>
+            Kod sah selama <span id="otp-countdown" style="font-weight:700;color:var(--accent-blue)">10:00</span>
+          </div>
+        </div>
+
+        <!-- Error -->
         <div class="error-msg" id="activation-error" style="display:none;">
           <i class="fa-solid fa-triangle-exclamation"></i>
           <span id="activation-error-text">Kod tidak sah.</span>
         </div>
 
+        <!-- OTP boxes -->
         <form onsubmit="handleActivationSubmit(event)">
-          <div class="form-group">
-            <label class="form-label">KOD AKTIVASI</label>
-            <div class="input-icon-wrap">
-              <i class="fa-solid fa-key"></i>
-              <input class="form-input" type="text" id="activation-code"
-                placeholder="Contoh: 123456"
-                maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                style="letter-spacing:6px;font-size:1.3rem;text-align:center;font-weight:bold;">
-            </div>
+          <label class="form-label" style="text-align:center;display:block;margin-bottom:0.75rem;letter-spacing:0.05em">
+            MASUKKAN KOD AKTIVASI
+          </label>
+          <div class="otp-boxes" id="otp-boxes">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="otp-box otp-gap" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
           </div>
 
-          <button type="submit" class="btn-primary" id="activation-submit-btn">
-            <i class="fa-solid fa-check-circle"></i> Sahkan & Daftar
+          <!-- Hidden combined input for form submit -->
+          <input type="hidden" id="activation-code">
+
+          <button type="submit" class="submit-btn" id="activation-submit-btn" style="margin-top:1.5rem">
+            <i class="fa-solid fa-shield-check"></i> Sahkan & Daftar
           </button>
         </form>
 
-        <div style="text-align:center;margin-top:1rem;font-size:0.82rem;color:var(--text-muted)">
-          Tidak terima e-mel?
-          <a href="#" onclick="handleResendCode(event)" style="color:var(--accent-blue);text-decoration:none">
-            Hantar semula kod
+        <div style="text-align:center;margin-top:1.1rem;font-size:0.82rem;color:var(--text-muted)">
+          Tidak terima e-mel? &nbsp;
+          <a href="#" onclick="handleResendCode(event)" id="resend-link" style="color:var(--accent-blue);text-decoration:none;font-weight:600">
+            Hantar semula
           </a>
         </div>
 
-        <div style="text-align:center;margin-top:0.5rem">
+        <div style="text-align:center;margin-top:0.6rem">
           <a href="#" onclick="showIdentifyView(event)" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none">
             &larr; Kembali
           </a>
@@ -3563,10 +3666,12 @@
         if (!res.ok) {
           errorTxt.textContent = data.error || 'Pengesahan gagal. Sila cuba lagi.';
           errorDiv.style.display = 'flex';
+          shakeOtpBoxes();
           return;
         }
 
         // Berjaya — lengkapkan log masuk
+        clearInterval(_otpTimerInterval);
         const { name, email, position } = _pendingRegistration;
         _pendingRegistration = null;
         completeLogin(name, email, position);
@@ -3577,7 +3682,7 @@
         errorDiv.style.display = 'flex';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Sahkan & Daftar';
+        submitBtn.innerHTML = '<i class="fa-solid fa-shield-check"></i> Sahkan & Daftar';
       }
     }
 
@@ -3610,13 +3715,110 @@
       evaluateSessionView();
     }
 
+    // ── OTP box logic ────────────────────────────────────────────────────────
+    let _otpTimerInterval = null;
+
+    function initOtpBoxes() {
+      const boxes = Array.from(document.querySelectorAll('.otp-box'));
+
+      boxes.forEach((box, i) => {
+        box.value = '';
+        box.classList.remove('filled', 'shake');
+
+        box.addEventListener('input', e => {
+          const val = box.value.replace(/\D/g, '');
+          box.value = val ? val[val.length - 1] : '';
+          box.classList.toggle('filled', !!box.value);
+          if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+          syncHiddenInput();
+        });
+
+        box.addEventListener('keydown', e => {
+          if (e.key === 'Backspace') {
+            if (!box.value && i > 0) {
+              boxes[i - 1].value = '';
+              boxes[i - 1].classList.remove('filled');
+              boxes[i - 1].focus();
+              syncHiddenInput();
+            }
+          } else if (e.key === 'ArrowLeft' && i > 0) {
+            boxes[i - 1].focus();
+          } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {
+            boxes[i + 1].focus();
+          } else if (e.key === 'Enter') {
+            document.querySelector('#view-activation form').dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+          }
+        });
+
+        box.addEventListener('paste', e => {
+          e.preventDefault();
+          const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+          boxes.forEach((b, j) => {
+            b.value = pasted[j] || '';
+            b.classList.toggle('filled', !!b.value);
+          });
+          const nextEmpty = boxes.findIndex(b => !b.value);
+          (nextEmpty >= 0 ? boxes[nextEmpty] : boxes[boxes.length - 1]).focus();
+          syncHiddenInput();
+        });
+
+        box.addEventListener('focus', () => box.select());
+      });
+    }
+
+    function syncHiddenInput() {
+      const boxes = Array.from(document.querySelectorAll('.otp-box'));
+      document.getElementById('activation-code').value = boxes.map(b => b.value).join('');
+    }
+
+    function startOtpTimer(seconds) {
+      clearInterval(_otpTimerInterval);
+      const wrap = document.getElementById('otp-timer-wrap');
+      const display = document.getElementById('otp-countdown');
+      let remaining = seconds;
+
+      function tick() {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        display.textContent = `${m}:${String(s).padStart(2, '0')}`;
+        wrap.classList.toggle('expiring', remaining <= 60);
+        if (remaining <= 0) {
+          clearInterval(_otpTimerInterval);
+          display.textContent = 'Tamat';
+          wrap.classList.add('expiring');
+        }
+        remaining--;
+      }
+      tick();
+      _otpTimerInterval = setInterval(tick, 1000);
+    }
+
+    function shakeOtpBoxes() {
+      document.querySelectorAll('.otp-box').forEach(b => {
+        b.classList.remove('shake');
+        void b.offsetWidth;
+        b.classList.add('shake');
+        setTimeout(() => b.classList.remove('shake'), 500);
+      });
+    }
+
     function showActivationView() {
       document.getElementById('view-sector-select').style.display = 'none';
       document.getElementById('view-identify').style.display = 'none';
       document.getElementById('view-email-login').style.display = 'none';
       document.getElementById('view-admin-pin').style.display = 'none';
       document.getElementById('view-activation').style.display = 'block';
-      setTimeout(() => document.getElementById('activation-code').focus(), 100);
+
+      // Show recipient email
+      if (_pendingRegistration) {
+        document.getElementById('activation-email-display').textContent = _pendingRegistration.email;
+      }
+
+      initOtpBoxes();
+      startOtpTimer(600); // 10 minit
+      document.getElementById('activation-error').style.display = 'none';
+
+      setTimeout(() => document.querySelectorAll('.otp-box')[0].focus(), 150);
     }
 
     // AUTH HANDLING: Log Keluar
