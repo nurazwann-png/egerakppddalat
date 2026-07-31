@@ -1747,6 +1747,18 @@
     }
     .admin-tab-btn:hover { color: var(--primary-blue); background: #f0f4ff; }
     .admin-tab-btn.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); background: transparent; }
+
+    /* Language toggle */
+    .lang-toggle {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 12px; border-radius: 6px;
+      border: 1.5px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+      color: #fff; font-size: 0.78rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.5px;
+      transition: background 0.18s;
+    }
+    .lang-toggle:hover { background: rgba(255,255,255,0.22); }
   </style>
 </head>
 <body>
@@ -1770,24 +1782,25 @@
         <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
+    <button class="lang-toggle" id="lang-toggle-btn" onclick="toggleLang()">EN</button>
   </header>
 
   <!-- Navigation Menu (Shown only when authenticated) -->
   <nav id="app-nav">
     <button class="nav-btn active float-s" onclick="switchTab('utama')">
-      <i class="fa-solid fa-house"></i> Utama
+      <i class="fa-solid fa-house"></i> <span data-i18n="nav.utama">Utama</span>
     </button>
     <button class="nav-btn float-m" onclick="switchTab('kalendar')">
-      <i class="fa-solid fa-calendar-days"></i> Kalendar
+      <i class="fa-solid fa-calendar-days"></i> <span data-i18n="nav.kalendar">Kalendar</span>
     </button>
     <button class="nav-btn float-f" onclick="switchTab('borang')">
-      <i class="fa-solid fa-file-invoice"></i> Borang
+      <i class="fa-solid fa-file-invoice"></i> <span data-i18n="nav.borang">Borang</span>
     </button>
     <button class="nav-btn float-s" onclick="switchTab('analisis')">
-      <i class="fa-solid fa-chart-simple"></i> Analisis
+      <i class="fa-solid fa-chart-simple"></i> <span data-i18n="nav.analisis">Analisis</span>
     </button>
     <button class="nav-btn float-m" onclick="switchTab('jana')">
-      <i class="fa-solid fa-file-excel"></i> Jana Fail
+      <i class="fa-solid fa-file-excel"></i> <span data-i18n="nav.jana">Jana Fail</span>
     </button>
   </nav>
 
@@ -1801,60 +1814,60 @@
       <!-- VIEW: SECTOR SELECTION -->
       <div class="auth-card" id="view-sector-select">
         <div class="auth-header">
-          <h2>Pilih Sektor</h2>
-          <p>Sila pilih sektor anda di PPD Dalat</p>
+          <h2 data-i18n="auth.sector.title">Pilih Sektor</h2>
+          <p data-i18n="auth.sector.sub">Sila pilih sektor anda di PPD Dalat</p>
         </div>
         <div class="sector-grid">
           <button class="sector-btn" data-sektor="SPr" onclick="selectSector('SPr','Sektor Perancangan',this)">
             <i class="fa-solid fa-sitemap"></i>
             <div class="sector-code">SPr</div>
-            <div class="sector-name">Sektor Perancangan</div>
+            <div class="sector-name" data-i18n="sector.SPr">Sektor Perancangan</div>
           </button>
           <button class="sector-btn" data-sektor="SPb" onclick="selectSector('SPb','Sektor Pembelajaran',this)">
             <i class="fa-solid fa-book-open"></i>
             <div class="sector-code">SPb</div>
-            <div class="sector-name">Sektor Pembelajaran</div>
+            <div class="sector-name" data-i18n="sector.SPb">Sektor Pembelajaran</div>
           </button>
           <button class="sector-btn" data-sektor="SPbM" onclick="selectSector('SPbM','Sektor Pembangunan Murid',this)">
             <i class="fa-solid fa-child-reaching"></i>
             <div class="sector-code">SPbM</div>
-            <div class="sector-name">Sektor Pembangunan Murid</div>
+            <div class="sector-name" data-i18n="sector.SPbM">Sektor Pembangunan Murid</div>
           </button>
           <button class="sector-btn" data-sektor="SP" onclick="selectSector('SP','Sektor Pengurusan',this)">
             <i class="fa-solid fa-briefcase"></i>
             <div class="sector-code">SP</div>
-            <div class="sector-name">Sektor Pengurusan</div>
+            <div class="sector-name" data-i18n="sector.SP">Sektor Pengurusan</div>
           </button>
           <button class="sector-btn" data-sektor="SPS" onclick="selectSector('SPS','Sektor Pengurusan Sekolah',this)">
             <i class="fa-solid fa-school"></i>
             <div class="sector-code">SPS</div>
-            <div class="sector-name">Sektor Pengurusan Sekolah</div>
+            <div class="sector-name" data-i18n="sector.SPS">Sektor Pengurusan Sekolah</div>
           </button>
           <button class="sector-btn" data-sektor="SPP/SPsK" onclick="selectSector('SPP/SPsK','Sektor Pentaksiran &amp; Psikologi Kaunseling',this)">
             <i class="fa-solid fa-clipboard-check"></i>
             <div class="sector-code">SPP/SPsK</div>
-            <div class="sector-name">Pentaksiran &amp; Psikologi Kaunseling</div>
+            <div class="sector-name" data-i18n="sector.SPPSPsK">Pentaksiran &amp; Psikologi Kaunseling</div>
           </button>
           <button class="sector-btn" data-sektor="PTIS" onclick="selectSector('PTIS','Pasukan Teknikal ICT Sekolah',this)">
             <i class="fa-solid fa-computer"></i>
             <div class="sector-code">PTIS</div>
-            <div class="sector-name">Pasukan Teknikal ICT Sekolah</div>
+            <div class="sector-name" data-i18n="sector.PTIS">Pasukan Teknikal ICT Sekolah</div>
           </button>
           <button class="sector-btn sector-btn-admin" onclick="showAdminPinView(event)">
             <i class="fa-solid fa-shield-halved"></i>
             <div class="sector-code">ADMIN</div>
-            <div class="sector-name">Log Masuk Admin</div>
+            <div class="sector-name" data-i18n="auth.sector.adminBtn">Log Masuk Admin</div>
           </button>
         </div>
         <button class="sector-continue-btn" id="sector-continue-btn" onclick="proceedFromSector()" disabled>
-          <i class="fa-solid fa-arrow-right"></i> Teruskan
+          <i class="fa-solid fa-arrow-right"></i> <span data-i18n="auth.sector.continue">Teruskan</span>
         </button>
       </div>
 
       <div class="auth-card" id="view-identify" style="display:none;">
         <div class="auth-header">
-          <h2>Kenal Pasti Pegawai</h2>
-          <p>Sila nyatakan maklumat ringkas anda untuk meneruskan</p>
+          <h2 data-i18n="auth.id.title">Kenal Pasti Pegawai</h2>
+          <p data-i18n="auth.id.sub">Sila nyatakan maklumat ringkas anda untuk meneruskan</p>
         </div>
 
         <div class="error-msg" id="login-error">
@@ -1864,23 +1877,23 @@
 
         <form onsubmit="handleIdentifySubmit(event)">
           <div class="form-group">
-            <label class="form-label" for="identify-name">Nama Penuh</label>
+            <label class="form-label" for="identify-name" data-i18n="auth.id.namaLabel">Nama Penuh</label>
             <div class="input-wrapper">
-              <input class="form-input" type="text" id="identify-name" placeholder="Cth: Encik Mohamad Fauzi bin Suhaili" required>
+              <input class="form-input" type="text" id="identify-name" placeholder="Cth: Encik Mohamad Fauzi bin Suhaili" data-i18n-placeholder="auth.id.namaPlaceholder" required>
               <i class="fa-solid fa-user"></i>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="identify-email">Alamat E-mel (MOE)</label>
+            <label class="form-label" for="identify-email" data-i18n="auth.id.emailLabel">Alamat E-mel (MOE)</label>
             <div class="input-wrapper">
-              <input class="form-input" type="email" id="identify-email" placeholder="nama@moe.gov.my" required>
+              <input class="form-input" type="email" id="identify-email" placeholder="nama@moe.gov.my" data-i18n-placeholder="auth.id.emailPlaceholder" required>
               <i class="fa-solid fa-envelope"></i>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="identify-position">Jawatan</label>
+            <label class="form-label" for="identify-position" data-i18n="auth.id.jawatanLabel">Jawatan</label>
             <div class="input-wrapper">
               <select class="form-select" id="identify-position" required>
                 <option value="" disabled selected>Pilih Jawatan...</option>
@@ -1891,24 +1904,24 @@
           </div>
 
           <button type="submit" class="submit-btn">
-            <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
+            <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="auth.id.submit">Log Masuk</span>
           </button>
         </form>
 
-        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.78rem; color: var(--text-muted);">
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.78rem; color: var(--text-muted);" data-i18n="auth.id.hint">
           Hanya akaun e-mel berakhiran <strong>@moe.gov.my</strong> dibenarkan meneruskan. Kali pertama log masuk akan mendaftarkan anda secara automatik.
         </p>
 
         <p style="text-align: center; margin-top: 0.75rem; font-size: 0.78rem;">
-          <a href="#" class="auth-toggle-link" onclick="showAdminPinView(event)">Masuk sebagai Admin</a>
+          <a href="#" class="auth-toggle-link" onclick="showAdminPinView(event)" data-i18n="auth.id.adminLink">Masuk sebagai Admin</a>
         </p>
       </div>
 
       <!-- VIEW: RETURNING USER — email only -->
       <div class="auth-card" id="view-email-login" style="display: none;">
         <div class="auth-header">
-          <h2>Log Masuk</h2>
-          <p>Masukkan alamat e-mel anda untuk meneruskan</p>
+          <h2 data-i18n="auth.email.title">Log Masuk</h2>
+          <p data-i18n="auth.email.sub">Masukkan alamat e-mel anda untuk meneruskan</p>
         </div>
 
         <div class="error-msg" id="email-login-error">
@@ -1918,22 +1931,22 @@
 
         <form onsubmit="handleEmailLoginSubmit(event)">
           <div class="form-group">
-            <label class="form-label" for="returning-email">Alamat E-mel (MOE)</label>
+            <label class="form-label" for="returning-email" data-i18n="auth.email.label">Alamat E-mel (MOE)</label>
             <div class="input-wrapper">
-              <input class="form-input" type="email" id="returning-email" placeholder="nama@moe.gov.my" required>
+              <input class="form-input" type="email" id="returning-email" placeholder="nama@moe.gov.my" data-i18n-placeholder="auth.email.placeholder" required>
               <i class="fa-solid fa-envelope"></i>
             </div>
           </div>
 
           <button type="submit" class="submit-btn">
-            <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
+            <i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="auth.email.submit">Log Masuk</span>
           </button>
         </form>
 
         <p style="text-align: center; margin-top: 1.25rem; font-size: 0.78rem;">
-          <a href="#" class="auth-toggle-link" onclick="showFullRegisterView(event)">Daftar akaun baru</a>
+          <a href="#" class="auth-toggle-link" onclick="showFullRegisterView(event)" data-i18n="auth.email.newAccount">Daftar akaun baru</a>
           &nbsp;·&nbsp;
-          <a href="#" class="auth-toggle-link" onclick="showAdminPinView(event)">Masuk sebagai Admin</a>
+          <a href="#" class="auth-toggle-link" onclick="showAdminPinView(event)" data-i18n="auth.email.adminLink">Masuk sebagai Admin</a>
         </p>
       </div>
 
@@ -1941,8 +1954,8 @@
            first admin can get in and add staff before anyone is on the roster) -->
       <div class="auth-card" id="view-admin-pin" style="display: none;">
         <div class="auth-header">
-          <h2>Akses Admin</h2>
-          <p>Masukkan PIN admin untuk meneruskan</p>
+          <h2 data-i18n="auth.admin.title">Akses Admin</h2>
+          <p data-i18n="auth.admin.sub">Masukkan PIN admin untuk meneruskan</p>
         </div>
 
         <div class="error-msg" id="admin-pin-error">
@@ -1952,7 +1965,7 @@
 
         <form onsubmit="handleAdminPinSubmit(event)">
           <div class="form-group">
-            <label class="form-label" for="admin-pin-input">PIN Admin</label>
+            <label class="form-label" for="admin-pin-input" data-i18n="auth.admin.pinLabel">PIN Admin</label>
             <div class="input-wrapper">
               <input class="form-input" type="password" id="admin-pin-input" placeholder="••••••••••••" required>
               <i class="fa-solid fa-key"></i>
@@ -1960,12 +1973,12 @@
           </div>
 
           <button type="submit" class="submit-btn">
-            <i class="fa-solid fa-unlock"></i> Buka Panel Admin
+            <i class="fa-solid fa-unlock"></i> <span data-i18n="auth.admin.submit">Buka Panel Admin</span>
           </button>
         </form>
 
         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.78rem;">
-          <a href="#" class="auth-toggle-link" onclick="showIdentifyView(event)">Kembali ke Log Masuk Staf</a>
+          <a href="#" class="auth-toggle-link" onclick="showIdentifyView(event)" data-i18n="auth.admin.backLink">Kembali ke Log Masuk Staf</a>
         </p>
       </div>
     </div><!-- end auth-container-inner -->
@@ -1975,18 +1988,20 @@
     <div id="admin-panel" style="display: none; width: 100%;">
       <div class="glass-card active" id="tab-admin-dashboard">
         <div class="analysis-header">
-          <h2 class="analysis-title"><i class="fa-solid fa-shield-halved"></i> Panel Admin</h2>
+          <h2 class="analysis-title"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="admin.title">Panel Admin</span></h2>
           <button onclick="handleAdminLogout()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:8px;border:1.5px solid #fca5a5;background:#fff1f2;color:#dc2626;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.18s;" onmouseover="this.style.background='#dc2626';this.style.color='#fff';this.style.borderColor='#dc2626';" onmouseout="this.style.background='#fff1f2';this.style.color='#dc2626';this.style.borderColor='#fca5a5';">
-            <i class="fa-solid fa-right-from-bracket"></i> Log Keluar Admin
+            <i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="admin.logout">Log Keluar Admin</span>
           </button>
         </div>
 
         <!-- Tab Nav -->
         <div class="admin-tab-nav">
-          <button class="admin-tab-btn active" onclick="switchAdminTab('ringkasan',this)"><i class="fa-solid fa-gauge-high"></i> Ringkasan</button>
-          <button class="admin-tab-btn" onclick="switchAdminTab('analisis',this)"><i class="fa-solid fa-chart-bar"></i> Analisis</button>
-          <button class="admin-tab-btn" onclick="switchAdminTab('rekod',this)"><i class="fa-solid fa-table-list"></i> Rekod</button>
-          <button class="admin-tab-btn" onclick="switchAdminTab('urus',this)"><i class="fa-solid fa-gear"></i> Urus</button>
+          <button class="admin-tab-btn active" onclick="switchAdminTab('ringkasan',this)"><i class="fa-solid fa-gauge-high"></i> <span data-i18n="admin.tab.ringkasan">Ringkasan</span></button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('analisis',this)"><i class="fa-solid fa-chart-bar"></i> <span data-i18n="admin.tab.analisis">Analisis</span></button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('rekod',this)"><i class="fa-solid fa-table-list"></i> <span data-i18n="admin.tab.rekod">Rekod</span></button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('urus',this)"><i class="fa-solid fa-gear"></i> <span data-i18n="admin.tab.urus">Urus</span></button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('jana',this)"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="admin.tab.jana">Jana Fail</span></button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('kalend',this)"><i class="fa-solid fa-calendar-days"></i> <span data-i18n="admin.tab.kalend">Kalendar</span></button>
         </div>
 
         <!-- ===== TAB: RINGKASAN ===== -->
@@ -1994,17 +2009,17 @@
           <div id="admin-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
 
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-chart-line"></i> Trend Pergerakan — 6 Bulan Lepas</div>
+            <div class="insights-title"><i class="fa-solid fa-chart-line"></i> <span data-i18n="admin.trend.title">Trend Pergerakan — 6 Bulan Lepas</span></div>
             <div class="tujuan-breakdown" id="admin-monthly-trend" style="margin-top:0.5rem;"></div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div class="insights-panel" style="margin-bottom:0;">
-              <div class="insights-title"><i class="fa-solid fa-location-dot"></i> Top 5 Destinasi</div>
+              <div class="insights-title"><i class="fa-solid fa-location-dot"></i> <span data-i18n="admin.top5.title">Top 5 Destinasi</span></div>
               <div class="tujuan-breakdown" id="admin-top-destinations" style="margin-top:0.5rem;"></div>
             </div>
             <div class="insights-panel" style="margin-bottom:0;">
-              <div class="insights-title"><i class="fa-solid fa-user-slash"></i> Pegawai Tiada Rekod</div>
+              <div class="insights-title"><i class="fa-solid fa-user-slash"></i> <span data-i18n="admin.inactive.title">Pegawai Tiada Rekod</span></div>
               <div id="admin-inactive-staff" style="margin-top:0.5rem;"></div>
             </div>
           </div>
@@ -2013,28 +2028,28 @@
         <!-- ===== TAB: ANALISIS ===== -->
         <div class="admin-tab-content" id="admin-tab-analisis" style="display:none;">
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-chart-bar"></i> Analisis Pergerakan Mengikut Sektor</div>
-            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Klik sektor untuk tapis rekod dalam tab Rekod.</p>
+            <div class="insights-title"><i class="fa-solid fa-chart-bar"></i> <span data-i18n="admin.sector.title">Analisis Pergerakan Mengikut Sektor</span></div>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;" data-i18n="admin.sector.hint">Klik sektor untuk tapis rekod dalam tab Rekod.</p>
             <div class="tujuan-breakdown" id="admin-sector-breakdown"></div>
           </div>
 
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-calendar-week"></i> Analisis Mengikut Hari Seminggu</div>
+            <div class="insights-title"><i class="fa-solid fa-calendar-week"></i> <span data-i18n="admin.dow.title">Analisis Mengikut Hari Seminggu</span></div>
             <div class="tujuan-breakdown" id="admin-day-of-week" style="margin-top:0.5rem;"></div>
           </div>
 
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-sitemap"></i> Pecahan Tujuan Mengikut Sektor</div>
+            <div class="insights-title"><i class="fa-solid fa-sitemap"></i> <span data-i18n="admin.tujuanSector.title">Pecahan Tujuan Mengikut Sektor</span></div>
             <div id="admin-tujuan-per-sektor" style="margin-top:0.5rem;display:flex;flex-direction:column;gap:1rem;"></div>
           </div>
 
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-chart-column"></i> Statistik Pergerakan Setiap Pengguna</div>
+            <div class="insights-title"><i class="fa-solid fa-chart-column"></i> <span data-i18n="admin.userStats.title">Statistik Pergerakan Setiap Pengguna</span></div>
             <div class="table-container">
               <table>
                 <thead><tr>
-                  <th>Nama Pegawai</th><th>E-mel</th><th>Sektor</th>
-                  <th>Jumlah Rekod</th><th>Tujuan Paling Kerap</th>
+                  <th data-i18n="col.nama">Nama Pegawai</th><th data-i18n="col.email">E-mel</th><th data-i18n="col.sektor">Sektor</th>
+                  <th data-i18n="col.jumlah">Jumlah Rekod</th><th data-i18n="col.topTujuan">Tujuan Paling Kerap</th>
                 </tr></thead>
                 <tbody id="user-stats-table-body"></tbody>
               </table>
@@ -2045,10 +2060,10 @@
         <!-- ===== TAB: REKOD ===== -->
         <div class="admin-tab-content" id="admin-tab-rekod" style="display:none;">
           <div class="insights-panel" id="admin-records-panel">
-            <div class="insights-title"><i class="fa-solid fa-table-list"></i> Semua Rekod Pergerakan</div>
+            <div class="insights-title"><i class="fa-solid fa-table-list"></i> <span data-i18n="admin.records.title">Semua Rekod Pergerakan</span></div>
             <div style="display:flex;gap:10px;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
               <select id="admin-sector-filter" class="form-select" style="padding-left:12px;max-width:170px;" onchange="filterAdminRecords()">
-                <option value="">Semua Sektor</option>
+                <option value="" data-i18n="admin.records.allSektor">Semua Sektor</option>
                 <option value="SPr">SPr — Sektor Perancangan</option>
                 <option value="SPb">SPb — Sektor Pembelajaran</option>
                 <option value="SPbM">SPbM — Pembangunan Murid</option>
@@ -2058,27 +2073,27 @@
                 <option value="PTIS">PTIS — ICT Sekolah</option>
               </select>
               <div class="search-box" style="flex:1;min-width:180px;">
-                <input type="text" class="search-input" id="admin-record-search" onkeyup="filterAdminRecords()" placeholder="Cari nama, destinasi, tujuan...">
+                <input type="text" class="search-input" id="admin-record-search" onkeyup="filterAdminRecords()" placeholder="Cari nama, destinasi, tujuan..." data-i18n-placeholder="admin.records.searchPlaceholder">
                 <i class="fa-solid fa-magnifying-glass"></i>
               </div>
             </div>
             <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
               <div style="display:flex;align-items:center;gap:6px;">
-                <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;">Dari:</label>
+                <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;" data-i18n="admin.records.from">Dari:</label>
                 <input type="date" id="admin-date-from" class="form-input" style="padding:6px 10px;font-size:0.82rem;max-width:150px;" onchange="filterAdminRecords()">
               </div>
               <div style="display:flex;align-items:center;gap:6px;">
-                <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;">Hingga:</label>
+                <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;" data-i18n="admin.records.to">Hingga:</label>
                 <input type="date" id="admin-date-to" class="form-input" style="padding:6px 10px;font-size:0.82rem;max-width:150px;" onchange="filterAdminRecords()">
               </div>
-              <button onclick="clearAdminDateFilter()" style="font-size:0.78rem;padding:6px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-muted);cursor:pointer;"><i class="fa-solid fa-xmark"></i> Kosongkan Tarikh</button>
+              <button onclick="clearAdminDateFilter()" style="font-size:0.78rem;padding:6px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-muted);cursor:pointer;"><i class="fa-solid fa-xmark"></i> <span data-i18n="admin.records.clearDate">Kosongkan Tarikh</span></button>
             </div>
             <div class="table-container">
               <table>
                 <thead><tr>
-                  <th>Nama Pegawai</th><th>Sektor</th><th>Tarikh</th>
-                  <th>Destinasi</th><th>Tujuan</th>
-                  <th style="width:60px;text-align:center;">Tindakan</th>
+                  <th data-i18n="col.nama">Nama Pegawai</th><th data-i18n="col.sektor">Sektor</th><th data-i18n="col.tarikh">Tarikh</th>
+                  <th data-i18n="col.dest">Destinasi</th><th data-i18n="col.tujuan">Tujuan</th>
+                  <th style="width:60px;text-align:center;" data-i18n="col.tindakan">Tindakan</th>
                 </tr></thead>
                 <tbody id="admin-records-table-body"></tbody>
               </table>
@@ -2089,31 +2104,31 @@
         <!-- ===== TAB: URUS ===== -->
         <div class="admin-tab-content" id="admin-tab-urus" style="display:none;">
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-users"></i> Urus Staf (Tambah / Padam Pengguna)</div>
+            <div class="insights-title"><i class="fa-solid fa-users"></i> <span data-i18n="admin.staff.title">Urus Staf (Tambah / Padam Pengguna)</span></div>
             <form onsubmit="handleAddStaff(event)" class="admin-staff-form" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:1.25rem;">
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" for="staff-nama">Nama</label>
-                <input class="form-input" style="padding-left:14px;" type="text" id="staff-nama" placeholder="Nama penuh" required>
+                <label class="form-label" for="staff-nama" data-i18n="admin.staff.namaLabel">Nama</label>
+                <input class="form-input" style="padding-left:14px;" type="text" id="staff-nama" placeholder="Nama penuh" data-i18n-placeholder="admin.staff.namaPlaceholder" required>
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" for="staff-email">E-mel</label>
+                <label class="form-label" for="staff-email" data-i18n="admin.staff.emailLabel">E-mel</label>
                 <input class="form-input" style="padding-left:14px;" type="email" id="staff-email" placeholder="nama@moe.gov.my" required>
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" for="staff-jawatan">Jawatan</label>
+                <label class="form-label" for="staff-jawatan" data-i18n="admin.staff.jawatanLabel">Jawatan</label>
                 <select class="form-select" style="padding-left:14px;" id="staff-jawatan" required>
                   <option value="" disabled selected>Pilih...</option>
                 </select>
               </div>
               <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:12px 20px;">
-                <i class="fa-solid fa-user-plus"></i> Tambah
+                <i class="fa-solid fa-user-plus"></i> <span data-i18n="admin.staff.addBtn">Tambah</span>
               </button>
             </form>
             <div class="table-container">
               <table>
                 <thead><tr>
-                  <th>Nama</th><th>E-mel</th><th>Jawatan</th><th>Sektor</th>
-                  <th style="width:60px;text-align:center;">Tindakan</th>
+                  <th data-i18n="admin.staff.namaLabel">Nama</th><th data-i18n="admin.staff.emailLabel">E-mel</th><th data-i18n="admin.staff.jawatanLabel">Jawatan</th><th data-i18n="admin.staff.sektorHeader">Sektor</th>
+                  <th style="width:60px;text-align:center;" data-i18n="admin.staff.tindakanHeader">Tindakan</th>
                 </tr></thead>
                 <tbody id="staff-table-body"></tbody>
               </table>
@@ -2121,11 +2136,11 @@
           </div>
 
           <div class="insights-panel">
-            <div class="insights-title"><i class="fa-solid fa-briefcase"></i> Urus Senarai Jawatan</div>
+            <div class="insights-title"><i class="fa-solid fa-briefcase"></i> <span data-i18n="admin.jawatan.title">Urus Senarai Jawatan</span></div>
             <form onsubmit="handleAddJawatan(event)" style="display:flex;gap:10px;margin-bottom:1.25rem;">
-              <input class="form-input" style="padding-left:14px;" type="text" id="jawatan-input" placeholder="Cth: Ketua Unit ICT" required>
+              <input class="form-input" style="padding-left:14px;" type="text" id="jawatan-input" placeholder="Cth: Ketua Unit ICT" data-i18n-placeholder="admin.jawatan.placeholder" required>
               <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:12px 20px;white-space:nowrap;">
-                <i class="fa-solid fa-plus"></i> Tambah Jawatan
+                <i class="fa-solid fa-plus"></i> <span data-i18n="admin.jawatan.addBtn">Tambah Jawatan</span>
               </button>
             </form>
             <div id="jawatan-list-container" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
@@ -2134,7 +2149,7 @@
           <div class="insights-panel" style="padding:0;overflow:hidden;">
             <button onclick="toggleAuditLog()" id="audit-log-toggle" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:none;border:none;cursor:pointer;text-align:left;">
               <span style="display:flex;align-items:center;gap:8px;font-size:0.88rem;font-weight:700;color:var(--text-main);">
-                <i class="fa-solid fa-clipboard-list" style="color:var(--primary-blue);"></i> Log Audit
+                <i class="fa-solid fa-clipboard-list" style="color:var(--primary-blue);"></i> <span data-i18n="admin.audit.title">Log Audit</span>
                 <span id="audit-log-count" style="font-size:0.72rem;background:#e0e7ff;color:#3730a3;border-radius:99px;padding:1px 8px;font-weight:600;"></span>
               </span>
               <i class="fa-solid fa-chevron-down" id="audit-log-chevron" style="color:var(--text-muted);font-size:0.8rem;transition:transform 0.2s;"></i>
@@ -2145,8 +2160,8 @@
                   <table id="audit-log-table">
                     <thead><tr>
                       <th style="width:36px;"></th>
-                      <th>Tindakan</th>
-                      <th style="width:160px;text-align:right;">Tarikh & Masa</th>
+                      <th data-i18n="admin.audit.colAction">Tindakan</th>
+                      <th style="width:160px;text-align:right;" data-i18n="admin.audit.colTime">Tarikh & Masa</th>
                     </tr></thead>
                     <tbody id="audit-log-list"></tbody>
                   </table>
@@ -2155,6 +2170,48 @@
             </div>
           </div>
         </div>
+
+        <!-- ===== TAB: JANA FAIL ===== -->
+        <div class="admin-tab-content" id="admin-tab-jana" style="display:none;">
+          <div style="max-width:760px;margin:0 auto;">
+            <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+              <i class="fa-solid fa-file-arrow-down" style="color:var(--primary-blue)"></i>
+              <span data-i18n="admin.jana.title">Jana & Muat Turun Laporan</span>
+            </h3>
+            <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.5rem;" data-i18n="admin.jana.sub">Jana laporan pergerakan dalam format PDF atau Excel mengikut sektor atau keseluruhan PPD.</p>
+
+            <!-- Per sector -->
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-weight:700;font-size:0.85rem;color:var(--text-main);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-layer-group" style="color:#7c3aed;font-size:0.9rem;"></i>
+                <span data-i18n="admin.jana.bySector">Jana Mengikut Sektor</span>
+              </div>
+              <div id="admin-jana-sector-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
+            </div>
+
+            <!-- All PPD -->
+            <div style="background:linear-gradient(135deg,#003580 0%,#1d4ed8 100%);border-radius:14px;padding:20px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;">
+              <div>
+                <div style="font-size:1rem;font-weight:700;margin-bottom:4px;" data-i18n="admin.jana.allTitle">Keseluruhan PPD Dalat</div>
+                <div style="font-size:0.78rem;opacity:0.8;" data-i18n="admin.jana.allSub">Semua sektor digabungkan dalam satu laporan.</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button onclick="adminJanaAllPDF()" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                  <i class="fa-solid fa-file-pdf"></i> PDF
+                </button>
+                <button onclick="adminJanaAllExcel()" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;">
+                  <i class="fa-solid fa-file-excel"></i> Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TAB: KALENDAR ADMIN ===== -->
+        <div class="admin-tab-content" id="admin-tab-kalend" style="display:none;">
+          <div id="admin-calendar-section"></div>
+        </div>
+
       </div>
     </div>
 
@@ -2169,19 +2226,19 @@
           <div class="stat-card clickable-stat" onclick="toggleStatDetail('log')">
             <i class="fa-solid fa-gauge-high"></i>
             <div class="stat-val" id="stat-total-logs">0</div>
-            <div class="stat-lbl">Jumlah Log Pergerakan</div>
+            <div class="stat-lbl" data-i18n="home.totalLog">Jumlah Log Pergerakan</div>
             <div class="stat-hint"><i class="fa-solid fa-chevron-down"></i></div>
           </div>
           <div class="stat-card clickable-stat" onclick="toggleStatDetail('today')">
             <i class="fa-solid fa-user-astronaut"></i>
             <div class="stat-val" id="stat-active-today">0</div>
-            <div class="stat-lbl">Pergerakan Hari Ini</div>
+            <div class="stat-lbl" data-i18n="home.todayMov">Pergerakan Hari Ini</div>
             <div class="stat-hint"><i class="fa-solid fa-chevron-down"></i></div>
           </div>
           <div class="stat-card clickable-stat" onclick="toggleStatDetail('pegawai')">
             <i class="fa-solid fa-network-wired"></i>
             <div class="stat-val" id="stat-unique-officers">0</div>
-            <div class="stat-lbl">Pegawai Terlibat</div>
+            <div class="stat-lbl" data-i18n="home.staffInvolved">Pegawai Terlibat</div>
             <div class="stat-hint"><i class="fa-solid fa-chevron-down"></i></div>
           </div>
         </div>
@@ -2198,14 +2255,14 @@
         <!-- Analisis Jenis Pergerakan -->
         <div class="portal-section" style="margin-top: 1.5rem;">
           <div class="section-title-row">
-            <i class="fa-solid fa-chart-bar"></i> Analisis Pergerakan Mengikut Jenis
+            <i class="fa-solid fa-chart-bar"></i> <span data-i18n="home.analysisByType">Analisis Pergerakan Mengikut Jenis</span>
           </div>
           <div id="tujuan-breakdown" class="tujuan-breakdown"></div>
         </div>
 
         <div class="portal-section">
           <button class="submit-btn" style="width: auto; padding: 12px 30px; margin: 0 auto; display: inline-flex;" onclick="switchTab('borang')">
-            <i class="fa-solid fa-plus"></i> Daftar Pergerakan Baru
+            <i class="fa-solid fa-plus"></i> <span data-i18n="home.newRecord">Daftar Pergerakan Baru</span>
           </button>
         </div>
       </div>
@@ -2215,7 +2272,7 @@
         <div class="time-grid">
           <!-- Galaxy Clock -->
           <div class="clock-container">
-            <div class="clock-title"><i class="fa-solid fa-circle-notch fa-spin"></i> Waktu Semasa</div>
+            <div class="clock-title"><i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="cal.clock">Waktu Semasa</span></div>
             <div class="digital-clock" id="digital-clock">00:00:00</div>
             <div class="digital-date" id="digital-date">Selasa, 7 Julai 2026</div>
             <div class="digital-day" id="digital-day">Modul Kalendar Aktif</div>
@@ -2228,7 +2285,7 @@
               <h3 id="calendar-month-year">Julai 2026</h3>
               <button class="calendar-nav-btn" onclick="adjustMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
-            <div class="calendar-weekdays">
+            <div class="calendar-weekdays" id="cal-weekdays">
               <div>AH</div><div>IS</div><div>SE</div><div>RA</div><div>KH</div><div>JU</div><div>SA</div>
             </div>
             <div class="calendar-days" id="calendar-days-grid">
@@ -2249,21 +2306,21 @@
       <!-- SECTION: BORANG PERGERAKAN -->
       <div class="glass-card" id="tab-borang">
         <div class="form-container">
-          <h2 class="form-title" id="borang-title">Daftar Pergerakan Pegawai</h2>
+          <h2 class="form-title" id="borang-title" data-i18n="form.title">Daftar Pergerakan Pegawai</h2>
 
           <!-- Post-submit action panel (hidden until first record is saved) -->
           <div id="post-submit-panel" style="display:none; margin-bottom: 1.5rem;">
-            <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="background: #0f766e; border: none; border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-circle-check" style="color: var(--success-green); font-size: 1.2rem;"></i>
-                <span id="post-submit-msg" style="font-size: 0.88rem; color: #a7f3d0;"></span>
+                <i class="fa-solid fa-circle-check" style="color: #ffffff; font-size: 1.2rem;"></i>
+                <span id="post-submit-msg" style="font-size: 0.88rem; color: #ffffff; font-weight: 600;"></span>
               </div>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" onclick="addAnotherMovement()" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #a7f3d0; padding: 7px 14px; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-plus"></i> Tambah Pergerakan Lain
+                <button type="button" onclick="addAnotherMovement()" style="background: #ffffff; border: none; color: #0f766e; padding: 7px 14px; border-radius: 7px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-plus"></i> <span data-i18n="form.addAnother">Tambah Pergerakan Lain</span>
                 </button>
-                <button type="button" onclick="finishMovements()" style="background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.35); color: #93c5fd; padding: 7px 14px; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-list"></i> Selesai / Lihat Log
+                <button type="button" onclick="finishMovements()" style="background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.5); color: #ffffff; padding: 7px 14px; border-radius: 7px; font-size: 0.82rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-list"></i> <span data-i18n="form.done">Selesai / Lihat Log</span>
                 </button>
               </div>
             </div>
@@ -2273,16 +2330,16 @@
 
             <!-- Nama Pegawai -->
             <div class="form-group">
-              <label class="form-label" for="nama_pegawai">Nama Pegawai</label>
+              <label class="form-label" for="nama_pegawai" data-i18n="form.namaLabel">Nama Pegawai</label>
               <div class="input-wrapper">
-                <input class="form-input" type="text" id="nama_pegawai" placeholder="Cth: Encik Mohamad Fauzi bin Suhaili" required>
+                <input class="form-input" type="text" id="nama_pegawai" placeholder="Cth: Encik Mohamad Fauzi bin Suhaili" data-i18n-placeholder="form.namaPlaceholder" required>
                 <i class="fa-solid fa-user-astronaut"></i>
               </div>
             </div>
 
             <!-- Tarikh -->
             <div class="form-group">
-              <label class="form-label" for="tarikh_pergerakan">Tarikh Pergerakan</label>
+              <label class="form-label" for="tarikh_pergerakan" data-i18n="form.tarikhLabel">Tarikh Pergerakan</label>
               <div class="input-wrapper">
                 <input class="form-input" type="date" id="tarikh_pergerakan" required>
                 <i class="fa-solid fa-calendar-day"></i>
@@ -2290,34 +2347,34 @@
               <!-- Multi-day toggle -->
               <label style="display:inline-flex; align-items:center; gap:8px; margin-top:10px; cursor:pointer; user-select:none; font-size:0.82rem; color:var(--text-muted);">
                 <input type="checkbox" id="multiday-toggle" onchange="toggleMultiday(this.checked)" style="width:15px; height:15px; accent-color:var(--accent-cyan); cursor:pointer;">
-                Urusan melebihi 1 hari
+                <span data-i18n="form.multiDay">Urusan melebihi 1 hari</span>
               </label>
             </div>
 
             <!-- Tarikh Akhir (hidden until multi-day checked) -->
             <div class="form-group" id="tarikh-akhir-group" style="display:none;">
-              <label class="form-label" for="tarikh_akhir">Tarikh Akhir</label>
+              <label class="form-label" for="tarikh_akhir" data-i18n="form.endDateLabel">Tarikh Akhir</label>
               <div class="input-wrapper">
                 <input class="form-input" type="date" id="tarikh_akhir">
                 <i class="fa-solid fa-calendar-check"></i>
               </div>
               <p style="font-size:0.75rem; color:var(--accent-cyan); margin-top:6px;">
-                <i class="fa-solid fa-circle-info"></i> Satu rekod akan didaftarkan bagi setiap hari dalam julat tarikh ini.
+                <i class="fa-solid fa-circle-info"></i> <span data-i18n="form.multiDayHint">Satu rekod akan didaftarkan bagi setiap hari dalam julat tarikh ini.</span>
               </p>
             </div>
 
             <!-- Destinasi/Lokasi -->
             <div class="form-group">
-              <label class="form-label" for="destinasi">Destinasi / Lokasi</label>
+              <label class="form-label" for="destinasi" data-i18n="form.destLabel">Destinasi / Lokasi</label>
               <div class="input-wrapper">
-                <input class="form-input" type="text" id="destinasi" placeholder="Cth: SMK Dalat / PPD Mukah" required>
+                <input class="form-input" type="text" id="destinasi" placeholder="Cth: SMK Dalat / PPD Mukah" data-i18n-placeholder="form.destPlaceholder" required>
                 <i class="fa-solid fa-map-marker-alt"></i>
               </div>
             </div>
 
             <!-- Tujuan (Dropdown with Cuti Umum and Pelepasan) -->
             <div class="form-group">
-              <label class="form-label" for="tujuan">Tujuan Pergerakan</label>
+              <label class="form-label" for="tujuan" data-i18n="form.tujuanLabel">Tujuan Pergerakan</label>
               <div class="input-wrapper">
                 <select class="form-select" id="tujuan" required onchange="handleTujuanChange(this.value)">
                   <option value="" disabled selected>Pilih Tujuan...</option>
@@ -2338,7 +2395,7 @@
 
             <!-- Masa -->
             <div class="form-group">
-              <label class="form-label">Masa <span style="font-weight:400; color:var(--text-muted);">(Pilihan)</span></label>
+              <label class="form-label"><span data-i18n="form.masaLabel">Masa</span> <span style="font-weight:400; color:var(--text-muted);" data-i18n="form.masaOptional">(Pilihan)</span></label>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div class="input-wrapper">
                   <input class="form-input" type="time" id="masa_bertolak" placeholder="Bertolak">
@@ -2349,17 +2406,17 @@
                   <i class="fa-solid fa-plane-arrival"></i>
                 </div>
               </div>
-              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Masa Bertolak &nbsp;·&nbsp; Masa Balik</p>
+              <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;" data-i18n="form.masaHint">Masa Bertolak &nbsp;·&nbsp; Masa Balik</p>
             </div>
 
             <!-- Nota -->
             <div class="form-group">
-              <label class="form-label" for="nota">Nota Tambahan</label>
-              <textarea class="form-textarea" id="nota" placeholder="Masukkan ulasan ringkas mengenai agenda pergerakan..."></textarea>
+              <label class="form-label" for="nota" data-i18n="form.notaLabel">Nota Tambahan</label>
+              <textarea class="form-textarea" id="nota" placeholder="Masukkan ulasan ringkas mengenai agenda pergerakan..." data-i18n-placeholder="form.notaPlaceholder"></textarea>
             </div>
 
             <button type="submit" class="submit-btn">
-              <i class="fa-solid fa-paper-plane"></i> Hantar Rekod
+              <i class="fa-solid fa-paper-plane"></i> <span data-i18n="form.submit">Hantar Rekod</span>
             </button>
           </form>
         </div>
@@ -2368,20 +2425,20 @@
       <!-- SECTION: ANALISIS PERGERAKAN -->
       <div class="glass-card" id="tab-analisis">
         <div class="analysis-header">
-          <h2 class="analysis-title">Log & Analisis Pergerakan</h2>
+          <h2 class="analysis-title" data-i18n="analisis.title">Log & Analisis Pergerakan</h2>
           <div class="search-box">
-            <input type="text" class="search-input" id="search-input" onkeyup="filterTable()" placeholder="Cari nama, lokasi atau tujuan...">
+            <input type="text" class="search-input" id="search-input" onkeyup="filterTable()" placeholder="Cari nama, lokasi atau tujuan..." data-i18n-placeholder="analisis.searchPlaceholder">
             <i class="fa-solid fa-magnifying-glass"></i>
           </div>
         </div>
 
         <!-- Period Filter (defaults to weekly - recalculates automatically as time passes) -->
         <div class="period-filter" id="period-filter">
-          <button class="period-btn" data-period="day" onclick="setAnalysisPeriod('day')">Hari</button>
-          <button class="period-btn" data-period="week" onclick="setAnalysisPeriod('week')">Minggu</button>
-          <button class="period-btn" data-period="month" onclick="setAnalysisPeriod('month')">Bulan</button>
-          <button class="period-btn" data-period="year" onclick="setAnalysisPeriod('year')">Tahun</button>
-          <button class="period-btn" data-period="all" onclick="setAnalysisPeriod('all')">Semua</button>
+          <button class="period-btn" data-period="day" onclick="setAnalysisPeriod('day')" data-i18n="analisis.period.day">Hari</button>
+          <button class="period-btn" data-period="week" onclick="setAnalysisPeriod('week')" data-i18n="analisis.period.week">Minggu</button>
+          <button class="period-btn" data-period="month" onclick="setAnalysisPeriod('month')" data-i18n="analisis.period.month">Bulan</button>
+          <button class="period-btn" data-period="year" onclick="setAnalysisPeriod('year')" data-i18n="analisis.period.year">Tahun</button>
+          <button class="period-btn" data-period="all" onclick="setAnalysisPeriod('all')" data-i18n="analisis.period.all">Semua</button>
           <span class="period-range" id="period-range-label"></span>
         </div>
 
@@ -2390,12 +2447,12 @@
           <table id="movement-table">
             <thead>
               <tr>
-                <th>Nama Pegawai</th>
-                <th>Tarikh</th>
-                <th>Destinasi / Lokasi</th>
-                <th>Tujuan</th>
-                <th>Nota</th>
-                <th style="width: 80px; text-align: center;">Tindakan</th>
+                <th data-i18n="analisis.col.nama">Nama Pegawai</th>
+                <th data-i18n="analisis.col.tarikh">Tarikh</th>
+                <th data-i18n="analisis.col.dest">Destinasi / Lokasi</th>
+                <th data-i18n="analisis.col.tujuan">Tujuan</th>
+                <th data-i18n="analisis.col.nota">Nota</th>
+                <th style="width: 80px; text-align: center;" data-i18n="analisis.col.tindakan">Tindakan</th>
               </tr>
             </thead>
             <tbody id="table-body">
@@ -2406,15 +2463,15 @@
           <!-- Table Empty State -->
           <div class="empty-state" id="table-empty-state" style="display: none;">
             <i class="fa-solid fa-ghost"></i>
-            <h3>Tiada Log Pergerakan Dijumpai</h3>
-            <p id="table-empty-desc">Tiada rekod pergerakan untuk tempoh ini atau carian anda tiada padanan.</p>
+            <h3 data-i18n="analisis.empty.title">Tiada Log Pergerakan Dijumpai</h3>
+            <p id="table-empty-desc" data-i18n="analisis.empty.sub">Tiada rekod pergerakan untuk tempoh ini atau carian anda tiada padanan.</p>
           </div>
         </div>
 
         <!-- Visual Insights Grid -->
         <div class="insights-panel" id="insights-panel">
           <div class="insights-title">
-            <i class="fa-solid fa-chart-pie"></i> Analisis Taburan Tujuan Misi
+            <i class="fa-solid fa-chart-pie"></i> <span data-i18n="analisis.taburan">Analisis Taburan Tujuan Misi</span>
           </div>
           <div class="bars-container tujuan-breakdown" id="insights-bars">
             <!-- Dynamically populated -->
@@ -2426,61 +2483,61 @@
       <div class="glass-card" id="tab-jana">
         <div class="generate-bay">
           <div class="teleport-terminal">
-            <h2 style="font-family:'Outfit',sans-serif; margin-bottom:0.25rem; color:var(--text-main);">Jana Fail Laporan</h2>
-            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.25rem;">Muat turun laporan pergerakan pegawai dalam format PDF atau Excel.</p>
+            <h2 style="font-family:'Outfit',sans-serif; margin-bottom:0.25rem; color:var(--text-main);" data-i18n="jana.title">Jana Fail Laporan</h2>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.25rem;" data-i18n="jana.sub">Muat turun laporan pergerakan pegawai dalam format PDF atau Excel.</p>
 
             <!-- Export Period Filter -->
             <div class="period-filter" id="export-period-filter" style="justify-content:center; margin-bottom:0.5rem;">
-              <button class="period-btn" data-period="day" onclick="setExportPeriod('day')">Hari</button>
-              <button class="period-btn" data-period="week" onclick="setExportPeriod('week')">Minggu</button>
-              <button class="period-btn" data-period="month" onclick="setExportPeriod('month')">Bulan</button>
-              <button class="period-btn" data-period="year" onclick="setExportPeriod('year')">Tahun</button>
-              <button class="period-btn" data-period="all" onclick="setExportPeriod('all')">Semua</button>
+              <button class="period-btn" data-period="day" onclick="setExportPeriod('day')" data-i18n="analisis.period.day">Hari</button>
+              <button class="period-btn" data-period="week" onclick="setExportPeriod('week')" data-i18n="analisis.period.week">Minggu</button>
+              <button class="period-btn" data-period="month" onclick="setExportPeriod('month')" data-i18n="analisis.period.month">Bulan</button>
+              <button class="period-btn" data-period="year" onclick="setExportPeriod('year')" data-i18n="analisis.period.year">Tahun</button>
+              <button class="period-btn" data-period="all" onclick="setExportPeriod('all')" data-i18n="analisis.period.all">Semua</button>
             </div>
             <div class="period-range" id="export-range-label" style="display:block; margin-bottom:1.25rem;"></div>
 
             <div class="teleport-grid" style="margin-bottom:1.25rem;">
               <div class="teleport-metric">
-                <div class="teleport-metric-lbl">Rekod Sektor</div>
+                <div class="teleport-metric-lbl" data-i18n="jana.records">Rekod Sektor</div>
                 <div class="teleport-metric-val" id="metric-record-count">0 Rekod</div>
               </div>
               <div class="teleport-metric">
-                <div class="teleport-metric-lbl">Status</div>
-                <div class="teleport-metric-val" style="color:var(--success-green);"><i class="fa-solid fa-circle-check"></i> Sedia</div>
+                <div class="teleport-metric-lbl" data-i18n="jana.status">Status</div>
+                <div class="teleport-metric-val" style="color:var(--success-green);"><i class="fa-solid fa-circle-check"></i> <span data-i18n="jana.ready">Sedia</span></div>
               </div>
             </div>
 
             <div class="downloads-layout">
               <!-- Sektor downloads -->
               <div>
-                <p class="download-section-title"><i class="fa-solid fa-layer-group"></i> Sektor Semasa</p>
+                <p class="download-section-title"><i class="fa-solid fa-layer-group"></i> <span data-i18n="jana.sektorTitle">Sektor Semasa</span></p>
                 <div class="download-grid">
                   <div class="download-card pdf" onclick="generatePDF('sector')">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <div class="dc-label">Muat Turun PDF</div>
-                    <div class="dc-sub">Laporan sektor semasa</div>
+                    <div class="dc-label" data-i18n="jana.pdfLabel">Muat Turun PDF</div>
+                    <div class="dc-sub" data-i18n="jana.pdfSub">Laporan sektor semasa</div>
                   </div>
                   <div class="download-card xlsx" onclick="exportToExcel('sector')">
                     <i class="fa-solid fa-file-excel"></i>
-                    <div class="dc-label">Muat Turun Excel</div>
-                    <div class="dc-sub">Data sektor semasa</div>
+                    <div class="dc-label" data-i18n="jana.excelLabel">Muat Turun Excel</div>
+                    <div class="dc-sub" data-i18n="jana.excelSub">Data sektor semasa</div>
                   </div>
                 </div>
               </div>
 
               <!-- Whole PPD downloads -->
               <div>
-                <p class="download-section-title"><i class="fa-solid fa-building-columns"></i> Keseluruhan PPD</p>
+                <p class="download-section-title"><i class="fa-solid fa-building-columns"></i> <span data-i18n="jana.allTitle">Keseluruhan PPD</span></p>
                 <div class="download-grid">
                   <div class="download-card pdf" onclick="generatePDF('all')">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <div class="dc-label">Muat Turun PDF</div>
-                    <div class="dc-sub">Semua sektor PPD</div>
+                    <div class="dc-label" data-i18n="jana.pdfLabel">Muat Turun PDF</div>
+                    <div class="dc-sub" data-i18n="jana.allPdfSub">Semua sektor PPD</div>
                   </div>
                   <div class="download-card xlsx" onclick="exportToExcel('all')">
                     <i class="fa-solid fa-file-excel"></i>
-                    <div class="dc-label">Muat Turun Excel</div>
-                    <div class="dc-sub">Semua sektor PPD</div>
+                    <div class="dc-label" data-i18n="jana.excelLabel">Muat Turun Excel</div>
+                    <div class="dc-sub" data-i18n="jana.allExcelSub">Semua sektor PPD</div>
                   </div>
                 </div>
               </div>
@@ -2489,10 +2546,10 @@
 
           <div class="reset-orbit-container">
             <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:10px;">
-              Perhatian: Tindakan ini akan memadamkan kesemua data pergerakan secara kekal. Sila pastikan anda telah membuat sandaran terlebih dahulu.
+              <span data-i18n="jana.deleteWarning">Perhatian: Tindakan ini akan memadamkan kesemua data pergerakan secara kekal. Sila pastikan anda telah membuat sandaran terlebih dahulu.</span>
             </p>
             <button class="reset-btn" onclick="resetSystemData()">
-              <i class="fa-solid fa-trash"></i> Padam Semua Data
+              <i class="fa-solid fa-trash"></i> <span data-i18n="jana.deleteBtn">Padam Semua Data</span>
             </button>
           </div>
         </div>
@@ -2514,6 +2571,450 @@
   </footer>
 
   <script>
+    // ===== LANGUAGE SYSTEM =====
+    const LANG_STRINGS = {
+      bm: {
+        'auth.sector.title': 'Pilih Sektor',
+        'auth.sector.sub': 'Sila pilih sektor anda di PPD Dalat',
+        'auth.sector.continue': 'Teruskan',
+        'auth.sector.adminBtn': 'Log Masuk Admin',
+        'sector.SPr': 'Sektor Perancangan',
+        'sector.SPb': 'Sektor Pembelajaran',
+        'sector.SPbM': 'Sektor Pembangunan Murid',
+        'sector.SP': 'Sektor Pengurusan',
+        'sector.SPS': 'Sektor Pengurusan Sekolah',
+        'sector.SPPSPsK': 'Pentaksiran & Psikologi Kaunseling',
+        'sector.PTIS': 'Pasukan Teknikal ICT Sekolah',
+        'auth.id.title': 'Kenal Pasti Pegawai',
+        'auth.id.sub': 'Sila nyatakan maklumat ringkas anda untuk meneruskan',
+        'auth.id.namaLabel': 'Nama Penuh',
+        'auth.id.namaPlaceholder': 'Cth: Encik Mohamad Fauzi bin Suhaili',
+        'auth.id.emailLabel': 'Alamat E-mel (MOE)',
+        'auth.id.emailPlaceholder': 'nama@moe.gov.my',
+        'auth.id.jawatanLabel': 'Jawatan',
+        'auth.id.jawatanPlaceholder': 'Pilih Jawatan...',
+        'auth.id.submit': 'Log Masuk',
+        'auth.id.hint': 'Hanya akaun e-mel berakhiran @moe.gov.my dibenarkan meneruskan. Kali pertama log masuk akan mendaftarkan anda secara automatik.',
+        'auth.id.adminLink': 'Masuk sebagai Admin',
+        'auth.email.title': 'Log Masuk',
+        'auth.email.sub': 'Masukkan alamat e-mel anda untuk meneruskan',
+        'auth.email.label': 'Alamat E-mel (MOE)',
+        'auth.email.placeholder': 'nama@moe.gov.my',
+        'auth.email.submit': 'Log Masuk',
+        'auth.email.newAccount': 'Daftar akaun baru',
+        'auth.email.adminLink': 'Masuk sebagai Admin',
+        'auth.admin.title': 'Akses Admin',
+        'auth.admin.sub': 'Masukkan PIN admin untuk meneruskan',
+        'auth.admin.pinLabel': 'PIN Admin',
+        'auth.admin.submit': 'Buka Panel Admin',
+        'auth.admin.backLink': 'Kembali ke Log Masuk Staf',
+        'nav.utama': 'Utama',
+        'nav.kalendar': 'Kalendar',
+        'nav.borang': 'Borang',
+        'nav.analisis': 'Analisis',
+        'nav.jana': 'Jana Fail',
+        'home.totalLog': 'Jumlah Log Pergerakan',
+        'home.todayMov': 'Pergerakan Hari Ini',
+        'home.staffInvolved': 'Pegawai Terlibat',
+        'home.analysisByType': 'Analisis Pergerakan Mengikut Jenis',
+        'home.newRecord': 'Daftar Pergerakan Baru',
+        'home.noRecord': 'Tiada rekod pergerakan.',
+        'form.title': 'Daftar Pergerakan Pegawai',
+        'form.addAnother': 'Tambah Pergerakan Lain',
+        'form.done': 'Selesai / Lihat Log',
+        'form.namaLabel': 'Nama Pegawai',
+        'form.namaPlaceholder': 'Cth: Encik Mohamad Fauzi bin Suhaili',
+        'form.tarikhLabel': 'Tarikh Pergerakan',
+        'form.multiDay': 'Urusan melebihi 1 hari',
+        'form.endDateLabel': 'Tarikh Akhir',
+        'form.multiDayHint': 'Satu rekod akan didaftarkan bagi setiap hari dalam julat tarikh ini.',
+        'form.destLabel': 'Destinasi / Lokasi',
+        'form.destPlaceholder': 'Cth: SMK Dalat / PPD Mukah',
+        'form.tujuanLabel': 'Tujuan Pergerakan',
+        'form.tujuanPlaceholder': 'Pilih Tujuan...',
+        'form.masaLabel': 'Masa',
+        'form.masaOptional': '(Pilihan)',
+        'form.masaHint': 'Masa Bertolak · Masa Balik',
+        'form.notaLabel': 'Nota Tambahan',
+        'form.notaPlaceholder': 'Masukkan ulasan ringkas mengenai agenda pergerakan...',
+        'form.submit': 'Hantar Rekod',
+        'tujuan.pejabat': 'Berada di Pejabat',
+        'tujuan.mesyuarat': 'Mesyuarat / Perbincangan',
+        'tujuan.bengkel': 'Bengkel Kerja',
+        'tujuan.kursus': 'Kursus / Latihan',
+        'tujuan.pemantauan': 'Pemantauan Sekolah',
+        'tujuan.cutiUmum': 'Cuti Umum',
+        'tujuan.pelepasan': 'Pelepasan',
+        'tujuan.cuti': 'Cuti Rehat / Cuti Sakit',
+        'tujuan.lain': 'Tugas Rasmi Lain',
+        'analisis.title': 'Log & Analisis Pergerakan',
+        'analisis.searchPlaceholder': 'Cari nama, lokasi atau tujuan...',
+        'analisis.period.day': 'Hari',
+        'analisis.period.week': 'Minggu',
+        'analisis.period.month': 'Bulan',
+        'analisis.period.year': 'Tahun',
+        'analisis.period.all': 'Semua',
+        'analisis.col.nama': 'Nama Pegawai',
+        'analisis.col.tarikh': 'Tarikh',
+        'analisis.col.dest': 'Destinasi / Lokasi',
+        'analisis.col.tujuan': 'Tujuan',
+        'analisis.col.nota': 'Nota',
+        'analisis.col.tindakan': 'Tindakan',
+        'analisis.empty.title': 'Tiada Log Pergerakan Dijumpai',
+        'analisis.empty.sub': 'Tiada rekod pergerakan untuk tempoh ini atau carian anda tiada padanan.',
+        'analisis.taburan': 'Analisis Taburan Tujuan Misi',
+        'jana.title': 'Jana Fail Laporan',
+        'jana.sub': 'Muat turun laporan pergerakan pegawai dalam format PDF atau Excel.',
+        'jana.records': 'Rekod Sektor',
+        'jana.status': 'Status',
+        'jana.ready': 'Sedia',
+        'jana.sektorTitle': 'Sektor Semasa',
+        'jana.pdfLabel': 'Muat Turun PDF',
+        'jana.pdfSub': 'Laporan sektor semasa',
+        'jana.excelLabel': 'Muat Turun Excel',
+        'jana.excelSub': 'Data sektor semasa',
+        'jana.allTitle': 'Keseluruhan PPD',
+        'jana.allPdfSub': 'Semua sektor PPD',
+        'jana.allExcelSub': 'Semua sektor PPD',
+        'jana.deleteWarning': 'Perhatian: Tindakan ini akan memadamkan kesemua data pergerakan secara kekal. Sila pastikan anda telah membuat sandaran terlebih dahulu.',
+        'jana.deleteBtn': 'Padam Semua Data',
+        'admin.title': 'Panel Admin',
+        'admin.logout': 'Log Keluar Admin',
+        'admin.tab.ringkasan': 'Ringkasan',
+        'admin.tab.analisis': 'Analisis',
+        'admin.tab.rekod': 'Rekod',
+        'admin.tab.urus': 'Urus',
+        'admin.card.staff': 'Jumlah Staf',
+        'admin.card.today': 'Rekod Hari Ini',
+        'admin.card.total': 'Jumlah Rekod',
+        'admin.card.topSektor': 'Sektor Paling Aktif',
+        'admin.trend.title': 'Trend Pergerakan — 6 Bulan Lepas',
+        'admin.top5.title': 'Top 5 Destinasi',
+        'admin.inactive.title': 'Pegawai Tiada Rekod',
+        'admin.inactive.allActive': 'Semua staf berdaftar mempunyai rekod pergerakan.',
+        'admin.sector.title': 'Analisis Pergerakan Mengikut Sektor',
+        'admin.sector.hint': 'Klik sektor untuk tapis rekod dalam tab Rekod.',
+        'admin.dow.title': 'Analisis Mengikut Hari Seminggu',
+        'admin.tujuanSector.title': 'Pecahan Tujuan Mengikut Sektor',
+        'admin.userStats.title': 'Statistik Pergerakan Setiap Pengguna',
+        'admin.records.title': 'Semua Rekod Pergerakan',
+        'admin.records.allSektor': 'Semua Sektor',
+        'admin.records.searchPlaceholder': 'Cari nama, destinasi, tujuan...',
+        'admin.records.from': 'Dari:',
+        'admin.records.to': 'Hingga:',
+        'admin.records.clearDate': 'Kosongkan Tarikh',
+        'admin.records.empty': 'Tiada rekod pergerakan.',
+        'admin.staff.title': 'Urus Staf (Tambah / Padam Pengguna)',
+        'admin.staff.namaLabel': 'Nama',
+        'admin.staff.namaPlaceholder': 'Nama penuh',
+        'admin.staff.emailLabel': 'E-mel',
+        'admin.staff.jawatanLabel': 'Jawatan',
+        'admin.staff.sektorHeader': 'Sektor',
+        'admin.staff.tindakanHeader': 'Tindakan',
+        'admin.staff.addBtn': 'Tambah',
+        'admin.staff.empty': 'Tiada staf didaftarkan lagi.',
+        'admin.jawatan.title': 'Urus Senarai Jawatan',
+        'admin.jawatan.placeholder': 'Cth: Ketua Unit ICT',
+        'admin.jawatan.addBtn': 'Tambah Jawatan',
+        'admin.audit.title': 'Log Audit',
+        'admin.audit.colAction': 'Tindakan',
+        'admin.audit.colTime': 'Tarikh & Masa',
+        'admin.audit.empty': 'Tiada aktiviti admin direkodkan lagi.',
+        'admin.tab.jana': 'Jana Fail',
+        'admin.jana.title': 'Jana & Muat Turun Laporan',
+        'admin.jana.sub': 'Jana laporan pergerakan dalam format PDF atau Excel mengikut sektor atau keseluruhan PPD.',
+        'admin.jana.bySector': 'Jana Mengikut Sektor',
+        'admin.jana.allTitle': 'Keseluruhan PPD Dalat',
+        'admin.jana.allSub': 'Semua sektor digabungkan dalam satu laporan.',
+        'admin.tab.kalend': 'Kalendar',
+        'col.nama': 'Nama Pegawai',
+        'col.email': 'E-mel',
+        'col.sektor': 'Sektor',
+        'col.jumlah': 'Jumlah Rekod',
+        'col.topTujuan': 'Tujuan Paling Kerap',
+        'col.tarikh': 'Tarikh',
+        'col.dest': 'Destinasi',
+        'col.tujuan': 'Tujuan',
+        'col.tindakan': 'Tindakan',
+        'audit.delete_record': 'Padam Rekod',
+        'audit.delete_staff': 'Padam Staf',
+        'audit.delete_jawatan': 'Padam Jawatan',
+        'audit.add_staff': 'Tambah Staf',
+        'audit.add_jawatan': 'Tambah Jawatan',
+        'audit.self_register': 'Daftar Diri',
+        'audit.reset_staff': 'Reset Staf',
+        'audit.reset_all': 'Reset Semua',
+        'toast.loggedOut': 'Anda telah berjaya log keluar.',
+        'toast.adminPinFail': 'Tidak dapat berhubung dengan pelayan pangkalan data.',
+        'toast.welcome': 'Selamat datang, {name}!',
+        'toast.welcomeBack': 'Selamat datang semula, {name}!',
+        'toast.recordSent': 'Rekod pergerakan berjaya dihantar!',
+        'toast.recordSentMulti': '{n} rekod pergerakan berjaya dihantar!',
+        'toast.deleteConfirm': 'Padam rekod ini secara kekal? Tindakan ini akan dicatat dalam log audit.',
+        'toast.recordDeleted': 'Rekod telah dipadamkan.',
+        'toast.deleteAllConfirm': 'AMARAN! Padam semua data pergerakan? Tindakan ini tidak boleh dibatalkan.',
+        'toast.staffAdded': 'Staf {name} berjaya ditambah.',
+        'toast.staffDeleted': 'Akses staf telah dipadamkan.',
+        'toast.staffResetted': 'Pendaftaran {name} telah ditetapkan semula.',
+        'toast.jawatanAdded': 'Jawatan "{j}" berjaya ditambah.',
+        'toast.jawatanDeleted': 'Pilihan jawatan telah dipadamkan.',
+        'toast.recordDeletedAdmin': 'Rekod telah dipadamkan oleh admin.',
+        'cal.clock': 'Waktu Semasa',
+        'cal.days': 'AH,IS,SE,RA,KH,JU,SA',
+        'dow.1': 'Isnin', 'dow.2': 'Selasa', 'dow.3': 'Rabu',
+        'dow.4': 'Khamis', 'dow.5': 'Jumaat',
+      },
+      en: {
+        'auth.sector.title': 'Select Sector',
+        'auth.sector.sub': 'Please select your sector at PPD Dalat',
+        'auth.sector.continue': 'Continue',
+        'auth.sector.adminBtn': 'Admin Login',
+        'sector.SPr': 'Planning Sector',
+        'sector.SPb': 'Learning Sector',
+        'sector.SPbM': 'Student Development Sector',
+        'sector.SP': 'Management Sector',
+        'sector.SPS': 'School Management Sector',
+        'sector.SPPSPsK': 'Assessment & Psychology Counseling',
+        'sector.PTIS': 'School ICT Technical Team',
+        'auth.id.title': 'Officer Identification',
+        'auth.id.sub': 'Please provide your basic information to continue',
+        'auth.id.namaLabel': 'Full Name',
+        'auth.id.namaPlaceholder': 'e.g. Mr. Mohamad Fauzi bin Suhaili',
+        'auth.id.emailLabel': 'Email Address (MOE)',
+        'auth.id.emailPlaceholder': 'name@moe.gov.my',
+        'auth.id.jawatanLabel': 'Position',
+        'auth.id.jawatanPlaceholder': 'Select Position...',
+        'auth.id.submit': 'Sign In',
+        'auth.id.hint': 'Only email accounts ending with @moe.gov.my are allowed. First-time login will automatically register you.',
+        'auth.id.adminLink': 'Sign in as Admin',
+        'auth.email.title': 'Sign In',
+        'auth.email.sub': 'Enter your email address to continue',
+        'auth.email.label': 'Email Address (MOE)',
+        'auth.email.placeholder': 'name@moe.gov.my',
+        'auth.email.submit': 'Sign In',
+        'auth.email.newAccount': 'Register new account',
+        'auth.email.adminLink': 'Sign in as Admin',
+        'auth.admin.title': 'Admin Access',
+        'auth.admin.sub': 'Enter the admin PIN to continue',
+        'auth.admin.pinLabel': 'Admin PIN',
+        'auth.admin.submit': 'Open Admin Panel',
+        'auth.admin.backLink': 'Back to Staff Login',
+        'nav.utama': 'Home',
+        'nav.kalendar': 'Calendar',
+        'nav.borang': 'Form',
+        'nav.analisis': 'Analysis',
+        'nav.jana': 'Generate',
+        'home.totalLog': 'Total Movement Log',
+        'home.todayMov': "Today's Movements",
+        'home.staffInvolved': 'Officers Involved',
+        'home.analysisByType': 'Movement Analysis by Type',
+        'home.newRecord': 'Register New Movement',
+        'home.noRecord': 'No movement records.',
+        'form.title': 'Register Officer Movement',
+        'form.addAnother': 'Add Another Movement',
+        'form.done': 'Done / View Log',
+        'form.namaLabel': 'Officer Name',
+        'form.namaPlaceholder': 'e.g. Mr. Mohamad Fauzi bin Suhaili',
+        'form.tarikhLabel': 'Movement Date',
+        'form.multiDay': 'Assignment exceeds 1 day',
+        'form.endDateLabel': 'End Date',
+        'form.multiDayHint': 'One record will be registered for each day in this date range.',
+        'form.destLabel': 'Destination / Location',
+        'form.destPlaceholder': 'e.g. SMK Dalat / PPD Mukah',
+        'form.tujuanLabel': 'Purpose of Movement',
+        'form.tujuanPlaceholder': 'Select Purpose...',
+        'form.masaLabel': 'Time',
+        'form.masaOptional': '(Optional)',
+        'form.masaHint': 'Departure Time · Return Time',
+        'form.notaLabel': 'Additional Notes',
+        'form.notaPlaceholder': 'Enter a brief description of the movement agenda...',
+        'form.submit': 'Submit Record',
+        'tujuan.pejabat': 'In Office',
+        'tujuan.mesyuarat': 'Meeting / Discussion',
+        'tujuan.bengkel': 'Workshop',
+        'tujuan.kursus': 'Course / Training',
+        'tujuan.pemantauan': 'School Monitoring',
+        'tujuan.cutiUmum': 'Public Holiday',
+        'tujuan.pelepasan': 'Release',
+        'tujuan.cuti': 'Annual / Sick Leave',
+        'tujuan.lain': 'Other Official Duties',
+        'analisis.title': 'Movement Log & Analysis',
+        'analisis.searchPlaceholder': 'Search name, location or purpose...',
+        'analisis.period.day': 'Day',
+        'analisis.period.week': 'Week',
+        'analisis.period.month': 'Month',
+        'analisis.period.year': 'Year',
+        'analisis.period.all': 'All',
+        'analisis.col.nama': 'Officer Name',
+        'analisis.col.tarikh': 'Date',
+        'analisis.col.dest': 'Destination / Location',
+        'analisis.col.tujuan': 'Purpose',
+        'analisis.col.nota': 'Notes',
+        'analisis.col.tindakan': 'Actions',
+        'analisis.empty.title': 'No Movement Log Found',
+        'analisis.empty.sub': 'No movement records for this period or your search has no matches.',
+        'analisis.taburan': 'Purpose Distribution Analysis',
+        'jana.title': 'Generate Report File',
+        'jana.sub': 'Download officer movement reports in PDF or Excel format.',
+        'jana.records': 'Sector Records',
+        'jana.status': 'Status',
+        'jana.ready': 'Ready',
+        'jana.sektorTitle': 'Current Sector',
+        'jana.pdfLabel': 'Download PDF',
+        'jana.pdfSub': 'Current sector report',
+        'jana.excelLabel': 'Download Excel',
+        'jana.excelSub': 'Current sector data',
+        'jana.allTitle': 'All PPD',
+        'jana.allPdfSub': 'All PPD sectors',
+        'jana.allExcelSub': 'All PPD sectors',
+        'jana.deleteWarning': 'Warning: This action will permanently delete all movement data. Please ensure you have made a backup first.',
+        'jana.deleteBtn': 'Delete All Data',
+        'admin.title': 'Admin Panel',
+        'admin.logout': 'Logout Admin',
+        'admin.tab.ringkasan': 'Summary',
+        'admin.tab.analisis': 'Analysis',
+        'admin.tab.rekod': 'Records',
+        'admin.tab.urus': 'Manage',
+        'admin.card.staff': 'Total Staff',
+        'admin.card.today': "Today's Records",
+        'admin.card.total': 'Total Records',
+        'admin.card.topSektor': 'Most Active Sector',
+        'admin.trend.title': 'Movement Trend — Last 6 Months',
+        'admin.top5.title': 'Top 5 Destinations',
+        'admin.inactive.title': 'Officers with No Records',
+        'admin.inactive.allActive': 'All registered staff have movement records.',
+        'admin.sector.title': 'Movement Analysis by Sector',
+        'admin.sector.hint': 'Click a sector to filter records in the Records tab.',
+        'admin.dow.title': 'Analysis by Day of the Week',
+        'admin.tujuanSector.title': 'Purpose Breakdown by Sector',
+        'admin.userStats.title': 'Movement Statistics per Officer',
+        'admin.records.title': 'All Movement Records',
+        'admin.records.allSektor': 'All Sectors',
+        'admin.records.searchPlaceholder': 'Search name, destination, purpose...',
+        'admin.records.from': 'From:',
+        'admin.records.to': 'To:',
+        'admin.records.clearDate': 'Clear Dates',
+        'admin.records.empty': 'No movement records.',
+        'admin.staff.title': 'Manage Staff (Add / Remove Users)',
+        'admin.staff.namaLabel': 'Name',
+        'admin.staff.namaPlaceholder': 'Full name',
+        'admin.staff.emailLabel': 'Email',
+        'admin.staff.jawatanLabel': 'Position',
+        'admin.staff.sektorHeader': 'Sector',
+        'admin.staff.tindakanHeader': 'Actions',
+        'admin.staff.addBtn': 'Add',
+        'admin.staff.empty': 'No staff registered yet.',
+        'admin.jawatan.title': 'Manage Position List',
+        'admin.jawatan.placeholder': 'e.g. ICT Unit Head',
+        'admin.jawatan.addBtn': 'Add Position',
+        'admin.audit.title': 'Audit Log',
+        'admin.audit.colAction': 'Action',
+        'admin.audit.colTime': 'Date & Time',
+        'admin.audit.empty': 'No admin activity recorded yet.',
+        'admin.tab.jana': 'Generate',
+        'admin.jana.title': 'Generate & Download Reports',
+        'admin.jana.sub': 'Generate movement reports in PDF or Excel format by sector or for all PPD.',
+        'admin.jana.bySector': 'Generate by Sector',
+        'admin.jana.allTitle': 'All PPD Dalat',
+        'admin.jana.allSub': 'All sectors combined in one report.',
+        'admin.tab.kalend': 'Calendar',
+        'col.nama': 'Officer Name',
+        'col.email': 'Email',
+        'col.sektor': 'Sector',
+        'col.jumlah': 'Total Records',
+        'col.topTujuan': 'Most Common Purpose',
+        'col.tarikh': 'Date',
+        'col.dest': 'Destination',
+        'col.tujuan': 'Purpose',
+        'col.tindakan': 'Actions',
+        'audit.delete_record': 'Delete Record',
+        'audit.delete_staff': 'Delete Staff',
+        'audit.delete_jawatan': 'Delete Position',
+        'audit.add_staff': 'Add Staff',
+        'audit.add_jawatan': 'Add Position',
+        'audit.self_register': 'Self Register',
+        'audit.reset_staff': 'Reset Staff',
+        'audit.reset_all': 'Reset All',
+        'toast.loggedOut': 'You have successfully logged out.',
+        'toast.adminPinFail': 'Could not connect to the database server.',
+        'toast.welcome': 'Welcome, {name}!',
+        'toast.welcomeBack': 'Welcome back, {name}!',
+        'toast.recordSent': 'Movement record submitted successfully!',
+        'toast.recordSentMulti': '{n} movement records submitted successfully!',
+        'toast.deleteConfirm': 'Permanently delete this record? This action will be logged in the audit log.',
+        'toast.recordDeleted': 'Record has been deleted.',
+        'toast.deleteAllConfirm': 'WARNING! Delete all movement data? This action cannot be undone.',
+        'toast.staffAdded': 'Staff {name} added successfully.',
+        'toast.staffDeleted': 'Staff access has been removed.',
+        'toast.staffResetted': "Staff {name}'s registration has been reset.",
+        'toast.jawatanAdded': 'Position "{j}" added successfully.',
+        'toast.jawatanDeleted': 'Position option has been removed.',
+        'toast.recordDeletedAdmin': 'Record has been deleted by admin.',
+        'cal.clock': 'Current Time',
+        'cal.days': 'SU,MO,TU,WE,TH,FR,SA',
+        'dow.1': 'Monday', 'dow.2': 'Tuesday', 'dow.3': 'Wednesday',
+        'dow.4': 'Thursday', 'dow.5': 'Friday',
+      }
+    };
+
+    let currentLang = localStorage.getItem('ppd_lang') || 'bm';
+
+    function t(key) {
+      return (LANG_STRINGS[currentLang] || LANG_STRINGS.bm)[key] || LANG_STRINGS.bm[key] || key;
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'bm' ? 'en' : 'bm';
+      localStorage.setItem('ppd_lang', currentLang);
+      applyLanguage();
+      reRenderAll();
+    }
+
+    function applyLanguage() {
+      const btn = document.getElementById('lang-toggle-btn');
+      if (btn) btn.textContent = currentLang === 'bm' ? 'EN' : 'BM';
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        el.textContent = t(key);
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.title = t(el.dataset.i18nTitle);
+      });
+      // Update calendar weekday headers
+      const wd = document.getElementById('cal-weekdays');
+      if (wd) {
+        const days = t('cal.days').split(',');
+        const divs = wd.querySelectorAll('div');
+        divs.forEach((d, i) => { if (days[i]) d.textContent = days[i]; });
+      }
+    }
+
+    function reRenderAll() {
+      if (document.getElementById('admin-panel')?.style?.display === 'block') {
+        if (typeof renderAdminSummaryCards === 'function') renderAdminSummaryCards();
+        if (typeof renderMonthlyTrend === 'function') renderMonthlyTrend();
+        if (typeof renderTopDestinations === 'function') renderTopDestinations();
+        if (typeof renderDayOfWeek === 'function') renderDayOfWeek();
+        if (typeof renderTujuanPerSektor === 'function') renderTujuanPerSektor();
+        if (typeof renderStaffTable === 'function') renderStaffTable();
+        if (typeof renderUserStats === 'function') renderUserStats();
+        if (typeof renderSectorAnalysis === 'function') renderSectorAnalysis();
+        if (typeof renderAdminRecordsTable === 'function') renderAdminRecordsTable();
+        if (typeof renderInactiveStaff === 'function') renderInactiveStaff();
+        if (typeof renderAuditLog === 'function') renderAuditLog();
+      } else {
+        if (typeof renderMovementTable === 'function') renderMovementTable();
+        if (typeof renderInsights === 'function') renderInsights();
+        if (typeof updateStats === 'function') updateStats();
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof updateJanaMetrics === 'function') updateJanaMetrics();
+      }
+    }
+    // ===== END LANGUAGE SYSTEM =====
+
     // Star Background Generator
     function createStars() {
       const bg = document.getElementById('space-background');
@@ -2673,6 +3174,9 @@
 
     // Initialization
     async function initSystem() {
+      // Apply stored language preference
+      applyLanguage();
+
       // Load session
       const session = localStorage.getItem('ppd_dalat_session');
       if (session) {
@@ -2758,7 +3262,7 @@
       localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
       localStorage.setItem('ppd_dalat_remembered_email', email);
 
-      showToast(`Selamat datang, ${currentUserSession.name}!`, 'success');
+      showToast(t('toast.welcome').replace('{name}', currentUserSession.name), 'success');
       evaluateSessionView();
     }
 
@@ -2769,7 +3273,7 @@
       selectedSector = null;
       document.getElementById('app-title').textContent = 'e-Gerak PPD Dalat';
       resetSectorTheme();
-      showToast("Anda telah berjaya log keluar.", "success");
+      showToast(t('toast.loggedOut'), "success");
       evaluateSessionView();
     }
 
@@ -2831,7 +3335,7 @@
         localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
         localStorage.setItem('ppd_dalat_remembered_email', email);
 
-        showToast(`Selamat datang semula, ${staff.nama}!`, 'success');
+        showToast(t('toast.welcomeBack').replace('{name}', staff.nama), 'success');
         evaluateSessionView();
       } catch (err) {
         console.error(err);
@@ -2905,6 +3409,8 @@
         renderInactiveStaff(),
         renderAuditLog()
       ]);
+      renderAdminJanaSectorGrid();
+      renderAdminCalendar();
     }
 
     // --- Staf (roster) ---
@@ -2931,7 +3437,7 @@
               </div>
             </td>
           </tr>
-        `).join('') || '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tiada staf didaftarkan lagi.</td></tr>';
+        `).join('') || `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('admin.staff.empty')}</td></tr>`;
       } catch (err) {
         console.error(err);
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Gagal memuatkan senarai staf.</td></tr>';
@@ -2956,7 +3462,7 @@
         document.getElementById('staff-email').value = '';
         document.getElementById('staff-jawatan').value = '';
 
-        showToast(`Staf ${nama} berjaya ditambah.`, 'success');
+        showToast(t('toast.staffAdded').replace('{name}', nama), 'success');
         renderStaffTable();
         renderAuditLog();
       } catch (err) {
@@ -2975,7 +3481,7 @@
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-        showToast('Akses staf telah dipadamkan.', 'warning');
+        showToast(t('toast.staffDeleted'), 'warning');
         renderStaffTable();
         renderAuditLog();
       } catch (err) {
@@ -3019,7 +3525,7 @@
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
         input.value = '';
-        showToast(`Jawatan "${jawatan}" berjaya ditambah.`, 'success');
+        showToast(t('toast.jawatanAdded').replace('{j}', jawatan), 'success');
         renderJawatanList();
         loadJawatanOptions('staff-jawatan');
         renderAuditLog();
@@ -3039,7 +3545,7 @@
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-        showToast('Pilihan jawatan telah dipadamkan.', 'warning');
+        showToast(t('toast.jawatanDeleted'), 'warning');
         renderJawatanList();
         loadJawatanOptions('staff-jawatan');
         renderAuditLog();
@@ -3093,10 +3599,10 @@
       const topSektor = Object.entries(sektorCounts).sort((a, b) => b[1] - a[1])[0];
 
       const cards = [
-        { icon: 'fa-users', label: 'Jumlah Staf', value: '—', id: 'admin-card-staff', color: '#1d4ed8' },
-        { icon: 'fa-calendar-day', label: 'Rekod Hari Ini', value: todayCount, color: '#16a34a' },
-        { icon: 'fa-database', label: 'Jumlah Rekod', value: totalRecords, color: '#7c3aed' },
-        { icon: 'fa-trophy', label: 'Sektor Paling Aktif', value: topSektor ? `${topSektor[0]} (${topSektor[1]})` : '—', color: '#d97706' },
+        { icon: 'fa-users', label: t('admin.card.staff'), value: '—', id: 'admin-card-staff', color: '#1d4ed8' },
+        { icon: 'fa-calendar-day', label: t('admin.card.today'), value: todayCount, color: '#16a34a' },
+        { icon: 'fa-database', label: t('admin.card.total'), value: totalRecords, color: '#7c3aed' },
+        { icon: 'fa-trophy', label: t('admin.card.topSektor'), value: topSektor ? `${topSektor[0]} (${topSektor[1]})` : '—', color: '#d97706' },
       ];
       container.innerHTML = cards.map(c => `
         <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;gap:6px;">
@@ -3191,7 +3697,7 @@
         const activeEmails = new Set(adminMovementData.map(r => r.submittedBy));
         const inactive = staffList.filter(s => !activeEmails.has(s.email));
         if (!inactive.length) {
-          container.innerHTML = '<div style="font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-check"></i> Semua staf berdaftar mempunyai rekod pergerakan.</div>';
+          container.innerHTML = `<div style="font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-check"></i> ${t('admin.inactive.allActive')}</div>`;
           return;
         }
         container.innerHTML = inactive.map(s => `
@@ -3211,7 +3717,7 @@
     function renderDayOfWeek() {
       const container = document.getElementById('admin-day-of-week');
       if (!container) return;
-      const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+      const days = ['Ahad', t('dow.1'), t('dow.2'), t('dow.3'), t('dow.4'), t('dow.5'), 'Sabtu'];
       const counts = [0,0,0,0,0,0,0];
       adminMovementData.forEach(r => {
         if (!r.tarikh) return;
@@ -3335,11 +3841,11 @@
             <button class="action-btn" onclick="adminDeleteRecord('${r.id}')" title="Padam Rekod"><i class="fa-solid fa-trash-can"></i></button>
           </td>
         </tr>`;
-      }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Tiada rekod pergerakan.</td></tr>';
+      }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">${t('admin.records.empty')}</td></tr>`;
     }
 
     async function adminDeleteRecord(id) {
-      if (!confirm('Padam rekod ini secara kekal? Tindakan ini akan dicatat dalam log audit.')) return;
+      if (!confirm(t('toast.deleteConfirm'))) return;
 
       try {
         const res = await fetch(`${API_BASE}/movements/${encodeURIComponent(id)}`, {
@@ -3348,7 +3854,7 @@
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-        showToast('Rekod telah dipadamkan oleh admin.', 'warning');
+        showToast(t('toast.recordDeletedAdmin'), 'warning');
         await loadAllMovementsForAdmin();
         renderAdminRecordsTable();
         renderSectorAnalysis();
@@ -3390,9 +3896,12 @@
     function setAdminSectorFilter(sektor) {
       const el = document.getElementById('admin-sector-filter');
       if (!el) return;
-      el.value = (el.value === sektor) ? '' : sektor; // toggle
+      el.value = (el.value === sektor) ? '' : sektor;
       filterAdminRecords();
-      document.getElementById('admin-records-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Switch to Rekod tab
+      const rekodBtn = document.querySelector('.admin-tab-btn[onclick*="rekod"]');
+      if (rekodBtn) switchAdminTab('rekod', rekodBtn);
+      setTimeout(() => document.getElementById('admin-records-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     }
 
     // --- Log Audit ---
@@ -3404,6 +3913,236 @@
       chevron.style.transform = open ? 'rotate(180deg)' : '';
     }
 
+    // --- Admin Jana Fail ---
+    const JANA_SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
+    const JANA_SEKTOR_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488'];
+
+    function renderAdminJanaSectorGrid() {
+      const grid = document.getElementById('admin-jana-sector-grid');
+      if (!grid) return;
+      grid.innerHTML = JANA_SEKTORS.map((s, i) => {
+        const color = JANA_SEKTOR_COLORS[i % JANA_SEKTOR_COLORS.length];
+        const count = adminMovementData.filter(r => r.sektor === s).length;
+        return `<div style="background:#fff;border:1.5px solid ${color}33;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span>
+            <span style="font-weight:700;font-size:0.83rem;color:var(--text-main);">${s}</span>
+            <span style="margin-left:auto;font-size:0.75rem;color:var(--text-muted);">${count} rekod</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="adminJanaSektorPDF('${s}')" style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 8px;background:#fff3f3;border:1.5px solid #fca5a5;color:#dc2626;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">
+              <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
+            <button onclick="adminJanaSektorExcel('${s}')" style="flex:1;min-width:60px;display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 8px;background:#f0fdf4;border:1.5px solid #86efac;color:#16a34a;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">
+              <i class="fa-solid fa-file-excel"></i> Excel
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function buildSektorReport(sektor, records) {
+      const tujuanCounts = {};
+      records.forEach(r => { tujuanCounts[r.tujuan] = (tujuanCounts[r.tujuan] || 0) + 1; });
+      const topTujuan = Object.entries(tujuanCounts).sort((a,b) => b[1]-a[1]);
+      const today = new Date().toLocaleDateString('ms-MY', { year:'numeric', month:'long', day:'numeric' });
+
+      const staffMap = {};
+      records.forEach(r => {
+        if (!staffMap[r.nama]) staffMap[r.nama] = 0;
+        staffMap[r.nama]++;
+      });
+
+      const rows = records.map((r, i) => `
+        <tr style="background:${i%2===0?'#f8fafc':'#fff'}">
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${i+1}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.nama || '-'}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.tarikh || '-'}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.destinasi || '-'}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.tujuan || '-'}</td>
+          <td style="padding:6px 10px;border:1px solid #e2e8f0;font-size:11px;">${r.nota || '-'}</td>
+        </tr>`).join('');
+
+      const tujuanRows = topTujuan.map(([tj, cnt]) => `
+        <tr><td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;">${tj}</td>
+        <td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;font-weight:600;">${cnt}</td>
+        <td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;">${records.length>0?Math.round(cnt/records.length*100):0}%</td></tr>`).join('');
+
+      const staffRows = Object.entries(staffMap).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([nm, cnt]) =>
+        `<tr><td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;">${nm}</td>
+         <td style="padding:5px 10px;border:1px solid #e2e8f0;font-size:11px;font-weight:600;">${cnt}</td></tr>`).join('');
+
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <title>Laporan ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : sektor}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #1e293b; }
+        h1 { font-size: 16px; margin: 0; }
+        h2 { font-size: 13px; margin: 14px 0 6px; color: #003580; border-bottom: 2px solid #003580; padding-bottom: 4px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 14px; }
+        th { background: #003580; color: #fff; padding: 7px 10px; font-size: 11px; text-align: left; border: 1px solid #1d4ed8; }
+        .header-row { display: flex; align-items: center; gap: 14px; border-bottom: 3px solid #003580; padding-bottom: 10px; margin-bottom: 16px; }
+        .meta { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+        .stat-box { background: #f0f4f8; border-radius: 8px; padding: 10px 14px; }
+        .stat-val { font-size: 20px; font-weight: 800; color: #003580; }
+        .stat-lbl { font-size: 10px; color: #64748b; margin-top: 2px; }
+        @media print { body { margin: 10px; } }
+      </style></head><body>
+      <div class="header-row">
+        <img src="icons/icon-192.png" width="54" height="54" style="border-radius:8px;" onerror="this.style.display='none'">
+        <div>
+          <h1>Laporan Pergerakan Pegawai — ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : 'Sektor ' + sektor}</h1>
+          <div class="meta">Pejabat Pendidikan Daerah Dalat &nbsp;|&nbsp; Dijana pada ${today}</div>
+          <div class="meta">Jumlah rekod: <strong>${records.length}</strong></div>
+        </div>
+      </div>
+
+      <h2>Ringkasan Statistik</h2>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-val">${records.length}</div><div class="stat-lbl">Jumlah Rekod</div></div>
+        <div class="stat-box"><div class="stat-val">${Object.keys(staffMap).length}</div><div class="stat-lbl">Pegawai Terlibat</div></div>
+        <div class="stat-box"><div class="stat-val">${topTujuan[0]?topTujuan[0][0]:'-'}</div><div class="stat-lbl">Tujuan Paling Kerap</div></div>
+      </div>
+
+      <h2>Analisis Tujuan Pergerakan</h2>
+      <table><thead><tr><th>Tujuan</th><th>Bilangan</th><th>Peratusan</th></tr></thead>
+      <tbody>${tujuanRows || '<tr><td colspan="3" style="padding:8px;text-align:center;">Tiada data</td></tr>'}</tbody></table>
+
+      <h2>10 Pegawai Paling Aktif</h2>
+      <table><thead><tr><th>Nama Pegawai</th><th>Jumlah Rekod</th></tr></thead>
+      <tbody>${staffRows || '<tr><td colspan="2" style="padding:8px;text-align:center;">Tiada data</td></tr>'}</tbody></table>
+
+      <h2>Senarai Rekod Pergerakan</h2>
+      <table><thead><tr><th>#</th><th>Nama Pegawai</th><th>Tarikh</th><th>Destinasi</th><th>Tujuan</th><th>Nota</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" style="padding:8px;text-align:center;">Tiada rekod</td></tr>'}</tbody></table>
+      </body></html>`;
+    }
+
+    function adminJanaSektorPDF(sektor) {
+      const records = adminMovementData.filter(r => r.sektor === sektor)
+        .sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+      const html = buildSektorReport(sektor, records);
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 600);
+    }
+
+    function adminJanaSektorExcel(sektor) {
+      const records = adminMovementData.filter(r => r.sektor === sektor)
+        .sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+      const ws_data = [
+        ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
+        ...records.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nota||'', r.masa||'', r.submittedBy||''])
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, sektor.replace(/\//g,'-'));
+      XLSX.writeFile(wb, `Laporan_${sektor.replace(/\//g,'-')}_PPD_Dalat.xlsx`);
+    }
+
+    function adminJanaAllPDF() {
+      const records = [...adminMovementData].sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+      const html = buildSektorReport('SEMUA', records);
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 600);
+    }
+
+    function adminJanaAllExcel() {
+      const wb = XLSX.utils.book_new();
+      JANA_SEKTORS.forEach(s => {
+        const records = adminMovementData.filter(r => r.sektor === s)
+          .sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+        const ws_data = [
+          ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
+          ...records.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nama||'', r.masa||'', r.submittedBy||''])
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, s.replace(/\//g,'-'));
+      });
+      const allData = [['Nama Pegawai', 'Sektor', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
+        ...adminMovementData.sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')).map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])];
+      const wsAll = XLSX.utils.aoa_to_sheet(allData);
+      XLSX.utils.book_append_sheet(wb, wsAll, 'Semua');
+      XLSX.writeFile(wb, 'Laporan_Keseluruhan_PPD_Dalat.xlsx');
+    }
+
+    // --- Admin Kalendar ---
+    let adminCalDate = new Date();
+
+    function renderAdminCalendar() {
+      const section = document.getElementById('admin-calendar-section');
+      if (!section) return;
+
+      const monthsMalay = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
+      const year = adminCalDate.getFullYear();
+      const month = adminCalDate.getMonth();
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const prevLastDay = new Date(year, month, 0).getDate();
+      const today = new Date();
+
+      let dayCells = '';
+      for (let x = firstDayIndex; x > 0; x--) {
+        dayCells += `<div class="calendar-day other-month">${prevLastDay - x + 1}</div>`;
+      }
+      for (let i = 1; i <= lastDay; i++) {
+        const monthStr = String(month + 1).padStart(2,'0');
+        const dayStr = String(i).padStart(2,'0');
+        const ds = `${year}-${monthStr}-${dayStr}`;
+        const dayMovs = adminMovementData.filter(r => r.tarikh === ds);
+        const isToday = today.getFullYear()===year && today.getMonth()===month && today.getDate()===i;
+        const cls = ['calendar-day', isToday?'today':'', dayMovs.length>0?'has-movement':''].filter(Boolean).join(' ');
+        const badge = dayMovs.length > 0 ? `<span style="position:absolute;bottom:3px;right:4px;font-size:0.6rem;background:var(--primary-blue);color:#fff;border-radius:99px;padding:0 4px;line-height:1.5;">${dayMovs.length}</span>` : '';
+        dayCells += `<div class="${cls}" style="position:relative;" onclick="adminCalSelectDay('${ds}')">${i}${badge}</div>`;
+      }
+      const totalCells = firstDayIndex + lastDay;
+      for (let j = 1; j <= 42 - totalCells; j++) {
+        dayCells += `<div class="calendar-day other-month">${j}</div>`;
+      }
+
+      section.innerHTML = `
+        <div style="max-width:760px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <button onclick="adminAdjustMonth(-1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <h3 id="admin-cal-month-year" style="flex:1;text-align:center;font-size:1rem;font-weight:700;">${monthsMalay[month]} ${year}</h3>
+            <button onclick="adminAdjustMonth(1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div class="calendar-weekdays"><div>AH</div><div>IS</div><div>SE</div><div>RA</div><div>KH</div><div>JU</div><div>SA</div></div>
+          <div class="calendar-days" id="admin-calendar-days-grid">${dayCells}</div>
+          <div class="day-events-container" style="margin-top:1rem;" id="admin-cal-day-events">
+            <div class="day-events-title">Klik tarikh untuk lihat pergerakan</div>
+          </div>
+        </div>`;
+    }
+
+    function adminAdjustMonth(offset) {
+      adminCalDate.setMonth(adminCalDate.getMonth() + offset);
+      renderAdminCalendar();
+    }
+
+    function adminCalSelectDay(dateString) {
+      const container = document.getElementById('admin-cal-day-events');
+      if (!container) return;
+      const parts = dateString.split('-');
+      const displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      const matched = adminMovementData.filter(r => r.tarikh === dateString);
+      let html = `<div class="day-events-title">Pergerakan Tarikh: ${displayDate} (${matched.length} rekod)</div>`;
+      if (matched.length === 0) {
+        html += '<div style="padding:10px 0;text-align:center;color:var(--text-muted);font-size:0.85rem;">Tiada pergerakan pada tarikh ini.</div>';
+      } else {
+        html += '<ul class="day-events-list">' + matched.map(r => `
+          <li class="day-event-item">
+            <span class="day-event-name">${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.7rem;background:#e0e7ff;color:#3730a3;border-radius:4px;padding:1px 6px;">${escapeHtml(r.sektor)}</span>`:''}
+            </span>
+            <span class="day-event-dest"><i class="fa-solid fa-circle" style="font-size:5px;vertical-align:middle;margin-right:4px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')} (${escapeHtml(r.tujuan||'')})</span>
+          </li>`).join('') + '</ul>';
+      }
+      container.innerHTML = html;
+    }
+
     async function renderAuditLog() {
       const tbody = document.getElementById('audit-log-list');
       const countEl = document.getElementById('audit-log-count');
@@ -3413,14 +4152,14 @@
         if (countEl) countEl.textContent = entries.length;
 
         const ACTION_META = {
-          'delete_record': { icon: 'fa-trash-can',      color: '#dc2626', bg: '#fee2e2', label: 'Padam Rekod'   },
-          'delete_staff':  { icon: 'fa-user-minus',     color: '#dc2626', bg: '#fee2e2', label: 'Padam Staf'    },
-          'delete_jawatan':{ icon: 'fa-circle-minus',   color: '#dc2626', bg: '#fee2e2', label: 'Padam Jawatan' },
-          'add_staff':     { icon: 'fa-user-plus',      color: '#16a34a', bg: '#dcfce7', label: 'Tambah Staf'   },
-          'add_jawatan':   { icon: 'fa-circle-plus',    color: '#16a34a', bg: '#dcfce7', label: 'Tambah Jawatan'},
-          'self_register': { icon: 'fa-user-check',     color: '#1d4ed8', bg: '#dbeafe', label: 'Daftar Diri'   },
-          'reset_staff':   { icon: 'fa-rotate-left',    color: '#d97706', bg: '#fef3c7', label: 'Reset Staf'    },
-          'reset_all':     { icon: 'fa-bomb',           color: '#7c3aed', bg: '#ede9fe', label: 'Reset Semua'   },
+          'delete_record': { icon: 'fa-trash-can',      color: '#dc2626', bg: '#fee2e2', label: t('audit.delete_record')   },
+          'delete_staff':  { icon: 'fa-user-minus',     color: '#dc2626', bg: '#fee2e2', label: t('audit.delete_staff')    },
+          'delete_jawatan':{ icon: 'fa-circle-minus',   color: '#dc2626', bg: '#fee2e2', label: t('audit.delete_jawatan')  },
+          'add_staff':     { icon: 'fa-user-plus',      color: '#16a34a', bg: '#dcfce7', label: t('audit.add_staff')       },
+          'add_jawatan':   { icon: 'fa-circle-plus',    color: '#16a34a', bg: '#dcfce7', label: t('audit.add_jawatan')     },
+          'self_register': { icon: 'fa-user-check',     color: '#1d4ed8', bg: '#dbeafe', label: t('audit.self_register')   },
+          'reset_staff':   { icon: 'fa-rotate-left',    color: '#d97706', bg: '#fef3c7', label: t('audit.reset_staff')     },
+          'reset_all':     { icon: 'fa-bomb',           color: '#7c3aed', bg: '#ede9fe', label: t('audit.reset_all')       },
         };
 
         tbody.innerHTML = entries.map((e) => {
@@ -3438,7 +4177,7 @@
             </td>
             <td style="padding:10px 8px;text-align:right;white-space:nowrap;font-size:0.75rem;color:var(--text-muted);">${when}</td>
           </tr>`;
-        }).join('') || `<tr><td colspan="3" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.82rem;">Tiada aktiviti admin direkodkan lagi.</td></tr>`;
+        }).join('') || `<tr><td colspan="3" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.82rem;">${t('admin.audit.empty')}</td></tr>`;
       } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--text-muted);">Gagal memuatkan log audit.</td></tr>`;
@@ -3490,14 +4229,23 @@
         appNav.style.display = 'none';
         headerUserTag.style.display = 'none';
 
-        document.getElementById('view-sector-select').style.display = 'block';
-        document.getElementById('view-identify').style.display = 'none';
-        document.getElementById('view-email-login').style.display = 'none';
-        document.getElementById('view-admin-pin').style.display = 'none';
-        // Reset sector selection state
-        selectedSector = null;
-        document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('selected'));
-        document.getElementById('sector-continue-btn').disabled = true;
+        const _rememberedForSkip = localStorage.getItem('ppd_dalat_remembered_email');
+        if (_rememberedForSkip) {
+          // Returning user — skip sector selection, go straight to email login
+          document.getElementById('view-sector-select').style.display = 'none';
+          document.getElementById('view-identify').style.display = 'none';
+          document.getElementById('view-email-login').style.display = 'block';
+          document.getElementById('view-admin-pin').style.display = 'none';
+        } else {
+          document.getElementById('view-sector-select').style.display = 'block';
+          document.getElementById('view-identify').style.display = 'none';
+          document.getElementById('view-email-login').style.display = 'none';
+          document.getElementById('view-admin-pin').style.display = 'none';
+          // Reset sector selection state
+          selectedSector = null;
+          document.querySelectorAll('.sector-btn').forEach(b => b.classList.remove('selected'));
+          document.getElementById('sector-continue-btn').disabled = true;
+        }
       }
     }
 
@@ -3822,7 +4570,7 @@
         panel.style.display = 'block';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        showToast(`${dates.length > 1 ? dates.length + ' rekod' : 'Pergerakan'} bagi ${nama} berjaya dihantar!`, 'success');
+        showToast(dates.length > 1 ? t('toast.recordSentMulti').replace('{n}', dates.length) : t('toast.recordSent'), 'success');
       } catch (err) {
         console.error(err);
         showToast('Gagal menghantar pergerakan. Sila semak sambungan ke pelayan pangkalan data.', 'error');
@@ -4886,7 +5634,7 @@
           headers: { 'X-Admin-Token': adminToken }
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        showToast(`Pendaftaran ${nama} telah ditetapkan semula.`, 'success');
+        showToast(t('toast.staffResetted').replace('{name}', nama), 'success');
         renderStaffTable();
         renderAuditLog();
       } catch (err) {
