@@ -3670,7 +3670,11 @@
       const errorTxt = document.getElementById('activation-error-text');
       errorDiv.style.display = 'none';
 
-      const code = document.getElementById('activation-code').value.trim();
+      // Baca terus dari kotak sebagai sandaran jika hidden input kosong
+      const boxes = Array.from(document.querySelectorAll('#otp-boxes .otp-box'));
+      const codeFromBoxes = boxes.map(b => b.value).join('');
+      const hiddenVal = document.getElementById('activation-code').value.trim();
+      const code = (hiddenVal.length === 6 ? hiddenVal : codeFromBoxes).trim();
       if (!code || code.length !== 6) {
         errorTxt.textContent = 'Sila masukkan kod 6-digit.';
         errorDiv.style.display = 'flex';
@@ -3745,55 +3749,101 @@
     let _otpTimerInterval = null;
 
     function initOtpBoxes() {
-      const boxes = Array.from(document.querySelectorAll('.otp-box'));
+      const container = document.getElementById('otp-boxes');
+      if (!container) return;
+
+      // Buang semua event listeners lama dengan replace node
+      const oldBoxes = Array.from(container.querySelectorAll('.otp-box'));
+      oldBoxes.forEach(box => {
+        const clone = box.cloneNode(true);
+        clone.value = '';
+        clone.classList.remove('filled', 'shake');
+        box.parentNode.replaceChild(clone, box);
+      });
+
+      const boxes = Array.from(container.querySelectorAll('.otp-box'));
+
+      function updateBox(box, digit) {
+        box.value = digit;
+        box.classList.toggle('filled', !!digit);
+        syncHiddenInput();
+      }
 
       boxes.forEach((box, i) => {
-        box.value = '';
-        box.classList.remove('filled', 'shake');
-
-        box.addEventListener('input', e => {
-          const val = box.value.replace(/\D/g, '');
-          box.value = val ? val[val.length - 1] : '';
-          box.classList.toggle('filled', !!box.value);
-          if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
-          syncHiddenInput();
+        // Apabila kotak difokus, pilih kandungan supaya taip ganti terus
+        box.addEventListener('focus', () => {
+          setTimeout(() => box.select(), 0);
         });
 
+        // Tangkap keydown untuk Backspace, Arrow, digit sebelum browser proses
         box.addEventListener('keydown', e => {
           if (e.key === 'Backspace') {
-            if (!box.value && i > 0) {
-              boxes[i - 1].value = '';
-              boxes[i - 1].classList.remove('filled');
+            e.preventDefault();
+            if (box.value) {
+              updateBox(box, '');
+            } else if (i > 0) {
+              updateBox(boxes[i - 1], '');
               boxes[i - 1].focus();
-              syncHiddenInput();
             }
-          } else if (e.key === 'ArrowLeft' && i > 0) {
-            boxes[i - 1].focus();
-          } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {
-            boxes[i + 1].focus();
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if (i > 0) boxes[i - 1].focus();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (i < boxes.length - 1) boxes[i + 1].focus();
           } else if (e.key === 'Enter') {
+            e.preventDefault();
             document.querySelector('#view-activation form').dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+          } else if (/^\d$/.test(e.key)) {
+            e.preventDefault();
+            updateBox(box, e.key);
+            // Pindah ke kotak seterusnya
+            if (i < boxes.length - 1) {
+              boxes[i + 1].focus();
+            }
+          } else if (!/^(Tab|Shift|Control|Alt|Meta|CapsLock)$/.test(e.key)) {
+            // Sekat input bukan angka (kecuali kekunci khas)
+            e.preventDefault();
           }
         });
 
+        // Tangkap input untuk sokongan mobile keyboard (on-screen keyboard)
+        box.addEventListener('input', e => {
+          const raw = box.value.replace(/\D/g, '');
+          if (!raw) {
+            updateBox(box, '');
+            return;
+          }
+          // Ambil digit terakhir jika ada lebih dari satu
+          const digit = raw[raw.length - 1];
+          updateBox(box, digit);
+          if (i < boxes.length - 1) {
+            boxes[i + 1].focus();
+          }
+        });
+
+        // Sokongan paste
         box.addEventListener('paste', e => {
           e.preventDefault();
           const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+          if (!pasted) return;
           boxes.forEach((b, j) => {
             b.value = pasted[j] || '';
-            b.classList.toggle('filled', !!b.value);
+            b.classList.toggle('filled', !!(pasted[j]));
           });
-          const nextEmpty = boxes.findIndex(b => !b.value);
-          (nextEmpty >= 0 ? boxes[nextEmpty] : boxes[boxes.length - 1]).focus();
           syncHiddenInput();
+          // Fokus ke kotak selepas digit terakhir yang dipaste
+          const nextIdx = Math.min(pasted.length, boxes.length - 1);
+          boxes[nextIdx].focus();
         });
-
-        box.addEventListener('focus', () => box.select());
       });
+
+      // Fokus ke kotak pertama
+      boxes[0].focus();
     }
 
     function syncHiddenInput() {
-      const boxes = Array.from(document.querySelectorAll('.otp-box'));
+      const boxes = Array.from(document.querySelectorAll('#otp-boxes .otp-box'));
       document.getElementById('activation-code').value = boxes.map(b => b.value).join('');
     }
 
