@@ -3176,6 +3176,7 @@
           fetch(`${API_BASE}/movements?${sektorQ}`),
           fetch(`${API_BASE}/movements?${emailQ}`)
         ]);
+        if (sectorRes.status === 401) return true; // not logged in yet — silent
         if (!sectorRes.ok) throw new Error(`Server returned ${sectorRes.status}`);
         movementRecords = await sectorRes.json();
         allMovementRecords = allRes.ok ? await allRes.json() : movementRecords;
