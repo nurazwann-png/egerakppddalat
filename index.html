@@ -2535,7 +2535,7 @@
             <div class="clock-title"><i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="cal.clock">Waktu Semasa</span></div>
             <div class="digital-clock" id="digital-clock">00:00:00</div>
             <div class="digital-date" id="digital-date">Selasa, 7 Julai 2026</div>
-            <div class="digital-day" id="digital-day">Modul Kalendar Aktif</div>
+            <div class="digital-day" id="digital-day" data-i18n="cal.modulActive">Modul Kalendar Aktif</div>
           </div>
 
           <!-- Custom Interactive Calendar Widget -->
@@ -3061,7 +3061,20 @@
         'auth.serverError': 'Tidak dapat mendaftar/mengesahkan akses. Sila semak sambungan ke pelayan pangkalan data.',
         'form.tujuanComboPlaceholder': 'Pilih atau taip tujuan...',
         'cal.clock': 'Waktu Semasa',
+        'cal.modulActive': 'Modul Kalendar Aktif',
         'cal.days': 'AH,IS,SE,RA,KH,JU,SA',
+        'cal.movDate': 'Pergerakan Tarikh:',
+        'cal.noMov': 'Tiada pergerakan berjadual pada tarikh ini. Semua berada di pangkalan.',
+        'cal.year': 'Tahun',
+        'period.all.label': 'Sepanjang masa',
+        'period.noRecord': 'Tiada rekod pergerakan untuk tempoh ini.',
+        'period.noLog': 'Tiada log pergerakan bagi tempoh ini',
+        'empty.data': 'Tiada data.',
+        'empty.record': 'Tiada rekod.',
+        'empty.movRecord': 'Tiada rekod pergerakan.',
+        'empty.movData': 'Tiada data pergerakan lagi.',
+        'empty.periodRecord': 'Tiada rekod untuk tempoh ini.',
+        'pdf.noRecord': 'Tiada rekod untuk dijana sebagai PDF.',
         'dow.1': 'Isnin', 'dow.2': 'Selasa', 'dow.3': 'Rabu',
         'dow.4': 'Khamis', 'dow.5': 'Jumaat',
       },
@@ -3290,7 +3303,20 @@
         'auth.serverError': 'Unable to register/verify access. Please check the database server connection.',
         'form.tujuanComboPlaceholder': 'Select or type purpose...',
         'cal.clock': 'Current Time',
+        'cal.modulActive': 'Calendar Module Active',
         'cal.days': 'SU,MO,TU,WE,TH,FR,SA',
+        'cal.movDate': 'Movements on:',
+        'cal.noMov': 'No scheduled movements on this date. All officers are at base.',
+        'cal.year': 'Year',
+        'period.all.label': 'All time',
+        'period.noRecord': 'No movement records for this period.',
+        'period.noLog': 'No movement log for this period',
+        'empty.data': 'No data.',
+        'empty.record': 'No records.',
+        'empty.movRecord': 'No movement records.',
+        'empty.movData': 'No movement data yet.',
+        'empty.periodRecord': 'No records for this period.',
+        'pdf.noRecord': 'No records to generate as PDF.',
         'dow.1': 'Monday', 'dow.2': 'Tuesday', 'dow.3': 'Wednesday',
         'dow.4': 'Thursday', 'dow.5': 'Friday',
       }
@@ -4171,7 +4197,7 @@
             <td>${topTujuan ? escapeHtml(topTujuan[0]) + ` (${topTujuan[1]})` : '-'}</td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Tiada data pergerakan lagi.</td></tr>';
+      }).join('') || `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('empty.movData')}</td></tr>`;
     }
 
     // --- Kad ringkasan admin ---
@@ -4262,7 +4288,7 @@
       adminMovementData.forEach(r => { if (r.tujuan) counts[r.tujuan] = (counts[r.tujuan]||0)+1; });
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
       const total = sorted.reduce((s,[,v])=>s+v,0);
-      if (!sorted.length) { container.innerHTML='<div class="detail-empty">Tiada data.</div>'; return; }
+      if (!sorted.length) { container.innerHTML=`<div class="detail-empty">${t('empty.data')}</div>`; return; }
 
       const SIZE=220, cx=SIZE/2, cy=SIZE/2, r=SIZE*0.38, ir=SIZE*0.22;
       let ang=-Math.PI/2;
@@ -4300,7 +4326,7 @@
       const counts = {};
       adminMovementData.forEach(r => { if (r.destinasi) counts[r.destinasi] = (counts[r.destinasi] || 0) + 1; });
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      if (!top.length) { container.innerHTML = '<div class="detail-empty">Tiada data.</div>'; return; }
+      if (!top.length) { container.innerHTML = `<div class="detail-empty">${t('empty.data')}</div>`; return; }
       const max = top[0][1];
       const total = Object.values(counts).reduce((s, v) => s + v, 0);
       const colors = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2'];
@@ -4405,7 +4431,7 @@
           </div>
           <div style="padding:10px;display:flex;flex-direction:column;gap:4px;">${bars}</div>
         </div>`;
-      }).filter(Boolean).join('') || '<div class="detail-empty">Tiada data.</div>';
+      }).filter(Boolean).join('') || `<div class="detail-empty">${t('empty.data')}</div>`;
     }
 
     // --- Urus sebarang rekod (admin boleh padam rekod sesiapa sahaja) ---
@@ -4574,7 +4600,7 @@
     function _svgPie(data, size) {
       size = size || 180;
       const total = data.reduce((s,d) => s+d.v, 0);
-      if (!total) return '<p style="color:#999;font-size:11px;text-align:center;">Tiada data</p>';
+      if (!total) return `<p style="color:#999;font-size:11px;text-align:center;">${t('empty.data')}</p>`;
       const cx = size/2, cy = size/2, r = size*0.38, ir = size*0.22;
       let ang = -Math.PI/2;
       const slices = data.map(d => {
@@ -4717,11 +4743,11 @@
 
       <h2>Analisis Tujuan Pergerakan</h2>
       <table><thead><tr><th>Tujuan</th><th style="width:60px">Bilangan</th><th style="width:60px">Peratusan</th></tr></thead>
-      <tbody>${tujuanRows || '<tr><td colspan="3" style="padding:8px;text-align:center;">Tiada data</td></tr>'}</tbody></table>
+      <tbody>${tujuanRows || `<tr><td colspan="3" style="padding:8px;text-align:center;">${t('empty.data')}</td></tr>`}</tbody></table>
 
       <h2>10 Pegawai Paling Aktif</h2>
       <table><thead><tr><th>Nama Pegawai</th><th style="width:80px">Jumlah Rekod</th></tr></thead>
-      <tbody>${staffRows || '<tr><td colspan="2" style="padding:8px;text-align:center;">Tiada data</td></tr>'}</tbody></table>
+      <tbody>${staffRows || `<tr><td colspan="2" style="padding:8px;text-align:center;">${t('empty.data')}</td></tr>`}</tbody></table>
 
       <h2>Senarai Rekod Pergerakan</h2>
       <table><thead><tr>
@@ -4729,7 +4755,7 @@
         ${sektor==='SEMUA'?'<th style="width:50px">Sektor</th>':''}
         <th style="width:65px">Tarikh</th><th>Destinasi</th><th style="width:100px">Tujuan</th><th>Nota</th>
       </tr></thead>
-      <tbody>${rows || '<tr><td colspan="6" style="padding:8px;text-align:center;">Tiada rekod</td></tr>'}</tbody></table>
+      <tbody>${rows || `<tr><td colspan="6" style="padding:8px;text-align:center;">${t('empty.record')}</td></tr>`}</tbody></table>
       </body></html>`;
     }
 
@@ -5104,7 +5130,7 @@
     function updateTujuanBreakdown() {
       const container = document.getElementById('tujuan-breakdown');
       if (!container) return;
-      if (!movementRecords.length) { container.innerHTML = '<div class="detail-empty">Tiada rekod pergerakan.</div>'; return; }
+      if (!movementRecords.length) { container.innerHTML = `<div class="detail-empty">${t('empty.movRecord')}</div>`; return; }
 
       const counts = {};
       movementRecords.forEach(r => { const t = r.tujuan || 'Lain-lain'; counts[t] = (counts[t] || 0) + 1; });
@@ -5155,7 +5181,7 @@
 
     function renderMovementTable(records) {
       const body = document.getElementById('stat-detail-body');
-      if (!records.length) { body.innerHTML = '<div class="detail-empty">Tiada rekod.</div>'; return; }
+      if (!records.length) { body.innerHTML = `<div class="detail-empty">${t('empty.record')}</div>`; return; }
       body.innerHTML = `<table>
         <thead><tr><th>#</th><th>Tarikh</th><th>Nama</th><th>Tujuan</th><th>Destinasi</th></tr></thead>
         <tbody>${records.slice().reverse().map((r, i) => `
@@ -5433,9 +5459,11 @@
     }
 
     function formatPeriodRangeLabel(period) {
-      if (period === 'all') return 'Sepanjang masa';
+      if (period === 'all') return t('period.all.label');
 
-      const monthsShort = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
+      const monthsShortBm = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
+      const monthsShortEn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthsShort = currentLang === 'en' ? monthsShortEn : monthsShortBm;
       const fmt = (d) => `${String(d.getDate()).padStart(2, '0')} ${monthsShort[d.getMonth()]}`;
 
       const range = getPeriodRange(period);
@@ -5443,7 +5471,7 @@
       endInclusive.setDate(endInclusive.getDate() - 1);
 
       if (period === 'day') return `${fmt(range.start)} ${range.start.getFullYear()}`;
-      if (period === 'year') return `Tahun ${range.start.getFullYear()}`;
+      if (period === 'year') return `${t('cal.year')} ${range.start.getFullYear()}`;
       return `${fmt(range.start)} - ${fmt(endInclusive)} ${endInclusive.getFullYear()}`;
     }
 
@@ -5514,8 +5542,8 @@
         document.getElementById('insights-panel').style.display = 'none';
         if (emptyDesc) {
           emptyDesc.textContent = movementRecords.length === 0
-            ? 'Tiada rekod pergerakan untuk tempoh ini.'
-            : `Tiada log pergerakan bagi tempoh ini (${formatPeriodRangeLabel(currentAnalysisPeriod)}).`;
+            ? t('period.noRecord')
+            : `${t('period.noLog')} (${formatPeriodRangeLabel(currentAnalysisPeriod)}).`;
         }
         return;
       }
@@ -5674,7 +5702,7 @@
 
       const active = tujuans.filter(t => counts[t] > 0).sort((a, b) => counts[b] - counts[a]);
       if (!active.length) {
-        container.innerHTML = '<div class="detail-empty">Tiada rekod untuk tempoh ini.</div>';
+        container.innerHTML = `<div class="detail-empty">${t('empty.periodRecord')}</div>`;
         return;
       }
 
@@ -5835,13 +5863,13 @@
         displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
       } catch(e) {}
 
-      title.textContent = `Pergerakan Tarikh: ${displayDate}`;
+      title.textContent = `${t('cal.movDate')} ${displayDate}`;
       list.innerHTML = '';
 
       const matched = allMovementRecords.filter(r => r.tarikh === dateString);
 
       if (matched.length === 0) {
-        list.innerHTML = '<li style="padding: 10px 0; text-align:center;">Tiada pergerakan berjadual pada tarikh ini. Semua berada di pangkalan.</li>';
+        list.innerHTML = `<li style="padding: 10px 0; text-align:center;">${t('cal.noMov')}</li>`;
         return;
       }
 
@@ -5877,7 +5905,7 @@
 
       const periodRecords = records.filter(r => isRecordInPeriod(r, currentExportPeriod));
       if (periodRecords.length === 0) {
-        showToast('Tiada rekod untuk dijana sebagai PDF.', 'error');
+        showToast(t('pdf.noRecord'), 'error');
         return;
       }
 

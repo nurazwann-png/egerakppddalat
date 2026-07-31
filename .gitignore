@@ -15,9 +15,11 @@ node_modules/
 Thumbs.db
 
 # Unrelated files
-*.jpeg
-*.jpg
 *.xlsx
 agent.py
 prompt.txt
-images/
+# Exclude WhatsApp/personal photos but keep project images
+WhatsApp*.jpeg
+WhatsApp*.jpg
+logo/*.jpeg
+logo/*.jpg
