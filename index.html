@@ -2380,7 +2380,7 @@
               <div class="input-wrapper">
                 <input class="form-input" type="text" id="tujuan" required autocomplete="off"
                   list="tujuan-datalist"
-                  placeholder="Pilih atau taip tujuan..."
+                  placeholder="Pilih atau taip tujuan..." data-i18n-placeholder="form.tujuanComboPlaceholder"
                   oninput="handleTujuanChange(this.value)"
                   onchange="handleTujuanChange(this.value)">
                 <datalist id="tujuan-datalist">
@@ -2765,6 +2765,23 @@
         'toast.jawatanAdded': 'Jawatan "{j}" berjaya ditambah.',
         'toast.jawatanDeleted': 'Pilihan jawatan telah dipadamkan.',
         'toast.recordDeletedAdmin': 'Rekod telah dipadamkan oleh admin.',
+        'toast.deleteStaffConfirm': 'Padam akses staf {email}? Mereka tidak akan dapat log masuk lagi.',
+        'toast.sektorUpdated': 'Sektor {name} dikemaskini kepada {sektor}.',
+        'toast.deleteJawatanConfirm': 'Padam pilihan jawatan "{j}"?',
+        'toast.recordDeletedOfficer': 'Rekod pergerakan {name} telah dikeluarkan dari pangkalan.',
+        'toast.noRecordsExport': 'Tiada rekod data pergerakan untuk dieksport bagi tempoh ini!',
+        'toast.excelSuccess': 'Fail Excel berjaya dijana dan dimuat turun!',
+        'toast.excelFail': 'Kegagalan menjana fail Excel. Sila cuba lagi.',
+        'toast.deleteAllConfirm2': 'Adakah anda pasti untuk memadamkan KESEMUA rekod pergerakan yang tersimpan? Tindakan ini tidak boleh dibatalkan.',
+        'toast.allDataDeleted': 'Semua data pergerakan telah dipadamkan.',
+        'toast.resetStaffConfirm': 'Reset pendaftaran {name} ({email})?\n\nMereka perlu daftar semula pada log masuk seterusnya.',
+        'toast.updateFail': 'Gagal mengemaskini: {msg}',
+        'toast.failLoad': 'Gagal memuatkan data.',
+        'toast.failDelete': 'Gagal memadam.',
+        'toast.failUpdate': 'Gagal mengemaskini.',
+        'auth.emailBlocked': 'Akses disekat. Sila gunakan e-mel rasmi MOE (@moe.gov.my).',
+        'auth.serverError': 'Tidak dapat mendaftar/mengesahkan akses. Sila semak sambungan ke pelayan pangkalan data.',
+        'form.tujuanComboPlaceholder': 'Pilih atau taip tujuan...',
         'cal.clock': 'Waktu Semasa',
         'cal.days': 'AH,IS,SE,RA,KH,JU,SA',
         'dow.1': 'Isnin', 'dow.2': 'Selasa', 'dow.3': 'Rabu',
@@ -2957,6 +2974,23 @@
         'toast.jawatanAdded': 'Position "{j}" added successfully.',
         'toast.jawatanDeleted': 'Position option has been removed.',
         'toast.recordDeletedAdmin': 'Record has been deleted by admin.',
+        'toast.deleteStaffConfirm': 'Remove staff access for {email}? They will no longer be able to sign in.',
+        'toast.sektorUpdated': '{name}\'s sector updated to {sektor}.',
+        'toast.deleteJawatanConfirm': 'Remove position option "{j}"?',
+        'toast.recordDeletedOfficer': '{name}\'s movement record has been removed.',
+        'toast.noRecordsExport': 'No movement records to export for this period!',
+        'toast.excelSuccess': 'Excel file generated and downloaded successfully!',
+        'toast.excelFail': 'Failed to generate Excel file. Please try again.',
+        'toast.deleteAllConfirm2': 'Are you sure you want to delete ALL stored movement records? This action cannot be undone.',
+        'toast.allDataDeleted': 'All movement data has been deleted.',
+        'toast.resetStaffConfirm': 'Reset registration for {name} ({email})?\n\nThey will need to re-register on next sign in.',
+        'toast.updateFail': 'Update failed: {msg}',
+        'toast.failLoad': 'Failed to load data.',
+        'toast.failDelete': 'Failed to delete.',
+        'toast.failUpdate': 'Failed to update.',
+        'auth.emailBlocked': 'Access denied. Please use your official MOE email (@moe.gov.my).',
+        'auth.serverError': 'Unable to register/verify access. Please check the database server connection.',
+        'form.tujuanComboPlaceholder': 'Select or type purpose...',
         'cal.clock': 'Current Time',
         'cal.days': 'SU,MO,TU,WE,TH,FR,SA',
         'dow.1': 'Monday', 'dow.2': 'Tuesday', 'dow.3': 'Wednesday',
@@ -3238,7 +3272,7 @@
       const position = document.getElementById('identify-position').value;
 
       if (!ALLOWED_EMAIL_REGEX.test(email)) {
-        errorTxt.textContent = "Akses disekat. Sila gunakan e-mel rasmi MOE (@moe.gov.my).";
+        errorTxt.textContent = t('auth.emailBlocked');
         errorDiv.style.display = 'flex';
         return;
       }
@@ -3260,7 +3294,7 @@
         }
       } catch (err) {
         console.error(err);
-        errorTxt.textContent = "Tidak dapat mendaftar/mengesahkan akses. Sila semak sambungan ke pelayan pangkalan data.";
+        errorTxt.textContent = t('auth.serverError');
         errorDiv.style.display = 'flex';
         return;
       }
@@ -3323,7 +3357,7 @@
       const email = document.getElementById('returning-email').value.trim().toLowerCase();
 
       if (!ALLOWED_EMAIL_REGEX.test(email)) {
-        errorTxt.textContent = "Akses disekat. Sila gunakan e-mel rasmi MOE (@moe.gov.my).";
+        errorTxt.textContent = t('auth.emailBlocked');
         errorDiv.style.display = 'flex';
         return;
       }
@@ -3453,7 +3487,7 @@
         `).join('') || `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('admin.staff.empty')}</td></tr>`;
       } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Gagal memuatkan senarai staf.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('toast.failLoad')}</td></tr>`;
       }
     }
 
@@ -3480,12 +3514,12 @@
         renderAuditLog();
       } catch (err) {
         console.error(err);
-        showToast('Gagal menambah staf.', 'error');
+        showToast(t('toast.failUpdate'), 'error');
       }
     }
 
     async function deleteStaffMember(email) {
-      if (!confirm(`Padam akses staf ${email}? Mereka tidak akan dapat log masuk lagi.`)) return;
+      if (!confirm(t('toast.deleteStaffConfirm').replace('{email}', email))) return;
 
       try {
         const res = await fetch(`${API_BASE}/admin/staff/${encodeURIComponent(email)}`, {
@@ -3499,7 +3533,7 @@
         renderAuditLog();
       } catch (err) {
         console.error(err);
-        showToast('Gagal memadam staf.', 'error');
+        showToast(t('toast.failDelete'), 'error');
       }
     }
 
@@ -3511,11 +3545,11 @@
           body: JSON.stringify({ sektor: newSektor })
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        showToast(`Sektor ${nama} dikemaskini kepada ${newSektor}.`, 'success');
+        showToast(t('toast.sektorUpdated').replace('{name}', nama).replace('{sektor}', newSektor), 'success');
         renderAuditLog();
       } catch (err) {
         console.error(err);
-        showToast('Gagal mengemaskini sektor.', 'error');
+        showToast(t('toast.failUpdate'), 'error');
         renderStaffTable(); // revert dropdown to DB value
       }
     }
@@ -3561,12 +3595,12 @@
         renderAuditLog();
       } catch (err) {
         console.error(err);
-        showToast('Gagal menambah jawatan.', 'error');
+        showToast(t('toast.failUpdate'), 'error');
       }
     }
 
     async function deleteJawatanOption(jawatan) {
-      if (!confirm(`Padam pilihan jawatan "${jawatan}"?`)) return;
+      if (!confirm(t('toast.deleteJawatanConfirm').replace('{j}', jawatan))) return;
 
       try {
         const res = await fetch(`${API_BASE}/admin/jawatan/${encodeURIComponent(jawatan)}`, {
@@ -3581,7 +3615,7 @@
         renderAuditLog();
       } catch (err) {
         console.error(err);
-        showToast('Gagal memadam jawatan.', 'error');
+        showToast(t('toast.failDelete'), 'error');
       }
     }
 
@@ -4934,7 +4968,7 @@
 
         const officer = record.nama;
         movementRecords.splice(index, 1);
-        showToast(`Rekod pergerakan ${officer} telah dikeluarkan dari pangkalan.`, 'warning');
+        showToast(t('toast.recordDeletedOfficer').replace('{name}', officer), 'warning');
 
         updateDashboardStats();
         populateTable();
@@ -5299,7 +5333,7 @@
 
       const exportRecords = records.filter(r => isRecordInPeriod(r, currentExportPeriod));
       if (exportRecords.length === 0) {
-        showToast("Tiada rekod data pergerakan untuk dieksport bagi tempoh ini!", "error");
+        showToast(t('toast.noRecordsExport'), "error");
         return;
       }
 
@@ -5324,16 +5358,16 @@
         XLSX.utils.book_append_sheet(wb, ws, "Log Pergerakan");
         const periodSuffix = { day:'Harian', week:'Mingguan', month:'Bulanan', year:'Tahunan', all:'Semua' }[currentExportPeriod];
         XLSX.writeFile(wb, `Log_Pergerakan_${scopeCode}_Dalat_${periodSuffix}.xlsx`);
-        showToast("Fail Excel berjaya dijana dan dimuat turun!", "success");
+        showToast(t('toast.excelSuccess'), "success");
       } catch (err) {
         console.error(err);
-        showToast("Kegagalan menjana fail Excel. Sila cuba lagi.", "error");
+        showToast(t('toast.excelFail'), "error");
       }
     }
 
     // Reset All System Local Data
     async function resetSystemData() {
-      if (!confirm("Adakah anda pasti untuk memadamkan KESEMUA rekod pergerakan yang tersimpan? Tindakan ini tidak boleh dibatalkan.")) {
+      if (!confirm(t('toast.deleteAllConfirm2'))) {
         return;
       }
 
@@ -5350,7 +5384,7 @@
         populateTable();
         renderCalendar();
         updateSelectedDayEvents(localDateStr());
-        showToast("Semua data pergerakan telah dipadamkan.", "warning");
+        showToast(t('toast.allDataDeleted'), "warning");
       } catch (err) {
         console.error(err);
         showToast('Gagal menetapkan semula. Sila semak sambungan ke pelayan pangkalan data.', 'error');
@@ -5693,7 +5727,7 @@
         await loadMovementsFromServer(true);
         populateTable();
       } catch (e) {
-        showToast(`Gagal mengemaskini: ${e.message}`, 'error');
+        showToast(t('toast.updateFail').replace('{msg}', e.message), 'error');
       }
     }
     // Close modal on overlay click
@@ -5703,7 +5737,7 @@
 
     // ===== Admin Reset Pendaftaran =====
     async function resetStaffMember(email, nama) {
-      if (!confirm(`Reset pendaftaran ${nama} (${email})?\n\nMereka perlu daftar semula pada log masuk seterusnya.`)) return;
+      if (!confirm(t('toast.resetStaffConfirm').replace('{name}', nama).replace('{email}', email))) return;
       try {
         const res = await fetch(`${API_BASE}/admin/staff/${encodeURIComponent(email)}/reset`, {
           method: 'POST',
