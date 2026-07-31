@@ -2779,6 +2779,16 @@
         'audit.update_sektor': 'Tukar Sektor',
         'toast.loggedOut': 'Anda telah berjaya log keluar.',
         'toast.adminPinFail': 'Tidak dapat berhubung dengan pelayan pangkalan data.',
+        'ejen.title': 'Ejen e-Gerak PPD Dalat',
+        'ejen.sub': 'Tanya saya tentang keberadaan pegawai',
+        'ejen.welcome': 'Salam! Saya Ejen e-Gerak PPD Dalat. Tanya saya tentang keberadaan pegawai, status semasa, atau statistik pergerakan.',
+        'ejen.chip1': 'Di luar hari ini',
+        'ejen.chip2': 'Statistik semasa',
+        'ejen.chip3': 'Minggu ini',
+        'ejen.chip1q': 'Siapa yang berada di luar pejabat hari ini?',
+        'ejen.chip2q': 'Berapa ramai pegawai sedang bertugas luar?',
+        'ejen.chip3q': 'Senaraikan semua pergerakan minggu ini',
+        'ejen.placeholder': 'Tanya tentang pegawai...',
         'toast.welcome': 'Selamat datang, {name}!',
         'toast.welcomeBack': 'Selamat datang semula, {name}!',
         'toast.recordSent': 'Rekod pergerakan berjaya dihantar!',
@@ -2989,6 +2999,16 @@
         'audit.update_sektor': 'Change Sector',
         'toast.loggedOut': 'You have successfully logged out.',
         'toast.adminPinFail': 'Could not connect to the database server.',
+        'ejen.title': 'e-Gerak PPD Dalat Agent',
+        'ejen.sub': 'Ask me about officer whereabouts',
+        'ejen.welcome': 'Hello! I am the e-Gerak PPD Dalat Agent. Ask me about officer whereabouts, current status, or movement statistics.',
+        'ejen.chip1': 'Out today',
+        'ejen.chip2': 'Current stats',
+        'ejen.chip3': 'This week',
+        'ejen.chip1q': 'Which officers are out of the office today?',
+        'ejen.chip2q': 'How many officers are currently on field duty?',
+        'ejen.chip3q': 'List all movements this week',
+        'ejen.placeholder': 'Ask about officers...',
         'toast.welcome': 'Welcome, {name}!',
         'toast.welcomeBack': 'Welcome back, {name}!',
         'toast.recordSent': 'Movement record submitted successfully!',
@@ -3059,6 +3079,7 @@
         const divs = wd.querySelectorAll('div');
         divs.forEach((d, i) => { if (days[i]) d.textContent = days[i]; });
       }
+      if (typeof applyEjenLanguage === 'function') applyEjenLanguage();
     }
 
     function reRenderAll() {
@@ -5765,6 +5786,22 @@
   </div>
 
   <script>
+    function applyEjenLanguage() {
+      const titleEl = document.querySelector('.ejen-header-title');
+      const subEl = document.querySelector('.ejen-header-sub');
+      const inputEl = document.getElementById('ejen-input');
+      const chips = document.querySelectorAll('#ejen-suggestions .ejen-chip');
+      if (titleEl) titleEl.textContent = t('ejen.title');
+      if (subEl) subEl.textContent = t('ejen.sub');
+      if (inputEl) inputEl.placeholder = t('ejen.placeholder');
+      const chipKeys = ['chip1','chip2','chip3'];
+      chips.forEach((chip, i) => {
+        if (!chipKeys[i]) return;
+        chip.textContent = t(`ejen.${chipKeys[i]}`);
+        chip.onclick = () => ejenAsk(t(`ejen.${chipKeys[i]}q`));
+      });
+    }
+
     function toggleEjenPanel() {
       const panel = document.getElementById('ejen-panel');
       panel.classList.toggle('open');
@@ -5819,7 +5856,7 @@
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, sektor })
+          body: JSON.stringify({ message, sektor, lang: currentLang })
         });
         const data = await res.json();
         document.getElementById('ejen-typing-indicator')?.remove();

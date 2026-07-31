@@ -599,6 +599,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const userMessage = (body.message || '').trim();
       const sektor = (body.sektor || '').trim();
+      const lang = (body.lang || 'bm').trim();
       if (!userMessage) { sendJSON(res, 400, { error: 'Mesej kosong.' }); return; }
 
       // Build movement context from DB
@@ -608,7 +609,9 @@ const server = http.createServer(async (req, res) => {
         `- ${r.nama} | ${r.sektor || '-'} | ${r.tarikh} | Tujuan: ${r.tujuan} | Destinasi: ${r.destinasi} | Balik: ${r.masa_balik || 'tidak dinyatakan'}`
       ).join('\n');
 
-      const systemPrompt = `Anda ialah Ejen e-Gerak PPD Dalat. Jawab dalam Bahasa Melayu, RINGKAS dan PADAT — maksimum 3-4 ayat atau senarai pendek. Terus kepada fakta, tiada ayat pengenalan panjang.\n\nPeranan: bantu pengguna semak keberadaan pegawai berdasarkan rekod pergerakan.\nTarikh hari ini: ${todayStr}\nSektor pengguna: ${sektor || 'tidak diketahui'}\n\nREKOD PERGERAKAN:\n${contextLines || 'Tiada rekod.'}\n\nPeraturan jawapan:\n- Jika soalan tentang hari ini, tapis rekod bertarikh ${todayStr} sahaja\n- Jika tiada rekod berkaitan, kata "Tiada rekod untuk tarikh/pegawai tersebut"\n- Jangan ubah data, jangan buat andaian\n- Format ringkas: nama → destinasi → tujuan`;
+      const systemPrompt = lang === 'en'
+        ? `You are the e-Gerak PPD Dalat Agent. Answer in English, BRIEF and CONCISE — maximum 3-4 sentences or a short list. Go straight to the facts, no lengthy introductions.\n\nRole: help users check officer whereabouts based on movement records.\nToday's date: ${todayStr}\nUser sector: ${sektor || 'unknown'}\n\nMOVEMENT RECORDS:\n${contextLines || 'No records.'}\n\nAnswer rules:\n- If the question is about today, filter records dated ${todayStr} only\n- If no relevant records, say "No records for that date/officer"\n- Do not alter data, do not make assumptions\n- Brief format: name → destination → purpose`
+        : `Anda ialah Ejen e-Gerak PPD Dalat. Jawab dalam Bahasa Melayu, RINGKAS dan PADAT — maksimum 3-4 ayat atau senarai pendek. Terus kepada fakta, tiada ayat pengenalan panjang.\n\nPeranan: bantu pengguna semak keberadaan pegawai berdasarkan rekod pergerakan.\nTarikh hari ini: ${todayStr}\nSektor pengguna: ${sektor || 'tidak diketahui'}\n\nREKOD PERGERAKAN:\n${contextLines || 'Tiada rekod.'}\n\nPeraturan jawapan:\n- Jika soalan tentang hari ini, tapis rekod bertarikh ${todayStr} sahaja\n- Jika tiada rekod berkaitan, kata "Tiada rekod untuk tarikh/pegawai tersebut"\n- Jangan ubah data, jangan buat andaian\n- Format ringkas: nama → destinasi → tujuan`;
 
       const deepseekBody = JSON.stringify({
         model: 'deepseek-chat',
