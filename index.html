@@ -1420,6 +1420,11 @@
       border-top: 1px solid rgba(255, 255, 255, 0.02);
       margin-top: auto;
     }
+    /* On auth page: bg image behind footer → white text */
+    footer.on-auth {
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
 
     footer p {
       margin-bottom: 4px;
@@ -2676,9 +2681,9 @@
 
   <!-- Footer Section -->
   <!-- Footer -->
-  <footer style="text-align: center; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.7);">
-    <p style="margin-bottom: 2px; opacity: 0.85;">e-Gerak PPD Dalat</p>
-    <p style="margin-bottom: 4px; opacity: 0.85;">Sistem Pengurusan Rekod Pergerakan Pegawai</p>
+  <footer id="app-footer" style="text-align: center;">
+    <p style="margin-bottom: 2px; opacity: 0.75;">e-Gerak PPD Dalat</p>
+    <p style="margin-bottom: 4px; opacity: 0.75;">Sistem Pengurusan Rekod Pergerakan Pegawai</p>
     <p style="font-weight: 700;">Pejabat Pendidikan Daerah Dalat</p>
   </footer>
 
@@ -4597,11 +4602,13 @@
       // regular staff session (e.g. after admin logout or on page load).
       document.getElementById('admin-panel').style.display = 'none';
 
+      const footer = document.getElementById('app-footer');
       if (currentUserSession) {
         // Identified - unlock the dashboard
         authPanel.style.display = 'none';
         mainContent.style.display = 'block';
         appNav.style.display = 'flex';
+        if (footer) footer.classList.remove('on-auth');
 
         // Update title to sector code (short) and apply sector theme
         const titleEl = document.getElementById('app-title');
@@ -4631,6 +4638,7 @@
         mainContent.style.display = 'none';
         appNav.style.display = 'none';
         headerUserTag.style.display = 'none';
+        if (footer) footer.classList.add('on-auth');
 
         const _rememberedForSkip = localStorage.getItem('ppd_dalat_remembered_email');
         if (_rememberedForSkip) {
