@@ -1,1 +1,23 @@
+# Database
 server/movements.db
+
+# Environment secrets
+.env
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Unrelated files
+*.jpeg
+*.jpg
+*.xlsx
+agent.py
+prompt.txt
+images/

@@ -3,25 +3,19 @@
 // staff on other devices just need one URL, e.g. http://<this-pc's-LAN-IP>:3001
 // (find that IP with `ipconfig` on Windows), rather than running two servers.
 //
-// Uses only Node's built-in http + fs + node:sqlite modules - no npm install needed.
-// Run with: node server/server.js  (requires Node 22.5+)
+// Uses Node built-ins + the `pg` package for PostgreSQL.
+// Run with: node server/server.js
 //
-// Local/LAN use: binds to all interfaces on port 3001, DB file lives next to this
-// script. Make sure Windows Firewall allows inbound connections on this port so
-// other devices on the same Wi-Fi/LAN can reach it.
-//
-// Deployed (e.g. Railway): set the PORT env var (the host usually sets this for you)
-// and DB_PATH to a path inside a mounted persistent volume, e.g. /data/movements.db -
-// without a persistent volume, the database resets on every redeploy/restart.
+// Set DATABASE_URL in .env, e.g.:
+//   postgresql://user:password@localhost:5432/egerak
 
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { DatabaseSync } = require('node:sqlite');
+const { Pool } = require('pg');
 
-// Load .env from project root — handles both standard KEY=VALUE and
-// Windows-style "set KEY=VALUE && ..." lines
+// Load .env from project root
 (function loadEnv() {
   const envPath = path.join(__dirname, '..', '.env');
   if (!fs.existsSync(envPath)) return;
@@ -37,11 +31,14 @@ const { DatabaseSync } = require('node:sqlite');
 })();
 
 const PORT = process.env.PORT || 3001;
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'movements.db');
-const db = new DatabaseSync(DB_PATH);
 
-// Shared PIN that unlocks the Admin page and every admin-only API call below.
-// Must be set via ADMIN_PIN in .env — server generates a random one and logs it if missing.
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost') ? false
+    : process.env.DATABASE_SSL === 'false' ? false
+    : { rejectUnauthorized: false }
+});
+
 let ADMIN_PIN = process.env.ADMIN_PIN;
 if (!ADMIN_PIN) {
   ADMIN_PIN = crypto.randomBytes(3).toString('hex').toUpperCase();
@@ -50,10 +47,8 @@ if (!ADMIN_PIN) {
   console.warn(`⚠️  Tetapkan ADMIN_PIN=${ADMIN_PIN} dalam .env untuk mengekalkan PIN ini.\n`);
 }
 
-// T-01: Server-side admin sessions — client stores a random token, not the PIN itself.
-// Tokens expire after 2 hours; a background sweep cleans stale entries every 30 min.
-const adminSessions = new Map(); // token → expiresAt (ms)
-const SESSION_TTL = 2 * 60 * 60 * 1000; // 2 hours
+const adminSessions = new Map();
+const SESSION_TTL = 2 * 60 * 60 * 1000;
 function createAdminSession() {
   const token = crypto.randomBytes(24).toString('hex');
   adminSessions.set(token, Date.now() + SESSION_TTL);
@@ -71,7 +66,6 @@ setInterval(() => {
   for (const [t, exp] of adminSessions) if (now > exp) adminSessions.delete(t);
 }, 30 * 60 * 1000);
 
-// Rate limiter for /api/admin/verify — 5 failures per 10 min triggers 15-min lockout.
 const _loginAttempts = new Map();
 const _MAX_FAILS = 5, _WINDOW_MS = 10 * 60 * 1000, _LOCKOUT_MS = 15 * 60 * 1000;
 function _rateLimitCheck(ip) {
@@ -89,12 +83,8 @@ function _rateLimitFail(ip) {
 }
 function _rateLimitClear(ip) { _loginAttempts.delete(ip); }
 
-// Same domain rule as the frontend's ALLOWED_EMAIL_REGEX - checked again here
-// so self-registration can't be bypassed by calling the API directly.
 const ALLOWED_EMAIL_DOMAIN = /^[^@]+@moe\.gov\.my$/;
 
-// The frontend files (index.html, manifest.json, sw.js, icons/) live one
-// level up from this script, at the project root.
 const STATIC_ROOT = path.join(__dirname, '..');
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -107,7 +97,6 @@ const MIME_TYPES = {
   '.webp': 'image/webp'
 };
 
-// S-01: Security headers applied to every response
 const SECURITY_HEADERS = {
   'X-Frame-Options': 'SAMEORIGIN',
   'X-Content-Type-Options': 'nosniff',
@@ -118,14 +107,11 @@ const SECURITY_HEADERS = {
 function serveStatic(req, res, pathname) {
   const relativePath = pathname === '/' ? '/index.html' : pathname;
   const fullPath = path.join(STATIC_ROOT, relativePath);
-
-  // Guard against path traversal (e.g. "/../server/server.js")
   if (!fullPath.startsWith(STATIC_ROOT)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
     return;
   }
-
   fs.readFile(fullPath, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -138,103 +124,92 @@ function serveStatic(req, res, pathname) {
   });
 }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS movements (
-    id TEXT PRIMARY KEY,
-    nama TEXT NOT NULL,
-    tarikh TEXT NOT NULL,
-    destinasi TEXT NOT NULL,
-    tujuan TEXT NOT NULL,
-    nota TEXT,
-    masa TEXT,
-    submittedBy TEXT NOT NULL
-  )
-`);
-// Add masa column to existing databases that predate this field
-try { db.exec(`ALTER TABLE movements ADD COLUMN masa TEXT DEFAULT ''`); } catch (_) {}
-// Add sektor column to existing databases that predate this field
-try { db.exec(`ALTER TABLE movements ADD COLUMN sektor TEXT DEFAULT 'SPr'`); } catch (_) {}
-// T-04: indexes for common query patterns (tarikh, sektor, submittedBy)
-try { db.exec(`CREATE INDEX IF NOT EXISTS idx_mv_tarikh ON movements(tarikh)`); } catch (_) {}
-try { db.exec(`CREATE INDEX IF NOT EXISTS idx_mv_sektor ON movements(sektor)`); } catch (_) {}
-try { db.exec(`CREATE INDEX IF NOT EXISTS idx_mv_by ON movements(submittedBy)`); } catch (_) {}
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS movements (
+      id TEXT PRIMARY KEY,
+      nama TEXT NOT NULL,
+      tarikh TEXT NOT NULL,
+      destinasi TEXT NOT NULL,
+      tujuan TEXT NOT NULL,
+      nota TEXT,
+      masa TEXT DEFAULT '',
+      submittedby TEXT NOT NULL,
+      sektor TEXT DEFAULT 'SPr'
+    )
+  `);
+  await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS masa TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS sektor TEXT DEFAULT 'SPr'`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_mv_tarikh ON movements(tarikh)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_mv_sektor ON movements(sektor)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_mv_by ON movements(submittedby)`);
 
-// Staff roster - only e-mails an admin has added here may sign in. This is
-// what gives "delete a user" real meaning (it revokes their ability to log
-// in), rather than just being a display list.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS staff (
-    email TEXT PRIMARY KEY,
-    nama TEXT NOT NULL,
-    jawatan TEXT NOT NULL,
-    addedAt TEXT NOT NULL,
-    sektor TEXT DEFAULT 'SPr'
-  )
-`);
-try { db.exec(`ALTER TABLE staff ADD COLUMN sektor TEXT DEFAULT 'SPr'`); } catch (_) {}
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS staff (
+      email TEXT PRIMARY KEY,
+      nama TEXT NOT NULL,
+      jawatan TEXT NOT NULL,
+      addedat TEXT NOT NULL,
+      sektor TEXT DEFAULT 'SPr'
+    )
+  `);
+  await pool.query(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS sektor TEXT DEFAULT 'SPr'`);
 
-// Jawatan options shown in the identify form's dropdown - admin-editable
-// instead of hardcoded in the frontend.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS jawatan_list (
-    jawatan TEXT PRIMARY KEY
-  )
-`);
-const jawatanCount = db.prepare('SELECT COUNT(*) AS n FROM jawatan_list').get().n;
-if (jawatanCount === 0) {
-  const seedJawatan = db.prepare('INSERT INTO jawatan_list (jawatan) VALUES (?)');
-  seedJawatan.run('Penolong Pegawai Pendidikan');
-  seedJawatan.run('Timbalan Sektor Perancangan');
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS jawatan_list (
+      jawatan TEXT PRIMARY KEY
+    )
+  `);
+  const { rows: jRows } = await pool.query('SELECT COUNT(*) AS n FROM jawatan_list');
+  if (parseInt(jRows[0].n) === 0) {
+    await pool.query(`INSERT INTO jawatan_list (jawatan) VALUES ($1) ON CONFLICT DO NOTHING`, ['Penolong Pegawai Pendidikan']);
+    await pool.query(`INSERT INTO jawatan_list (jawatan) VALUES ($1) ON CONFLICT DO NOTHING`, ['Timbalan Sektor Perancangan']);
+  }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id TEXT PRIMARY KEY,
+      action TEXT NOT NULL,
+      detail TEXT NOT NULL,
+      performedat TEXT NOT NULL
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS notices (
+      id TEXT PRIMARY KEY,
+      tajuk TEXT NOT NULL,
+      isi TEXT NOT NULL,
+      created_by TEXT NOT NULL,
+      nama TEXT NOT NULL,
+      sektor TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `);
 }
 
-// S-04: Auto-purge audit_log entries older than 6 months (runs once at startup + daily)
-function purgeOldAuditLog() {
+async function purgeOldAuditLog() {
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 6);
-  db.prepare('DELETE FROM audit_log WHERE performedAt < ?').run(cutoff.toISOString());
+  await pool.query(`DELETE FROM audit_log WHERE performedat < $1`, [cutoff.toISOString()]);
 }
-purgeOldAuditLog();
-setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
-
-// Notices (pemakluman) - visible to all users across all sectors
-db.exec(`
-  CREATE TABLE IF NOT EXISTS notices (
-    id TEXT PRIMARY KEY,
-    tajuk TEXT NOT NULL,
-    isi TEXT NOT NULL,
-    created_by TEXT NOT NULL,
-    nama TEXT NOT NULL,
-    sektor TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  )
-`);
-
-// Simple audit trail for admin actions (record deletions via admin override,
-// and staff/jawatan roster changes) - deleted records otherwise vanish with
-// no trace of who removed them or when.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS audit_log (
-    id TEXT PRIMARY KEY,
-    action TEXT NOT NULL,
-    detail TEXT NOT NULL,
-    performedAt TEXT NOT NULL
-  )
-`);
 
 function generateId() {
   return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
 }
 
-function logAudit(action, detail) {
-  db.prepare('INSERT INTO audit_log (id, action, detail, performedAt) VALUES (?, ?, ?, ?)')
-    .run(generateId(), action, detail, new Date().toISOString());
+async function logAudit(action, detail) {
+  await pool.query(
+    `INSERT INTO audit_log (id, action, detail, performedat) VALUES ($1, $2, $3, $4)`,
+    [generateId(), action, detail, new Date().toISOString()]
+  );
 }
 
-function isStaffEmail(email) {
-  return !!db.prepare('SELECT 1 FROM staff WHERE email = ?').get(email);
+async function isStaffEmail(email) {
+  const { rows } = await pool.query('SELECT 1 FROM staff WHERE email = $1', [email]);
+  return rows.length > 0;
 }
 
-// T-03: restrict CORS to same-origin LAN use only (no wildcard)
 const ALLOWED_ORIGINS = new Set([
   'http://localhost:3001',
   `http://127.0.0.1:${process.env.PORT || 3001}`,
@@ -244,12 +219,12 @@ function getCorsHeaders(req) {
   const allow = ALLOWED_ORIGINS.has(origin) ? origin : 'http://localhost:3001';
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS, PATCH',
     'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Pin, X-Admin-Token',
     'Vary': 'Origin',
   };
 }
-const CORS_HEADERS = getCorsHeaders({ headers: {} }); // fallback for non-request contexts
+const CORS_HEADERS = getCorsHeaders({ headers: {} });
 
 function sendJSON(res, status, data) {
   const cors = res._req ? getCorsHeaders(res._req) : CORS_HEADERS;
@@ -260,7 +235,7 @@ function sendJSON(res, status, data) {
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let raw = '';
-    const MAX_BODY = 65536; // 64 KB — K-04: reject oversized payloads
+    const MAX_BODY = 65536;
     req.on('data', (chunk) => {
       raw += chunk;
       if (raw.length > MAX_BODY) {
@@ -276,7 +251,7 @@ function readJsonBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  res._req = req; // T-03: make req available to sendJSON for per-request CORS
+  res._req = req;
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
   if (req.method === 'OPTIONS') {
@@ -286,29 +261,26 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    // GET /api/movements?sektor=SPr&email=... - list records, optionally filtered by sector
-    // K-02: requires a valid staff email so anonymous callers cannot dump all movement data
+    // GET /api/movements
     if (url.pathname === '/api/movements' && req.method === 'GET') {
       const email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const token = req.headers['x-admin-token'];
       const pin = req.headers['x-admin-pin'];
       if (!isValidAdminSession(token) && pin !== ADMIN_PIN) {
-        if (!email || !isStaffEmail(email)) {
+        if (!email || !(await isStaffEmail(email))) {
           sendJSON(res, 401, { error: 'Akses tidak dibenarkan. Sila log masuk.' });
           return;
         }
       }
       const sektor = url.searchParams.get('sektor');
-      const rows = sektor
-        ? db.prepare('SELECT * FROM movements WHERE sektor = ? ORDER BY tarikh DESC').all(sektor)
-        : db.prepare('SELECT * FROM movements ORDER BY tarikh DESC').all();
+      const { rows } = sektor
+        ? await pool.query('SELECT id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby AS "submittedBy", sektor FROM movements WHERE sektor = $1 ORDER BY tarikh DESC', [sektor])
+        : await pool.query('SELECT id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby AS "submittedBy", sektor FROM movements ORDER BY tarikh DESC');
       sendJSON(res, 200, rows);
       return;
     }
 
-    // POST /api/movements - create a new record. Only e-mails on the staff
-    // roster may submit, mirroring the login gate (closes the gap where
-    // someone could otherwise POST directly bypassing the identify form).
+    // POST /api/movements
     if (url.pathname === '/api/movements' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const { id, nama, tarikh, destinasi, tujuan, nota, masa, submittedBy, sektor } = body;
@@ -325,26 +297,29 @@ const server = http.createServer(async (req, res) => {
         sendJSON(res, 400, { error: 'Format tarikh tidak sah' });
         return;
       }
-      if (!isStaffEmail(submittedBy)) {
+      if (!(await isStaffEmail(submittedBy))) {
         sendJSON(res, 403, { error: 'This e-mail is not on the staff roster' });
         return;
       }
-      const existing = db.prepare('SELECT id FROM movements WHERE submittedBy = ? AND tarikh = ? AND destinasi = ? AND tujuan = ?').get(submittedBy, tarikh, destinasi, tujuan);
-      if (existing) {
+      const { rows: existing } = await pool.query(
+        'SELECT id FROM movements WHERE submittedby = $1 AND tarikh = $2 AND destinasi = $3 AND tujuan = $4',
+        [submittedBy, tarikh, destinasi, tujuan]
+      );
+      if (existing.length > 0) {
         sendJSON(res, 409, { error: 'Rekod yang sama sudah wujud untuk tarikh dan destinasi ini' });
         return;
       }
 
-      db.prepare(`
-        INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedBy, sektor)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr');
-
+      await pool.query(
+        `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr']
+      );
       sendJSON(res, 201, { ok: true });
       return;
     }
 
-    // DELETE /api/movements - clear everything (requires admin session)
+    // DELETE /api/movements (clear all — admin)
     if (url.pathname === '/api/movements' && req.method === 'DELETE') {
       const token = req.headers['x-admin-token'];
       const pin = req.headers['x-admin-pin'];
@@ -352,27 +327,27 @@ const server = http.createServer(async (req, res) => {
         sendJSON(res, 403, { error: 'Admin session diperlukan untuk memadam semua rekod' });
         return;
       }
-      db.prepare('DELETE FROM movements').run();
-      logAudit('reset_all', 'Admin memadam semua rekod pergerakan');
+      await pool.query('DELETE FROM movements');
+      await logAudit('reset_all', 'Admin memadam semua rekod pergerakan');
       sendJSON(res, 200, { ok: true });
       return;
     }
 
-    // DELETE /api/movements/:id?email=...      - owner deletes their own record
-    // DELETE /api/movements/:id (X-Admin-Pin)  - admin deletes ANY record
+    // DELETE /api/movements/:id
     if (url.pathname.startsWith('/api/movements/') && req.method === 'DELETE') {
       const id = decodeURIComponent(url.pathname.split('/').pop());
       const requesterEmail = url.searchParams.get('email');
       const token = req.headers['x-admin-token'];
       const pin = req.headers['x-admin-pin'];
 
-      const record = db.prepare('SELECT * FROM movements WHERE id = ?').get(id);
+      const { rows } = await pool.query('SELECT * FROM movements WHERE id = $1', [id]);
+      const record = rows[0];
       if (!record) {
         sendJSON(res, 404, { error: 'Record not found' });
         return;
       }
 
-      const isOwner = requesterEmail && record.submittedBy === requesterEmail;
+      const isOwner = requesterEmail && record.submittedby === requesterEmail;
       const isAdmin = isValidAdminSession(token) || (pin && pin === ADMIN_PIN);
 
       if (!isOwner && !isAdmin) {
@@ -380,23 +355,24 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      db.prepare('DELETE FROM movements WHERE id = ?').run(id);
+      await pool.query('DELETE FROM movements WHERE id = $1', [id]);
       if (isAdmin && !isOwner) {
-        logAudit('delete_record', `Admin memadam rekod pergerakan ${record.nama} (${record.tarikh}, ${record.destinasi}) yang dikemukakan oleh ${record.submittedBy}`);
+        await logAudit('delete_record', `Admin memadam rekod pergerakan ${record.nama} (${record.tarikh}, ${record.destinasi}) yang dikemukakan oleh ${record.submittedby}`);
       }
       sendJSON(res, 200, { ok: true });
       return;
     }
 
-    // PATCH /api/movements/:id?email=... - owner edits their own record
+    // PATCH /api/movements/:id
     if (url.pathname.startsWith('/api/movements/') && req.method === 'PATCH') {
       const id = decodeURIComponent(url.pathname.split('/').pop());
       const requesterEmail = (url.searchParams.get('email') || '').toLowerCase();
       const body = await readJsonBody(req);
 
-      const record = db.prepare('SELECT * FROM movements WHERE id = ?').get(id);
+      const { rows } = await pool.query('SELECT * FROM movements WHERE id = $1', [id]);
+      const record = rows[0];
       if (!record) { sendJSON(res, 404, { error: 'Rekod tidak dijumpai' }); return; }
-      if (!requesterEmail || record.submittedBy !== requesterEmail) {
+      if (!requesterEmail || record.submittedby !== requesterEmail) {
         sendJSON(res, 403, { error: 'Anda hanya boleh mengedit rekod sendiri' }); return;
       }
 
@@ -413,41 +389,41 @@ const server = http.createServer(async (req, res) => {
         sendJSON(res, 400, { error: 'Input melebihi had panjang' }); return;
       }
 
-      db.prepare('UPDATE movements SET destinasi=?, tujuan=?, nota=?, masa=?, tarikh=? WHERE id=?')
-        .run(destinasi, tujuan, nota || '', masa || '', tarikh, id);
+      await pool.query(
+        'UPDATE movements SET destinasi=$1, tujuan=$2, nota=$3, masa=$4, tarikh=$5 WHERE id=$6',
+        [destinasi, tujuan, nota || '', masa || '', tarikh, id]
+      );
       sendJSON(res, 200, { ok: true });
       return;
     }
 
-    // GET /api/jawatan - public list of position options for the identify form
+    // GET /api/jawatan
     if (url.pathname === '/api/jawatan' && req.method === 'GET') {
-      const rows = db.prepare('SELECT jawatan FROM jawatan_list ORDER BY jawatan ASC').all();
+      const { rows } = await pool.query('SELECT jawatan FROM jawatan_list ORDER BY jawatan ASC');
       sendJSON(res, 200, rows.map((r) => r.jawatan));
       return;
     }
 
-    // GET /api/staff/check?email=... - public yes/no roster lookup used by the login gate
+    // GET /api/staff/check
     if (url.pathname === '/api/staff/check' && req.method === 'GET') {
       const email = (url.searchParams.get('email') || '').toLowerCase();
-      const staff = db.prepare('SELECT email, nama, jawatan, sektor FROM staff WHERE email = ?').get(email) || null;
+      const { rows } = await pool.query('SELECT email, nama, jawatan, sektor FROM staff WHERE email = $1', [email]);
+      const staff = rows[0] || null;
       sendJSON(res, 200, { allowed: !!staff, staff });
       return;
     }
 
-    // GET /api/staff/list?sektor=... - list staff for a sector (or all)
+    // GET /api/staff/list
     if (url.pathname === '/api/staff/list' && req.method === 'GET') {
       const sektor = url.searchParams.get('sektor');
-      const rows = sektor
-        ? db.prepare('SELECT nama, jawatan, sektor FROM staff WHERE sektor = ? ORDER BY nama').all(sektor)
-        : db.prepare('SELECT nama, jawatan, sektor FROM staff ORDER BY sektor, nama').all();
+      const { rows } = sektor
+        ? await pool.query('SELECT nama, jawatan, sektor FROM staff WHERE sektor = $1 ORDER BY nama', [sektor])
+        : await pool.query('SELECT nama, jawatan, sektor FROM staff ORDER BY sektor, nama');
       sendJSON(res, 200, { staff: rows });
       return;
     }
 
-    // POST /api/staff/register {email, nama, jawatan} - public self-registration,
-    // used the first time someone signs in. No PIN needed - anyone with a valid
-    // MOE e-mail can add themselves. Admins can still add/remove staff directly
-    // from the Admin panel regardless of this.
+    // POST /api/staff/register
     if (url.pathname === '/api/staff/register' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const email = (body.email || '').trim().toLowerCase();
@@ -455,7 +431,6 @@ const server = http.createServer(async (req, res) => {
       const jawatan = body.jawatan || '';
       const sektor = body.sektor || 'SPr';
 
-      // T-06: input length limits on self-registration
       if (!ALLOWED_EMAIL_DOMAIN.test(email) || !nama || !jawatan) {
         sendJSON(res, 400, { error: 'Invalid registration details' });
         return;
@@ -465,20 +440,18 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // K-05: INSERT OR IGNORE — self-registration cannot overwrite an existing record;
-      // admins must use /api/admin/staff to update existing staff details.
-      const inserted = db.prepare('INSERT OR IGNORE INTO staff (email, nama, jawatan, addedAt, sektor) VALUES (?, ?, ?, ?, ?)')
-        .run(email, nama, jawatan, new Date().toISOString(), sektor);
-      if (inserted.changes > 0) {
-        logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) mendaftar sebagai pengguna baharu`);
+      const result = await pool.query(
+        `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
+        [email, nama, jawatan, new Date().toISOString(), sektor]
+      );
+      if (result.rowCount > 0) {
+        await logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) mendaftar sebagai pengguna baharu`);
       }
       sendJSON(res, 201, { ok: true });
       return;
     }
 
-    // ---- Everything below requires the admin PIN ----
-
-    // POST /api/admin/verify {pin} - used to unlock the Admin tab in the UI
+    // POST /api/admin/verify
     if (url.pathname === '/api/admin/verify' && req.method === 'POST') {
       const ip = req.socket.remoteAddress || 'unknown';
       const rateCheck = _rateLimitCheck(ip);
@@ -491,7 +464,7 @@ const server = http.createServer(async (req, res) => {
       const ok = body.pin === ADMIN_PIN;
       if (ok) {
         _rateLimitClear(ip);
-        const token = createAdminSession(); // T-01: return token, not the PIN
+        const token = createAdminSession();
         sendJSON(res, 200, { ok, token });
       } else {
         _rateLimitFail(ip);
@@ -501,7 +474,6 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (url.pathname.startsWith('/api/admin/')) {
-      // T-01: accept session token (X-Admin-Token) OR legacy PIN (X-Admin-Pin) for backward compat
       const bodyForWrite = (req.method === 'POST' || req.method === 'PATCH') ? await readJsonBody(req) : null;
       const token = req.headers['x-admin-token'];
       const pin = req.headers['x-admin-pin'] || (bodyForWrite && bodyForWrite.pin);
@@ -511,14 +483,14 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // GET /api/admin/staff - list the roster
+      // GET /api/admin/staff
       if (url.pathname === '/api/admin/staff' && req.method === 'GET') {
-        const rows = db.prepare('SELECT * FROM staff ORDER BY addedAt DESC').all();
+        const { rows } = await pool.query(`SELECT * FROM staff ORDER BY addedat DESC`);
         sendJSON(res, 200, rows);
         return;
       }
 
-      // POST /api/admin/staff {pin, email, nama, jawatan} - add a staff member
+      // POST /api/admin/staff
       if (url.pathname === '/api/admin/staff' && req.method === 'POST') {
         const { email, nama, jawatan } = bodyForWrite;
         if (!email || !nama || !jawatan) {
@@ -526,74 +498,80 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         const normalizedEmail = email.trim().toLowerCase();
-        db.prepare('INSERT OR REPLACE INTO staff (email, nama, jawatan, addedAt, sektor) VALUES (?, ?, ?, ?, ?)')
-          .run(normalizedEmail, nama.trim(), jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr');
-        logAudit('add_staff', `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
+        await pool.query(
+          `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (email) DO UPDATE SET nama=EXCLUDED.nama, jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor`,
+          [normalizedEmail, nama.trim(), jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
+        );
+        await logAudit('add_staff', `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
         sendJSON(res, 201, { ok: true });
         return;
       }
 
-      // DELETE /api/admin/staff/:email?pin=... - revoke a staff member's access
-      if (url.pathname.startsWith('/api/admin/staff/') && req.method === 'DELETE') {
+      // DELETE /api/admin/staff/:email
+      if (url.pathname.startsWith('/api/admin/staff/') && !url.pathname.includes('/sektor') && !url.pathname.includes('/reset') && req.method === 'DELETE') {
         const email = decodeURIComponent(url.pathname.split('/').pop());
-        const staffMember = db.prepare('SELECT * FROM staff WHERE email = ?').get(email);
-        db.prepare('DELETE FROM staff WHERE email = ?').run(email);
+        const { rows } = await pool.query('SELECT * FROM staff WHERE email = $1', [email]);
+        const staffMember = rows[0];
+        await pool.query('DELETE FROM staff WHERE email = $1', [email]);
         if (staffMember) {
-          logAudit('delete_staff', `Admin memadam staf ${staffMember.nama} (${email})`);
+          await logAudit('delete_staff', `Admin memadam staf ${staffMember.nama} (${email})`);
         }
         sendJSON(res, 200, { ok: true });
         return;
       }
 
-      // POST /api/admin/jawatan {pin, jawatan} - add a position option
+      // POST /api/admin/jawatan
       if (url.pathname === '/api/admin/jawatan' && req.method === 'POST') {
         const { jawatan } = bodyForWrite;
         if (!jawatan || !jawatan.trim()) {
           sendJSON(res, 400, { error: 'Missing jawatan value' });
           return;
         }
-        db.prepare('INSERT OR IGNORE INTO jawatan_list (jawatan) VALUES (?)').run(jawatan.trim());
-        logAudit('add_jawatan', `Admin menambah jawatan baharu: "${jawatan.trim()}"`);
+        await pool.query(`INSERT INTO jawatan_list (jawatan) VALUES ($1) ON CONFLICT DO NOTHING`, [jawatan.trim()]);
+        await logAudit('add_jawatan', `Admin menambah jawatan baharu: "${jawatan.trim()}"`);
         sendJSON(res, 201, { ok: true });
         return;
       }
 
-      // DELETE /api/admin/jawatan/:value?pin=... - remove a position option
+      // DELETE /api/admin/jawatan/:value
       if (url.pathname.startsWith('/api/admin/jawatan/') && req.method === 'DELETE') {
         const value = decodeURIComponent(url.pathname.split('/').pop());
-        db.prepare('DELETE FROM jawatan_list WHERE jawatan = ?').run(value);
-        logAudit('delete_jawatan', `Admin membuang jawatan: "${value}"`);
+        await pool.query('DELETE FROM jawatan_list WHERE jawatan = $1', [value]);
+        await logAudit('delete_jawatan', `Admin membuang jawatan: "${value}"`);
         sendJSON(res, 200, { ok: true });
         return;
       }
 
-      // PATCH /api/admin/staff/:email/sektor - update staff sector
+      // PATCH /api/admin/staff/:email/sektor
       if (url.pathname.match(/^\/api\/admin\/staff\/[^/]+\/sektor$/) && req.method === 'PATCH') {
         const email = decodeURIComponent(url.pathname.split('/')[4]);
         const { sektor } = bodyForWrite;
         if (!sektor) { sendJSON(res, 400, { error: 'Missing sektor' }); return; }
-        const staffMember = db.prepare('SELECT * FROM staff WHERE email = ?').get(email);
+        const { rows } = await pool.query('SELECT * FROM staff WHERE email = $1', [email]);
+        const staffMember = rows[0];
         if (!staffMember) { sendJSON(res, 404, { error: 'Staf tidak dijumpai' }); return; }
-        db.prepare('UPDATE staff SET sektor = ? WHERE email = ?').run(sektor, email);
-        logAudit('update_sektor', `Admin menukar sektor ${staffMember.nama} (${email}) daripada ${staffMember.sektor} kepada ${sektor}`);
+        await pool.query('UPDATE staff SET sektor = $1 WHERE email = $2', [sektor, email]);
+        await logAudit('update_sektor', `Admin menukar sektor ${staffMember.nama} (${email}) daripada ${staffMember.sektor} kepada ${sektor}`);
         sendJSON(res, 200, { ok: true });
         return;
       }
 
-      // POST /api/admin/staff/:email/reset - remove staff registration (force re-register)
+      // POST /api/admin/staff/:email/reset
       if (url.pathname.match(/^\/api\/admin\/staff\/[^/]+\/reset$/) && req.method === 'POST') {
         const email = decodeURIComponent(url.pathname.split('/')[4]);
-        const staffMember = db.prepare('SELECT * FROM staff WHERE email = ?').get(email);
+        const { rows } = await pool.query('SELECT * FROM staff WHERE email = $1', [email]);
+        const staffMember = rows[0];
         if (!staffMember) { sendJSON(res, 404, { error: 'Staf tidak dijumpai' }); return; }
-        db.prepare('DELETE FROM staff WHERE email = ?').run(email);
-        logAudit('reset_staff', `Admin menetapkan semula pendaftaran ${staffMember.nama} (${email})`);
+        await pool.query('DELETE FROM staff WHERE email = $1', [email]);
+        await logAudit('reset_staff', `Admin menetapkan semula pendaftaran ${staffMember.nama} (${email})`);
         sendJSON(res, 200, { ok: true });
         return;
       }
 
-      // GET /api/admin/audit - recent admin activity
+      // GET /api/admin/audit
       if (url.pathname === '/api/admin/audit' && req.method === 'GET') {
-        const rows = db.prepare('SELECT * FROM audit_log ORDER BY performedAt DESC LIMIT 200').all();
+        const { rows } = await pool.query(`SELECT * FROM audit_log ORDER BY performedat DESC LIMIT 200`);
         sendJSON(res, 200, rows);
         return;
       }
@@ -602,46 +580,48 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // GET /api/notices - get all notices (any authenticated staff)
+    // GET /api/notices
     if (url.pathname === '/api/notices' && req.method === 'GET') {
       const email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const token = req.headers['x-admin-token'];
-      if (!isValidAdminSession(token) && !isStaffEmail(email)) {
+      if (!isValidAdminSession(token) && !(await isStaffEmail(email))) {
         sendJSON(res, 401, { error: 'Akses tidak dibenarkan.' }); return;
       }
-      const rows = db.prepare('SELECT * FROM notices ORDER BY created_at DESC').all();
+      const { rows } = await pool.query('SELECT * FROM notices ORDER BY created_at DESC');
       sendJSON(res, 200, rows);
       return;
     }
 
-    // POST /api/notices - create a notice (any authenticated staff)
+    // POST /api/notices
     if (url.pathname === '/api/notices' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const { tajuk, isi, email, nama, sektor } = body;
       if (!tajuk || !isi || !email) { sendJSON(res, 400, { error: 'Tajuk, isi dan email diperlukan.' }); return; }
-      if (!isStaffEmail(email.trim().toLowerCase())) { sendJSON(res, 403, { error: 'Akses tidak dibenarkan.' }); return; }
+      if (!(await isStaffEmail(email.trim().toLowerCase()))) { sendJSON(res, 403, { error: 'Akses tidak dibenarkan.' }); return; }
       const id = crypto.randomUUID();
       const created_at = new Date().toISOString();
-      // Always use the authoritative name from staff table
-      const staffRow = db.prepare('SELECT nama FROM staff WHERE email=?').get(email.trim().toLowerCase());
-      const resolvedNama = (staffRow && staffRow.nama) ? staffRow.nama : (nama || email).trim();
-      db.prepare('INSERT INTO notices (id,tajuk,isi,created_by,nama,sektor,created_at) VALUES (?,?,?,?,?,?,?)')
-        .run(id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), resolvedNama, (sektor||'').trim(), created_at);
+      const { rows: staffRows } = await pool.query('SELECT nama FROM staff WHERE email=$1', [email.trim().toLowerCase()]);
+      const resolvedNama = (staffRows[0] && staffRows[0].nama) ? staffRows[0].nama : (nama || email).trim();
+      await pool.query(
+        `INSERT INTO notices (id,tajuk,isi,created_by,nama,sektor,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), resolvedNama, (sektor||'').trim(), created_at]
+      );
       sendJSON(res, 201, { id, tajuk, isi, nama: resolvedNama, sektor, created_at });
       return;
     }
 
-    // DELETE /api/notices/:id - owner or admin deletes a notice
+    // DELETE /api/notices/:id
     if (url.pathname.startsWith('/api/notices/') && req.method === 'DELETE') {
       const id = decodeURIComponent(url.pathname.split('/').pop());
       const email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const token = req.headers['x-admin-token'];
-      const notice = db.prepare('SELECT * FROM notices WHERE id = ?').get(id);
+      const { rows } = await pool.query('SELECT * FROM notices WHERE id = $1', [id]);
+      const notice = rows[0];
       if (!notice) { sendJSON(res, 404, { error: 'Pemakluman tidak dijumpai.' }); return; }
       if (!isValidAdminSession(token) && notice.created_by !== email) {
         sendJSON(res, 403, { error: 'Hanya pencipta atau admin boleh padam.' }); return;
       }
-      db.prepare('DELETE FROM notices WHERE id = ?').run(id);
+      await pool.query('DELETE FROM notices WHERE id = $1', [id]);
       sendJSON(res, 200, { ok: true });
       return;
     }
@@ -659,8 +639,7 @@ const server = http.createServer(async (req, res) => {
       const lang = (body.lang || 'bm').trim();
       if (!userMessage) { sendJSON(res, 400, { error: 'Mesej kosong.' }); return; }
 
-      // Build movement context from DB
-      const allRecords = db.prepare('SELECT * FROM movements ORDER BY tarikh DESC LIMIT 500').all();
+      const { rows: allRecords } = await pool.query('SELECT * FROM movements ORDER BY tarikh DESC LIMIT 500');
       const todayStr = new Date().toLocaleDateString('en-CA');
       const contextLines = allRecords.map(r =>
         `- ${r.nama} | ${r.sektor || '-'} | ${r.tarikh} | Tujuan: ${r.tujuan} | Destinasi: ${r.destinasi} | Balik: ${r.masa_balik || 'tidak dinyatakan'}`
@@ -749,7 +728,7 @@ CARA MENJAWAB:
       return;
     }
 
-    // Anything else (GET requests for the page/assets) - serve the frontend files
+    // Static files
     if (!url.pathname.startsWith('/api/') && (req.method === 'GET' || req.method === 'HEAD')) {
       serveStatic(req, res, url.pathname);
       return;
@@ -762,6 +741,17 @@ CARA MENJAWAB:
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`e-Gerak SPR backend listening on port ${PORT}`);
-});
+// Initialize DB schema then start listening
+initDb()
+  .then(() => {
+    purgeOldAuditLog();
+    setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
+    server.listen(PORT, () => {
+      console.log(`e-Gerak PPD backend (PostgreSQL) listening on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Gagal menyambung ke PostgreSQL:', err.message);
+    console.error('Pastikan DATABASE_URL dalam .env adalah betul dan PostgreSQL sedang berjalan.');
+    process.exit(1);
+  });
