@@ -1729,6 +1729,24 @@
     .sector-btn[data-sektor="SPP/SPsK"]:hover, .sector-btn[data-sektor="SPP/SPsK"].selected { background:#db2777; border-color:#db2777; color:#fff; }
     .sector-btn[data-sektor="PTIS"]:hover, .sector-btn[data-sektor="PTIS"].selected { background:#dc2626; border-color:#dc2626; color:#fff; }
     .sector-btn-admin:hover { background:#1e293b; border-color:#1e293b; color:#fff; }
+
+    /* ===== Admin Tab Nav ===== */
+    .admin-tab-nav {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0;
+    }
+    .admin-tab-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 8px 8px 0 0;
+      border: none; background: transparent;
+      color: var(--text-muted); font-size: 0.83rem; font-weight: 600;
+      cursor: pointer; transition: all 0.18s;
+      margin-bottom: -2px; border-bottom: 2px solid transparent;
+    }
+    .admin-tab-btn:hover { color: var(--primary-blue); background: #f0f4ff; }
+    .admin-tab-btn.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); background: transparent; }
   </style>
 </head>
 <body>
@@ -1963,140 +1981,160 @@
           </button>
         </div>
 
-        <!-- Kad Ringkasan Admin -->
-        <div id="admin-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
+        <!-- Tab Nav -->
+        <div class="admin-tab-nav">
+          <button class="admin-tab-btn active" onclick="switchAdminTab('ringkasan',this)"><i class="fa-solid fa-gauge-high"></i> Ringkasan</button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('analisis',this)"><i class="fa-solid fa-chart-bar"></i> Analisis</button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('rekod',this)"><i class="fa-solid fa-table-list"></i> Rekod</button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('urus',this)"><i class="fa-solid fa-gear"></i> Urus</button>
+        </div>
 
-        <!-- Tambah / Padam Pengguna -->
-        <div class="insights-panel">
-          <div class="insights-title"><i class="fa-solid fa-users"></i> Urus Staf (Tambah / Padam Pengguna)</div>
+        <!-- ===== TAB: RINGKASAN ===== -->
+        <div class="admin-tab-content" id="admin-tab-ringkasan">
+          <div id="admin-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
 
-          <form onsubmit="handleAddStaff(event)" class="admin-staff-form" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 1.25rem;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="staff-nama">Nama</label>
-              <input class="form-input" style="padding-left: 14px;" type="text" id="staff-nama" placeholder="Nama penuh" required>
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-chart-line"></i> Trend Pergerakan — 6 Bulan Lepas</div>
+            <div class="tujuan-breakdown" id="admin-monthly-trend" style="margin-top:0.5rem;"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="insights-panel" style="margin-bottom:0;">
+              <div class="insights-title"><i class="fa-solid fa-location-dot"></i> Top 5 Destinasi</div>
+              <div class="tujuan-breakdown" id="admin-top-destinations" style="margin-top:0.5rem;"></div>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="staff-email">E-mel</label>
-              <input class="form-input" style="padding-left: 14px;" type="email" id="staff-email" placeholder="nama@moe.gov.my" required>
+            <div class="insights-panel" style="margin-bottom:0;">
+              <div class="insights-title"><i class="fa-solid fa-user-slash"></i> Pegawai Tiada Rekod</div>
+              <div id="admin-inactive-staff" style="margin-top:0.5rem;"></div>
             </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" for="staff-jawatan">Jawatan</label>
-              <select class="form-select" style="padding-left: 14px;" id="staff-jawatan" required>
-                <option value="" disabled selected>Pilih...</option>
+          </div>
+        </div>
+
+        <!-- ===== TAB: ANALISIS ===== -->
+        <div class="admin-tab-content" id="admin-tab-analisis" style="display:none;">
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-chart-bar"></i> Analisis Pergerakan Mengikut Sektor</div>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Klik sektor untuk tapis rekod dalam tab Rekod.</p>
+            <div class="tujuan-breakdown" id="admin-sector-breakdown"></div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-calendar-week"></i> Analisis Mengikut Hari Seminggu</div>
+            <div class="tujuan-breakdown" id="admin-day-of-week" style="margin-top:0.5rem;"></div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-sitemap"></i> Pecahan Tujuan Mengikut Sektor</div>
+            <div id="admin-tujuan-per-sektor" style="margin-top:0.5rem;display:flex;flex-direction:column;gap:1rem;"></div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-chart-column"></i> Statistik Pergerakan Setiap Pengguna</div>
+            <div class="table-container">
+              <table>
+                <thead><tr>
+                  <th>Nama Pegawai</th><th>E-mel</th><th>Sektor</th>
+                  <th>Jumlah Rekod</th><th>Tujuan Paling Kerap</th>
+                </tr></thead>
+                <tbody id="user-stats-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TAB: REKOD ===== -->
+        <div class="admin-tab-content" id="admin-tab-rekod" style="display:none;">
+          <div class="insights-panel" id="admin-records-panel">
+            <div class="insights-title"><i class="fa-solid fa-table-list"></i> Semua Rekod Pergerakan</div>
+            <div style="display:flex;gap:10px;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
+              <select id="admin-sector-filter" class="form-select" style="padding-left:12px;max-width:170px;" onchange="filterAdminRecords()">
+                <option value="">Semua Sektor</option>
+                <option value="SPr">SPr — Sektor Perancangan</option>
+                <option value="SPb">SPb — Sektor Pembelajaran</option>
+                <option value="SPbM">SPbM — Pembangunan Murid</option>
+                <option value="SP">SP — Sektor Pengurusan</option>
+                <option value="SPS">SPS — Pengurusan Sekolah</option>
+                <option value="SPP/SPsK">SPP/SPsK — Pentaksiran</option>
+                <option value="PTIS">PTIS — ICT Sekolah</option>
               </select>
+              <div class="search-box" style="flex:1;min-width:180px;">
+                <input type="text" class="search-input" id="admin-record-search" onkeyup="filterAdminRecords()" placeholder="Cari nama, destinasi, tujuan...">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
             </div>
-            <button type="submit" class="submit-btn" style="margin-top: 0; width: auto; padding: 12px 20px;">
-              <i class="fa-solid fa-user-plus"></i> Tambah
-            </button>
-          </form>
-
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>E-mel</th>
-                  <th>Jawatan</th>
-                  <th>Sektor</th>
-                  <th style="width: 60px; text-align: center;">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody id="staff-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Urus Senarai Jawatan -->
-        <div class="insights-panel">
-          <div class="insights-title"><i class="fa-solid fa-briefcase"></i> Urus Senarai Jawatan</div>
-
-          <form onsubmit="handleAddJawatan(event)" style="display: flex; gap: 10px; margin-bottom: 1.25rem;">
-            <input class="form-input" style="padding-left: 14px;" type="text" id="jawatan-input" placeholder="Cth: Ketua Unit ICT" required>
-            <button type="submit" class="submit-btn" style="margin-top: 0; width: auto; padding: 12px 20px; white-space: nowrap;">
-              <i class="fa-solid fa-plus"></i> Tambah Jawatan
-            </button>
-          </form>
-
-          <div id="jawatan-list-container" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-        </div>
-
-        <!-- Statistik Setiap Pengguna -->
-        <div class="insights-panel">
-          <div class="insights-title"><i class="fa-solid fa-chart-column"></i> Statistik Pergerakan Setiap Pengguna</div>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama Pegawai</th>
-                  <th>E-mel</th>
-                  <th>Sektor</th>
-                  <th>Jumlah Rekod</th>
-                  <th>Tujuan Paling Kerap</th>
-                </tr>
-              </thead>
-              <tbody id="user-stats-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Analisis Per Sektor -->
-        <div class="insights-panel">
-          <div class="insights-title"><i class="fa-solid fa-chart-bar"></i> Analisis Pergerakan Mengikut Sektor</div>
-          <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Klik sektor untuk tapis rekod di bawah.</p>
-          <div class="tujuan-breakdown" id="admin-sector-breakdown"></div>
-        </div>
-
-        <!-- Urus Sebarang Rekod (admin boleh padam rekod sesiapa sahaja) -->
-        <div class="insights-panel" id="admin-records-panel">
-          <div class="insights-title"><i class="fa-solid fa-table-list"></i> Semua Rekod Pergerakan</div>
-          <div style="display:flex;gap:10px;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
-            <select id="admin-sector-filter" class="form-select" style="padding-left:12px;max-width:170px;" onchange="filterAdminRecords()">
-              <option value="">Semua Sektor</option>
-              <option value="SPr">SPr — Sektor Perancangan</option>
-              <option value="SPb">SPb — Sektor Pembelajaran</option>
-              <option value="SPbM">SPbM — Pembangunan Murid</option>
-              <option value="SP">SP — Sektor Pengurusan</option>
-              <option value="SPS">SPS — Pengurusan Sekolah</option>
-              <option value="SPP/SPsK">SPP/SPsK — Pentaksiran</option>
-              <option value="PTIS">PTIS — ICT Sekolah</option>
-            </select>
-            <div class="search-box" style="flex:1;min-width:180px;">
-              <input type="text" class="search-input" id="admin-record-search" onkeyup="filterAdminRecords()" placeholder="Cari nama, destinasi, tujuan...">
-              <i class="fa-solid fa-magnifying-glass"></i>
+            <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;">Dari:</label>
+                <input type="date" id="admin-date-from" class="form-input" style="padding:6px 10px;font-size:0.82rem;max-width:150px;" onchange="filterAdminRecords()">
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;">Hingga:</label>
+                <input type="date" id="admin-date-to" class="form-input" style="padding:6px 10px;font-size:0.82rem;max-width:150px;" onchange="filterAdminRecords()">
+              </div>
+              <button onclick="clearAdminDateFilter()" style="font-size:0.78rem;padding:6px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-muted);cursor:pointer;"><i class="fa-solid fa-xmark"></i> Kosongkan Tarikh</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead><tr>
+                  <th>Nama Pegawai</th><th>Sektor</th><th>Tarikh</th>
+                  <th>Destinasi</th><th>Tujuan</th>
+                  <th style="width:60px;text-align:center;">Tindakan</th>
+                </tr></thead>
+                <tbody id="admin-records-table-body"></tbody>
+              </table>
             </div>
           </div>
-          <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;">Dari:</label>
-              <input type="date" id="admin-date-from" class="form-input" style="padding:6px 10px;font-size:0.82rem;max-width:150px;" onchange="filterAdminRecords()">
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;white-space:nowrap;">Hingga:</label>
-              <input type="date" id="admin-date-to" class="form-input" style="padding:6px 10px;font-size:0.82rem;max-width:150px;" onchange="filterAdminRecords()">
-            </div>
-            <button onclick="clearAdminDateFilter()" style="font-size:0.78rem;padding:6px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-muted);cursor:pointer;"><i class="fa-solid fa-xmark"></i> Kosongkan Tarikh</button>
-          </div>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama Pegawai</th>
-                  <th>Sektor</th>
-                  <th>Tarikh</th>
-                  <th>Destinasi</th>
-                  <th>Tujuan</th>
-                  <th style="width: 60px; text-align: center;">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody id="admin-records-table-body"></tbody>
-            </table>
-          </div>
         </div>
 
-        <!-- Log Audit -->
-        <div class="insights-panel">
-          <div class="insights-title"><i class="fa-solid fa-clipboard-list"></i> Log Audit</div>
-          <ul class="day-events-list" id="audit-log-list"></ul>
+        <!-- ===== TAB: URUS ===== -->
+        <div class="admin-tab-content" id="admin-tab-urus" style="display:none;">
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-users"></i> Urus Staf (Tambah / Padam Pengguna)</div>
+            <form onsubmit="handleAddStaff(event)" class="admin-staff-form" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:1.25rem;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="staff-nama">Nama</label>
+                <input class="form-input" style="padding-left:14px;" type="text" id="staff-nama" placeholder="Nama penuh" required>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="staff-email">E-mel</label>
+                <input class="form-input" style="padding-left:14px;" type="email" id="staff-email" placeholder="nama@moe.gov.my" required>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="staff-jawatan">Jawatan</label>
+                <select class="form-select" style="padding-left:14px;" id="staff-jawatan" required>
+                  <option value="" disabled selected>Pilih...</option>
+                </select>
+              </div>
+              <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:12px 20px;">
+                <i class="fa-solid fa-user-plus"></i> Tambah
+              </button>
+            </form>
+            <div class="table-container">
+              <table>
+                <thead><tr>
+                  <th>Nama</th><th>E-mel</th><th>Jawatan</th><th>Sektor</th>
+                  <th style="width:60px;text-align:center;">Tindakan</th>
+                </tr></thead>
+                <tbody id="staff-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-briefcase"></i> Urus Senarai Jawatan</div>
+            <form onsubmit="handleAddJawatan(event)" style="display:flex;gap:10px;margin-bottom:1.25rem;">
+              <input class="form-input" style="padding-left:14px;" type="text" id="jawatan-input" placeholder="Cth: Ketua Unit ICT" required>
+              <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:12px 20px;white-space:nowrap;">
+                <i class="fa-solid fa-plus"></i> Tambah Jawatan
+              </button>
+            </form>
+            <div id="jawatan-list-container" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-clipboard-list"></i> Log Audit</div>
+            <ul class="day-events-list" id="audit-log-list"></ul>
+          </div>
         </div>
       </div>
     </div>
@@ -2835,12 +2873,17 @@
     async function loadAdminDashboard() {
       await loadAllMovementsForAdmin();
       renderAdminSummaryCards();
+      renderMonthlyTrend();
+      renderTopDestinations();
+      renderDayOfWeek();
+      renderTujuanPerSektor();
       await Promise.all([
         renderStaffTable(),
         loadJawatanOptions('staff-jawatan').then(renderJawatanList),
         renderUserStats(),
         renderSectorAnalysis(),
         renderAdminRecordsTable(),
+        renderInactiveStaff(),
         renderAuditLog()
       ]);
     }
@@ -3054,6 +3097,161 @@
           const el = document.getElementById('admin-card-staff');
           if (el) el.textContent = list.length;
         }).catch(() => {});
+    }
+
+    // --- Tab switching ---
+    function switchAdminTab(tab, btn) {
+      document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('admin-tab-' + tab).style.display = '';
+      btn.classList.add('active');
+    }
+
+    // --- Trend pergerakan bulanan (6 bulan lepas) ---
+    function renderMonthlyTrend() {
+      const container = document.getElementById('admin-monthly-trend');
+      if (!container) return;
+      const months = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        const label = d.toLocaleDateString('ms-MY', { month: 'short', year: '2-digit' });
+        months.push({ key, label, count: 0 });
+      }
+      adminMovementData.forEach(r => {
+        const m = r.tarikh ? r.tarikh.slice(0, 7) : '';
+        const found = months.find(x => x.key === m);
+        if (found) found.count++;
+      });
+      const max = Math.max(...months.map(m => m.count), 1);
+      const total = months.reduce((s, m) => s + m.count, 0);
+      const colors = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777'];
+      container.innerHTML = months.map((m, i) => {
+        const pct = Math.round(m.count / max * 100);
+        const color = colors[i % colors.length];
+        return `<div class="tj-card" style="--fill:${pct}%;--clr:${color};--clr-bg:${color}1a;">
+          <div class="tj-fill"></div><div class="tj-dot"></div>
+          <div class="tj-name">${m.label}</div>
+          <div class="tj-num">${m.count}</div>
+          <div class="tj-pct">${total > 0 ? Math.round(m.count/total*100) : 0}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    // --- Top 5 destinasi ---
+    function renderTopDestinations() {
+      const container = document.getElementById('admin-top-destinations');
+      if (!container) return;
+      const counts = {};
+      adminMovementData.forEach(r => { if (r.destinasi) counts[r.destinasi] = (counts[r.destinasi] || 0) + 1; });
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      if (!top.length) { container.innerHTML = '<div class="detail-empty">Tiada data.</div>'; return; }
+      const max = top[0][1];
+      const total = Object.values(counts).reduce((s, v) => s + v, 0);
+      const colors = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2'];
+      container.innerHTML = top.map(([dest, count], i) => {
+        const pct = Math.round(count / max * 100);
+        const color = colors[i];
+        return `<div class="tj-card" style="--fill:${pct}%;--clr:${color};--clr-bg:${color}1a;">
+          <div class="tj-fill"></div><div class="tj-dot"></div>
+          <div class="tj-name" title="${escapeHtml(dest)}">${escapeHtml(dest)}</div>
+          <div class="tj-num">${count}</div>
+          <div class="tj-pct">${Math.round(count/total*100)}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    // --- Pegawai tiada rekod ---
+    async function renderInactiveStaff() {
+      const container = document.getElementById('admin-inactive-staff');
+      if (!container) return;
+      try {
+        const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
+        const staffList = await res.json();
+        const activeEmails = new Set(adminMovementData.map(r => r.submittedBy));
+        const inactive = staffList.filter(s => !activeEmails.has(s.email));
+        if (!inactive.length) {
+          container.innerHTML = '<div style="font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-check"></i> Semua staf berdaftar mempunyai rekod pergerakan.</div>';
+          return;
+        }
+        container.innerHTML = inactive.map(s => `
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-color);">
+            <div style="width:28px;height:28px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-user" style="font-size:0.75rem;color:#dc2626;"></i>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.82rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.nama)}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">${escapeHtml(s.sektor||'-')}</div>
+            </div>
+          </div>`).join('');
+      } catch(e) { container.innerHTML = '<div class="detail-empty">Gagal memuatkan.</div>'; }
+    }
+
+    // --- Analisis hari dalam seminggu ---
+    function renderDayOfWeek() {
+      const container = document.getElementById('admin-day-of-week');
+      if (!container) return;
+      const days = ['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+      const counts = [0,0,0,0,0,0,0];
+      adminMovementData.forEach(r => {
+        if (!r.tarikh) return;
+        const parts = r.tarikh.split('-');
+        if (parts.length !== 3) return;
+        const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+        counts[d.getDay()]++;
+      });
+      const workdays = [1,2,3,4,5];
+      const max = Math.max(...workdays.map(i => counts[i]), 1);
+      const total = workdays.reduce((s, i) => s + counts[i], 0);
+      const colors = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2'];
+      container.innerHTML = workdays.map((dayIdx, i) => {
+        const count = counts[dayIdx];
+        const pct = Math.round(count / max * 100);
+        const color = colors[i];
+        return `<div class="tj-card" style="--fill:${pct}%;--clr:${color};--clr-bg:${color}1a;">
+          <div class="tj-fill"></div><div class="tj-dot"></div>
+          <div class="tj-name">${days[dayIdx]}</div>
+          <div class="tj-num">${count}</div>
+          <div class="tj-pct">${total > 0 ? Math.round(count/total*100) : 0}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    // --- Pecahan tujuan per sektor ---
+    function renderTujuanPerSektor() {
+      const container = document.getElementById('admin-tujuan-per-sektor');
+      if (!container) return;
+      const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
+      const COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#dc2626'];
+      const data = {};
+      SEKTORS.forEach(s => { data[s] = {}; });
+      adminMovementData.forEach(r => {
+        if (!r.sektor || !r.tujuan || !data[r.sektor]) return;
+        data[r.sektor][r.tujuan] = (data[r.sektor][r.tujuan] || 0) + 1;
+      });
+      container.innerHTML = SEKTORS.map((s, si) => {
+        const entries = Object.entries(data[s]).sort((a, b) => b[1] - a[1]);
+        if (!entries.length) return '';
+        const sMax = entries[0][1];
+        const color = COLORS[si % COLORS.length];
+        const bars = entries.map(([tujuan, count]) => {
+          const pct = Math.round(count / sMax * 100);
+          return `<div class="tj-card" style="--fill:${pct}%;--clr:${color};--clr-bg:${color}1a;padding:7px 12px;">
+            <div class="tj-fill"></div><div class="tj-dot" style="width:7px;height:7px;"></div>
+            <div class="tj-name" style="font-size:0.75rem;" title="${escapeHtml(tujuan)}">${escapeHtml(tujuan)}</div>
+            <div class="tj-num" style="font-size:0.8rem;">${count}</div>
+          </div>`;
+        }).join('');
+        return `<div style="border:1px solid var(--border-color);border-radius:10px;overflow:hidden;">
+          <div style="padding:10px 14px;background:${color}0f;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;"></span>
+            <span style="font-size:0.82rem;font-weight:700;color:var(--text-main);">${s}</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">${entries.reduce((a,[,c])=>a+c,0)} rekod</span>
+          </div>
+          <div style="padding:10px;display:flex;flex-direction:column;gap:4px;">${bars}</div>
+        </div>`;
+      }).filter(Boolean).join('') || '<div class="detail-empty">Tiada data.</div>';
     }
 
     // --- Urus sebarang rekod (admin boleh padam rekod sesiapa sahaja) ---
