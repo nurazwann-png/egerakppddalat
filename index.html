@@ -4077,6 +4077,7 @@
       if (!section) return;
 
       const monthsMalay = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
+      const monthsShort = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
       const year = adminCalDate.getFullYear();
       const month = adminCalDate.getMonth();
       const firstDayIndex = new Date(year, month, 1).getDay();
@@ -4084,63 +4085,107 @@
       const prevLastDay = new Date(year, month, 0).getDate();
       const today = new Date();
 
-      let dayCells = '';
+      const badgeColor = (tj) => {
+        if (!tj) return '#aaa';
+        if (tj.includes('Mesyuarat')) return '#4a9eff';
+        if (tj.includes('Bengkel')) return '#b47aff';
+        if (tj.includes('Kursus')) return '#ffc14a';
+        if (tj.includes('Pemantauan')) return '#00e5a0';
+        if (tj.includes('Cuti')) return '#ff7eb3';
+        if (tj.includes('Pelepasan')) return '#ff9f7a';
+        if (tj.includes('Pejabat')) return '#7adfff';
+        return '#aaa';
+      };
+
+      section.innerHTML = `
+        <div style="max-width:760px;margin:0 auto;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <button onclick="adminAdjustMonth(-1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <h3 style="flex:1;text-align:center;font-size:1rem;font-weight:700;">${monthsMalay[month]} ${year}</h3>
+            <button onclick="adminAdjustMonth(1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <div class="calendar-weekdays"><div>AH</div><div>IS</div><div>SE</div><div>RA</div><div>KH</div><div>JU</div><div>SA</div></div>
+          <div class="calendar-days" id="admin-calendar-days-grid"></div>
+        </div>`;
+
+      const grid = document.getElementById('admin-calendar-days-grid');
+
+      // Prev month padding
       for (let x = firstDayIndex; x > 0; x--) {
-        dayCells += `<div class="calendar-day other-month">${prevLastDay - x + 1}</div>`;
+        const d = document.createElement('div');
+        d.className = 'calendar-day other-month';
+        d.textContent = prevLastDay - x + 1;
+        grid.appendChild(d);
       }
+
+      // Current month days
       for (let i = 1; i <= lastDay; i++) {
         const monthStr = String(month + 1).padStart(2,'0');
         const dayStr = String(i).padStart(2,'0');
         const ds = `${year}-${monthStr}-${dayStr}`;
         const dayMovs = adminMovementData.filter(r => r.tarikh === ds);
         const isToday = today.getFullYear()===year && today.getMonth()===month && today.getDate()===i;
-        const cls = ['calendar-day', isToday?'today':'', dayMovs.length>0?'has-movement':''].filter(Boolean).join(' ');
-        const badge = dayMovs.length > 0 ? `<span style="position:absolute;bottom:3px;right:4px;font-size:0.6rem;background:var(--primary-blue);color:#fff;border-radius:99px;padding:0 4px;line-height:1.5;">${dayMovs.length}</span>` : '';
-        dayCells += `<div class="${cls}" style="position:relative;" onclick="adminCalSelectDay('${ds}')">${i}${badge}</div>`;
-      }
-      const totalCells = firstDayIndex + lastDay;
-      for (let j = 1; j <= 42 - totalCells; j++) {
-        dayCells += `<div class="calendar-day other-month">${j}</div>`;
+
+        const div = document.createElement('div');
+        div.className = ['calendar-day', isToday?'today':'', dayMovs.length>0?'has-movement':''].filter(Boolean).join(' ');
+        div.style.position = 'relative';
+        div.textContent = i;
+
+        if (dayMovs.length > 0) {
+          const badge = document.createElement('span');
+          badge.style.cssText = 'position:absolute;bottom:3px;right:4px;font-size:0.6rem;background:var(--primary-blue);color:#fff;border-radius:99px;padding:0 4px;line-height:1.5;';
+          badge.textContent = dayMovs.length;
+          div.appendChild(badge);
+
+          div.addEventListener('mouseenter', () => {
+            let popup = document.getElementById('cal-hover-popup');
+            if (!popup) {
+              popup = document.createElement('div');
+              popup.id = 'cal-hover-popup';
+              popup.className = 'cal-popup';
+              document.body.appendChild(popup);
+            }
+            const dateLabel = `${String(i).padStart(2,'0')} ${monthsShort[month]} ${year}`;
+            popup.innerHTML = `
+              <div class="cal-popup-date"><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${dateLabel} · ${dayMovs.length} pergerakan</div>
+              ${dayMovs.map(r => `
+                <div class="cal-popup-item">
+                  <span class="cal-popup-nama"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.6;"></i>${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.65rem;background:#e0e7ff;color:#3730a3;border-radius:3px;padding:0 5px;margin-left:4px;">${escapeHtml(r.sektor)}</span>`:''}</span>
+                  <span class="cal-popup-dest"><i class="fa-solid fa-location-dot" style="margin-right:4px;color:var(--accent-cyan);"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
+                  <span class="cal-popup-badge" style="color:${badgeColor(r.tujuan)};background:${badgeColor(r.tujuan)}18;border-color:${badgeColor(r.tujuan)}33;">${escapeHtml(r.tujuan||'')}</span>
+                </div>`).join('')}
+            `;
+            const rect = div.getBoundingClientRect();
+            const pw = 280, ph = popup.offsetHeight || 160;
+            let left = rect.left + rect.width / 2 - pw / 2;
+            let top = rect.bottom + 8;
+            if (top + ph > window.innerHeight - 12) top = rect.top - ph - 8;
+            left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+            popup.style.cssText = `left:${left}px;top:${top}px;width:${pw}px;display:block;position:fixed;`;
+          });
+
+          div.addEventListener('mouseleave', () => {
+            const popup = document.getElementById('cal-hover-popup');
+            if (popup) popup.style.display = 'none';
+          });
+        }
+
+        grid.appendChild(div);
       }
 
-      section.innerHTML = `
-        <div style="max-width:760px;margin:0 auto;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-            <button onclick="adminAdjustMonth(-1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <h3 id="admin-cal-month-year" style="flex:1;text-align:center;font-size:1rem;font-weight:700;">${monthsMalay[month]} ${year}</h3>
-            <button onclick="adminAdjustMonth(1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
-          </div>
-          <div class="calendar-weekdays"><div>AH</div><div>IS</div><div>SE</div><div>RA</div><div>KH</div><div>JU</div><div>SA</div></div>
-          <div class="calendar-days" id="admin-calendar-days-grid">${dayCells}</div>
-          <div class="day-events-container" style="margin-top:1rem;" id="admin-cal-day-events">
-            <div class="day-events-title">Klik tarikh untuk lihat pergerakan</div>
-          </div>
-        </div>`;
+      // Next month padding
+      const totalCells = firstDayIndex + lastDay;
+      for (let j = 1; j <= 42 - totalCells; j++) {
+        const d = document.createElement('div');
+        d.className = 'calendar-day other-month';
+        d.textContent = j;
+        grid.appendChild(d);
+      }
     }
 
     function adminAdjustMonth(offset) {
       adminCalDate.setMonth(adminCalDate.getMonth() + offset);
       renderAdminCalendar();
-    }
-
-    function adminCalSelectDay(dateString) {
-      const container = document.getElementById('admin-cal-day-events');
-      if (!container) return;
-      const parts = dateString.split('-');
-      const displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-      const matched = adminMovementData.filter(r => r.tarikh === dateString);
-      let html = `<div class="day-events-title">Pergerakan Tarikh: ${displayDate} (${matched.length} rekod)</div>`;
-      if (matched.length === 0) {
-        html += '<div style="padding:10px 0;text-align:center;color:var(--text-muted);font-size:0.85rem;">Tiada pergerakan pada tarikh ini.</div>';
-      } else {
-        html += '<ul class="day-events-list">' + matched.map(r => `
-          <li class="day-event-item">
-            <span class="day-event-name">${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.7rem;background:#e0e7ff;color:#3730a3;border-radius:4px;padding:1px 6px;">${escapeHtml(r.sektor)}</span>`:''}
-            </span>
-            <span class="day-event-dest"><i class="fa-solid fa-circle" style="font-size:5px;vertical-align:middle;margin-right:4px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')} (${escapeHtml(r.tujuan||'')})</span>
-          </li>`).join('') + '</ul>';
-      }
-      container.innerHTML = html;
     }
 
     async function renderAuditLog() {
