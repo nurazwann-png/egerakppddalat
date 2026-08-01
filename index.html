@@ -3507,6 +3507,17 @@
       return 'rec_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
     }
 
+    // Map sektor code → { code, name } — used to restore selectedSector from DB value
+    const SEKTOR_MAP = {
+      'SPr':     { code: 'SPr',      name: 'Sektor Perancangan' },
+      'SPb':     { code: 'SPb',      name: 'Sektor Pembelajaran' },
+      'SPbM':    { code: 'SPbM',     name: 'Sektor Pembangunan Murid' },
+      'SP':      { code: 'SP',       name: 'Sektor Pengurusan' },
+      'SPS':     { code: 'SPS',      name: 'Sektor Pengurusan Sekolah' },
+      'SPP/SPsK':{ code: 'SPP/SPsK', name: 'Pentaksiran & Psikologi Kaunseling' },
+      'PTIS':    { code: 'PTIS',     name: 'Pasukan Teknikal ICT Sekolah' },
+    };
+
     // ===== SECTOR SELECTION =====
     function selectSector(code, name, el) {
       selectedSector = { code, name };
@@ -4003,7 +4014,12 @@
         localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
         localStorage.setItem('ppd_dalat_remembered_email', email);
         const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${email}`);
-        if (savedSektor) { try { selectedSector = JSON.parse(savedSektor); } catch(e){} }
+        if (savedSektor) {
+          try { selectedSector = JSON.parse(savedSektor); } catch(e){}
+        } else if (staff.sektor && SEKTOR_MAP[staff.sektor]) {
+          selectedSector = SEKTOR_MAP[staff.sektor];
+          localStorage.setItem(`ppd_dalat_sektor_${email}`, JSON.stringify(selectedSector));
+        }
 
         showToast(t('toast.welcomeBack').replace('{name}', staff.nama), 'success');
         evaluateSessionView();
