@@ -2093,7 +2093,7 @@
         </form>
 
         <p style="text-align: center; margin-top: 1.5rem; font-size: 0.78rem; color: var(--text-muted);" data-i18n="auth.id.hint">
-          Hanya akaun e-mel berakhiran <strong>@moe.gov.my</strong> dibenarkan meneruskan. Kali pertama log masuk akan mendaftarkan anda secara automatik.
+          Pendaftaran baru hanya untuk e-mel <strong>@moe.gov.my</strong>. Staf yang ditambah oleh admin boleh log masuk dengan mana-mana e-mel.
         </p>
 
         <p style="text-align: center; margin-top: 0.75rem; font-size: 0.78rem;">
@@ -2364,7 +2364,7 @@
         <div class="admin-tab-content" id="admin-tab-urus" style="display:none;">
           <div class="insights-panel">
             <div class="insights-title"><i class="fa-solid fa-users"></i> <span data-i18n="admin.staff.title">Urus Staf (Tambah / Padam Pengguna)</span></div>
-            <form onsubmit="handleAddStaff(event)" class="admin-staff-form" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:1.25rem;">
+            <form onsubmit="handleAddStaff(event)" class="admin-staff-form" style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:10px;align-items:end;margin-bottom:1.25rem;">
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" for="staff-nama" data-i18n="admin.staff.namaLabel">Nama</label>
                 <input class="form-input" style="padding-left:14px;" type="text" id="staff-nama" placeholder="Nama penuh" data-i18n-placeholder="admin.staff.namaPlaceholder" required>
@@ -2377,6 +2377,18 @@
                 <label class="form-label" for="staff-jawatan" data-i18n="admin.staff.jawatanLabel">Jawatan</label>
                 <select class="form-select" style="padding-left:14px;" id="staff-jawatan" required>
                   <option value="" disabled selected>Pilih...</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="staff-sektor" data-i18n="admin.staff.sektorHeader">Sektor</label>
+                <select class="form-select" style="padding-left:14px;" id="staff-sektor" required>
+                  <option value="SPr">SPr</option>
+                  <option value="SPb">SPb</option>
+                  <option value="SPbM">SPbM</option>
+                  <option value="SP">SP</option>
+                  <option value="SPS">SPS</option>
+                  <option value="SPP/SPsK">SPP/SPsK</option>
+                  <option value="PTIS">PTIS</option>
                 </select>
               </div>
               <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:12px 20px;">
@@ -2863,7 +2875,7 @@
         'auth.id.jawatanLabel': 'Jawatan',
         'auth.id.jawatanPlaceholder': 'Pilih Jawatan...',
         'auth.id.submit': 'Log Masuk',
-        'auth.id.hint': 'Hanya akaun e-mel berakhiran @moe.gov.my dibenarkan meneruskan. Kali pertama log masuk akan mendaftarkan anda secara automatik.',
+        'auth.id.hint': 'Pendaftaran baru hanya untuk e-mel @moe.gov.my. Staf yang ditambah oleh admin boleh log masuk dengan mana-mana e-mel.',
         'auth.id.adminLink': 'Masuk sebagai Admin',
         'auth.email.title': 'Log Masuk',
         'auth.email.sub': 'Masukkan alamat e-mel anda untuk meneruskan',
@@ -3015,6 +3027,7 @@
         'audit.reset_staff': 'Reset Staf',
         'audit.reset_all': 'Reset Semua',
         'audit.update_sektor': 'Tukar Sektor',
+        'loading': 'Memuatkan...',
         'toast.loggedOut': 'Anda telah berjaya log keluar.',
         'toast.adminPinFail': 'Tidak dapat berhubung dengan pelayan pangkalan data.',
         'ejen.title': 'Ejen e-Gerak PPD Dalat',
@@ -3063,7 +3076,9 @@
         'toast.failLoad': 'Gagal memuatkan data.',
         'toast.failDelete': 'Gagal memadam.',
         'toast.failUpdate': 'Gagal mengemaskini.',
-        'auth.emailBlocked': 'Akses disekat. Sila gunakan e-mel rasmi MOE (@moe.gov.my).',
+        'auth.emailBlocked': 'Pendaftaran baru hanya untuk e-mel @moe.gov.my. Hubungi admin jika e-mel anda telah ditambah.',
+        'auth.fillAll': 'Sila lengkapkan semua medan.',
+        'auth.emailNotFound': 'E-mel tidak dijumpai dalam sistem. Sila daftar akaun baru.',
         'auth.serverError': 'Tidak dapat mendaftar/mengesahkan akses. Sila semak sambungan ke pelayan pangkalan data.',
         'form.tujuanComboPlaceholder': 'Pilih atau taip tujuan...',
         'cal.clock': 'Waktu Semasa',
@@ -3109,7 +3124,7 @@
         'auth.id.jawatanLabel': 'Position',
         'auth.id.jawatanPlaceholder': 'Select Position...',
         'auth.id.submit': 'Sign In',
-        'auth.id.hint': 'Only email accounts ending with @moe.gov.my are allowed. First-time login will automatically register you.',
+        'auth.id.hint': 'New registrations require @moe.gov.my email only. Staff added by admin can log in with any email.',
         'auth.id.adminLink': 'Sign in as Admin',
         'auth.email.title': 'Sign In',
         'auth.email.sub': 'Enter your email address to continue',
@@ -3261,6 +3276,7 @@
         'audit.reset_staff': 'Reset Staff',
         'audit.reset_all': 'Reset All',
         'audit.update_sektor': 'Change Sector',
+        'loading': 'Loading...',
         'toast.loggedOut': 'You have successfully logged out.',
         'toast.adminPinFail': 'Could not connect to the database server.',
         'ejen.title': 'e-Gerak PPD Dalat Agent',
@@ -3309,7 +3325,9 @@
         'toast.failLoad': 'Failed to load data.',
         'toast.failDelete': 'Failed to delete.',
         'toast.failUpdate': 'Failed to update.',
-        'auth.emailBlocked': 'Access denied. Please use your official MOE email (@moe.gov.my).',
+        'auth.emailBlocked': 'New registrations require @moe.gov.my email only. Contact admin if your email was added manually.',
+        'auth.fillAll': 'Please fill in all fields.',
+        'auth.emailNotFound': 'Email not found in the system. Please register a new account.',
         'auth.serverError': 'Unable to register/verify access. Please check the database server connection.',
         'form.tujuanComboPlaceholder': 'Select or type purpose...',
         'cal.clock': 'Current Time',
@@ -3373,25 +3391,26 @@
     }
 
     function reRenderAll() {
+      const safe = fn => { try { fn(); } catch(e) { console.warn('reRenderAll:', e); } };
       if (document.getElementById('admin-panel')?.style?.display === 'block') {
-        if (typeof renderAdminSummaryCards === 'function') renderAdminSummaryCards();
-        if (typeof renderMonthlyTrend === 'function') renderMonthlyTrend();
-        if (typeof renderTujuanPie === 'function') renderTujuanPie();
-        if (typeof renderTopDestinations === 'function') renderTopDestinations();
-        if (typeof renderDayOfWeek === 'function') renderDayOfWeek();
-        if (typeof renderTujuanPerSektor === 'function') renderTujuanPerSektor();
-        if (typeof renderStaffTable === 'function') renderStaffTable();
-        if (typeof renderUserStats === 'function') renderUserStats();
-        if (typeof renderSectorAnalysis === 'function') renderSectorAnalysis();
-        if (typeof renderAdminRecordsTable === 'function') renderAdminRecordsTable();
-        if (typeof renderInactiveStaff === 'function') renderInactiveStaff();
-        if (typeof renderAuditLog === 'function') renderAuditLog();
+        if (typeof renderAdminSummaryCards === 'function') safe(renderAdminSummaryCards);
+        if (typeof renderMonthlyTrend === 'function') safe(renderMonthlyTrend);
+        if (typeof renderTujuanPie === 'function') safe(renderTujuanPie);
+        if (typeof renderTopDestinations === 'function') safe(renderTopDestinations);
+        if (typeof renderDayOfWeek === 'function') safe(renderDayOfWeek);
+        if (typeof renderTujuanPerSektor === 'function') safe(renderTujuanPerSektor);
+        if (typeof renderStaffTable === 'function') safe(renderStaffTable);
+        if (typeof renderUserStats === 'function') safe(renderUserStats);
+        if (typeof renderSectorAnalysis === 'function') safe(renderSectorAnalysis);
+        if (typeof renderAdminRecordsTable === 'function') safe(renderAdminRecordsTable);
+        if (typeof renderInactiveStaff === 'function') safe(renderInactiveStaff);
+        if (typeof renderAuditLog === 'function') safe(renderAuditLog);
       } else {
-        if (typeof renderMovementTable === 'function') renderMovementTable();
-        if (typeof renderInsights === 'function') renderInsights();
-        if (typeof updateStats === 'function') updateStats();
-        if (typeof renderCalendar === 'function') renderCalendar();
-        if (typeof updateJanaMetrics === 'function') updateJanaMetrics();
+        if (typeof renderInsights === 'function') safe(renderInsights);
+        if (typeof updateStats === 'function') safe(updateStats);
+        if (typeof renderCalendar === 'function') safe(renderCalendar);
+        if (typeof updateSelectedDayEvents === 'function') safe(() => updateSelectedDayEvents(localDateStr()));
+        if (typeof updateJanaMetrics === 'function') safe(updateJanaMetrics);
       }
     }
     // ===== END LANGUAGE SYSTEM =====
@@ -3569,6 +3588,7 @@
       if (session) {
         try {
           currentUserSession = JSON.parse(session);
+          if (currentUserSession.name) currentUserSession.name = currentUserSession.name.toUpperCase();
           const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${currentUserSession.email}`);
           if (savedSektor) selectedSector = JSON.parse(savedSektor);
         } catch (e) {
@@ -3621,15 +3641,10 @@
       const name = document.getElementById('identify-name').value.trim();
       const email = document.getElementById('identify-email').value.trim().toLowerCase();
       const position = document.getElementById('identify-position').value;
-      const sektor = selectedSector ? selectedSector.id : 'SPr';
+      const sektor = selectedSector ? selectedSector.code : 'SPr';
 
-      if (!ALLOWED_EMAIL_REGEX.test(email)) {
-        errorTxt.textContent = t('auth.emailBlocked');
-        errorDiv.style.display = 'flex';
-        return;
-      }
-      if (!name || !position) {
-        errorTxt.textContent = 'Sila lengkapkan semua medan.';
+      if (!name || !email || !position) {
+        errorTxt.textContent = t('auth.fillAll');
         errorDiv.style.display = 'flex';
         return;
       }
@@ -3751,7 +3766,7 @@
     }
 
     function completeLogin(name, email, position) {
-      currentUserSession = { name, email, position };
+      currentUserSession = { name: name.toUpperCase(), email, position };
       localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
       localStorage.setItem('ppd_dalat_remembered_email', email);
       if (selectedSector) localStorage.setItem(`ppd_dalat_sektor_${email}`, JSON.stringify(selectedSector));
@@ -3968,8 +3983,8 @@
 
       const email = document.getElementById('returning-email').value.trim().toLowerCase();
 
-      if (!ALLOWED_EMAIL_REGEX.test(email)) {
-        errorTxt.textContent = t('auth.emailBlocked');
+      if (!email) {
+        errorTxt.textContent = t('auth.fillAll');
         errorDiv.style.display = 'flex';
         return;
       }
@@ -3979,12 +3994,12 @@
         const { allowed, staff } = await res.json();
 
         if (!allowed || !staff) {
-          errorTxt.textContent = "E-mel tidak dijumpai dalam sistem. Sila daftar akaun baru.";
+          errorTxt.textContent = t('auth.emailNotFound');
           errorDiv.style.display = 'flex';
           return;
         }
 
-        currentUserSession = { name: staff.nama, email: staff.email, position: staff.jawatan };
+        currentUserSession = { name: (staff.nama || '').toUpperCase(), email: staff.email, position: staff.jawatan };
         localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
         localStorage.setItem('ppd_dalat_remembered_email', email);
         const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${email}`);
@@ -3994,7 +4009,7 @@
         evaluateSessionView();
       } catch (err) {
         console.error(err);
-        errorTxt.textContent = "Tidak dapat menghubungi pelayan. Sila cuba lagi.";
+        errorTxt.textContent = t('auth.serverError');
         errorDiv.style.display = 'flex';
       }
     }
@@ -4111,18 +4126,20 @@
       const nama = document.getElementById('staff-nama').value.trim();
       const email = document.getElementById('staff-email').value.trim().toLowerCase();
       const jawatan = document.getElementById('staff-jawatan').value;
+      const sektor = document.getElementById('staff-sektor').value;
 
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
-          body: JSON.stringify({ nama, email, jawatan })
+          body: JSON.stringify({ nama, email, jawatan, sektor })
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
         document.getElementById('staff-nama').value = '';
         document.getElementById('staff-email').value = '';
         document.getElementById('staff-jawatan').value = '';
+        document.getElementById('staff-sektor').selectedIndex = 0;
 
         showToast(t('toast.staffAdded').replace('{name}', nama), 'success');
         renderStaffTable();
@@ -5031,7 +5048,7 @@
         }).join('') || `<tr><td colspan="3" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.82rem;">${t('admin.audit.empty')}</td></tr>`;
       } catch (err) {
         console.error(err);
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--text-muted);">Gagal memuatkan log audit.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--text-muted);">${t('toast.failLoad')}</td></tr>`;
       }
     }
 
@@ -5241,9 +5258,9 @@
 
     function renderMovementTable(records) {
       const body = document.getElementById('stat-detail-body');
-      if (!records.length) { body.innerHTML = `<div class="detail-empty">${t('empty.record')}</div>`; return; }
+      if (!records || !records.length) { if (body) body.innerHTML = `<div class="detail-empty">${t('empty.record')}</div>`; return; }
       body.innerHTML = `<table>
-        <thead><tr><th>#</th><th>Tarikh</th><th>Nama</th><th>Tujuan</th><th>Destinasi</th></tr></thead>
+        <thead><tr><th>#</th><th>${t('col.tarikh')}</th><th>${t('col.nama')}</th><th>${t('col.tujuan')}</th><th>${t('col.dest')}</th></tr></thead>
         <tbody>${records.slice().reverse().map((r, i) => `
           <tr>
             <td>${records.length - i}</td>
@@ -5257,7 +5274,7 @@
 
     function renderStaffList() {
       const body = document.getElementById('stat-detail-body');
-      body.innerHTML = '<div class="detail-empty"><i class="fa-solid fa-spinner fa-spin"></i> Memuatkan...</div>';
+      body.innerHTML = `<div class="detail-empty"><i class="fa-solid fa-spinner fa-spin"></i> ${t('loading')}</div>`;
       const sektor = selectedSector ? selectedSector.code : '';
       fetch(`/api/staff/list${sektor ? `?sektor=${encodeURIComponent(sektor)}` : ''}`)
         .then(r => r.json())
@@ -5274,9 +5291,9 @@
             }
           });
           const list = [...registered, ...fromMovements];
-          if (!list.length) { body.innerHTML = '<div class="detail-empty">Tiada pegawai terlibat.</div>'; return; }
+          if (!list.length) { body.innerHTML = `<div class="detail-empty">${t('admin.staff.empty')}</div>`; return; }
           body.innerHTML = `<table>
-            <thead><tr><th>#</th><th>Nama</th><th>Jawatan</th></tr></thead>
+            <thead><tr><th>#</th><th>${t('col.nama')}</th><th>${t('admin.staff.jawatanLabel')}</th></tr></thead>
             <tbody>${list.map((s, i) => `
               <tr>
                 <td>${i+1}</td>

@@ -524,11 +524,11 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/staff/request-verification' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const email = (body.email || '').trim().toLowerCase();
-      const nama = (body.nama || '').trim();
+      const nama = (body.nama || '').trim().toUpperCase();
       const jawatan = body.jawatan || '';
       const sektor = body.sektor || 'SPr';
 
-      if (!ALLOWED_EMAIL_DOMAIN.test(email) || !nama || !jawatan) {
+      if (!email || !nama || !jawatan) {
         sendJSON(res, 400, { error: 'Maklumat pendaftaran tidak lengkap.' });
         return;
       }
@@ -537,11 +537,16 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Semak jika sudah berdaftar
+      // Semak jika sudah berdaftar (admin-added staff bypass domain check)
       const existing = await pool.query('SELECT 1 FROM staff WHERE email = $1', [email]);
       if (existing.rows.length > 0) {
-        // Sudah berdaftar — benarkan terus tanpa perlu kod
         sendJSON(res, 200, { ok: true, alreadyRegistered: true });
+        return;
+      }
+
+      // Pendaftaran baru — hanya domain @moe.gov.my dibenarkan
+      if (!ALLOWED_EMAIL_DOMAIN.test(email)) {
+        sendJSON(res, 400, { error: 'Hanya e-mel @moe.gov.my dibenarkan untuk pendaftaran baru.' });
         return;
       }
 
@@ -605,11 +610,11 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/staff/register' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const email = (body.email || '').trim().toLowerCase();
-      const nama = (body.nama || '').trim();
+      const nama = (body.nama || '').trim().toUpperCase();
       const jawatan = body.jawatan || '';
       const sektor = body.sektor || 'SPr';
 
-      if (!ALLOWED_EMAIL_DOMAIN.test(email) || !nama || !jawatan) {
+      if (!email || !nama || !jawatan) {
         sendJSON(res, 400, { error: 'Invalid registration details' });
         return;
       }
@@ -679,7 +684,7 @@ const server = http.createServer(async (req, res) => {
         await pool.query(
           `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5)
            ON CONFLICT (email) DO UPDATE SET nama=EXCLUDED.nama, jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor`,
-          [normalizedEmail, nama.trim(), jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
+          [normalizedEmail, nama.trim().toUpperCase(), jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
         );
         await logAudit('add_staff', `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
         sendJSON(res, 201, { ok: true });
@@ -749,7 +754,7 @@ const server = http.createServer(async (req, res) => {
 
       // GET /api/admin/audit
       if (url.pathname === '/api/admin/audit' && req.method === 'GET') {
-        const { rows } = await pool.query(`SELECT * FROM audit_log ORDER BY performedat DESC LIMIT 200`);
+        const { rows } = await pool.query(`SELECT id, action, detail, performedat AS "performedAt" FROM audit_log ORDER BY performedat DESC LIMIT 200`);
         sendJSON(res, 200, rows);
         return;
       }
