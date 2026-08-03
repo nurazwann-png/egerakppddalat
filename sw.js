@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ppd-dalat-v15';
+const CACHE_NAME = 'ppd-dalat-v16';
 
 const APP_SHELL = [
   './',
@@ -10,6 +10,7 @@ const APP_SHELL = [
   './fa/webfonts/fa-solid-900.woff2',
   './fa/webfonts/fa-regular-400.woff2',
   './fa/webfonts/fa-brands-400.woff2',
+  './xlsx/xlsx.full.min.js',
 ];
 
 self.addEventListener('install', (event) => {
