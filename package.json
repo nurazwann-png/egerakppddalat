@@ -14,6 +14,7 @@
     "pg": "^8.22.0"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^6.4.0"
+    "@fortawesome/fontawesome-free": "^6.4.0",
+    "xlsx": "^0.18.5"
   }
 }
