@@ -15,6 +15,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { Pool } = require('pg');
 const nodemailer = require('nodemailer');
+const webpush = require('web-push');
 
 // Load .env from project root
 (function loadEnv() {
@@ -274,6 +275,54 @@ async function initDb() {
       created_at TEXT NOT NULL
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      endpoint TEXT PRIMARY KEY,
+      subscription TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `);
+}
+
+let vapidPublicKey = '';
+
+async function initVapid() {
+  const { rows } = await pool.query("SELECT key, value FROM config WHERE key IN ('vapid_public','vapid_private')");
+  let pub  = (rows.find(r => r.key === 'vapid_public')  || {}).value;
+  let priv = (rows.find(r => r.key === 'vapid_private') || {}).value;
+  if (!pub || !priv) {
+    const keys = webpush.generateVAPIDKeys();
+    pub  = keys.publicKey;
+    priv = keys.privateKey;
+    await pool.query("INSERT INTO config(key,value) VALUES('vapid_public',$1)  ON CONFLICT(key) DO UPDATE SET value=$1", [pub]);
+    await pool.query("INSERT INTO config(key,value) VALUES('vapid_private',$1) ON CONFLICT(key) DO UPDATE SET value=$1", [priv]);
+  }
+  const subject = process.env.VAPID_SUBJECT || 'mailto:admin@ppd.edu.my';
+  webpush.setVapidDetails(subject, pub, priv);
+  vapidPublicKey = pub;
+}
+
+async function sendPushToAll(payload) {
+  const { rows } = await pool.query('SELECT endpoint, subscription FROM push_subscriptions');
+  const dead = [];
+  await Promise.allSettled(rows.map(async row => {
+    try {
+      await webpush.sendNotification(JSON.parse(row.subscription), JSON.stringify(payload));
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 410) dead.push(row.endpoint);
+    }
+  }));
+  if (dead.length) {
+    await Promise.allSettled(dead.map(ep => pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1', [ep])));
+  }
 }
 
 async function purgeOldAuditLog() {
@@ -413,6 +462,16 @@ const server = http.createServer(async (req, res) => {
         [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr']
       );
       sendJSON(res, 201, { ok: true });
+      // Send push notification to all subscribers (non-blocking)
+      const masaStr = masa ? ` (${masa})` : '';
+      sendPushToAll({
+        title: 'e-Gerak PPD Dalat',
+        body: `${nama}: ${destinasi} — ${tujuan}${masaStr}`,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: `movement-${tarikh}-${id}`,
+        data: { url: '/' }
+      }).catch(() => {});
       return;
     }
 
@@ -809,6 +868,35 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // GET /api/push/vapid-key
+    if (url.pathname === '/api/push/vapid-key' && req.method === 'GET') {
+      sendJSON(res, 200, { publicKey: vapidPublicKey });
+      return;
+    }
+
+    // POST /api/push/subscribe
+    if (url.pathname === '/api/push/subscribe' && req.method === 'POST') {
+      const body = await readJsonBody(req);
+      if (!body.subscription || !body.subscription.endpoint) {
+        sendJSON(res, 400, { error: 'Subscription tidak sah' }); return;
+      }
+      await pool.query(
+        `INSERT INTO push_subscriptions(endpoint, subscription, created_at)
+         VALUES($1,$2,$3) ON CONFLICT(endpoint) DO UPDATE SET subscription=$2`,
+        [body.subscription.endpoint, JSON.stringify(body.subscription), new Date().toISOString()]
+      );
+      sendJSON(res, 201, { ok: true });
+      return;
+    }
+
+    // DELETE /api/push/unsubscribe
+    if (url.pathname === '/api/push/unsubscribe' && req.method === 'DELETE') {
+      const body = await readJsonBody(req);
+      if (body.endpoint) await pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1', [body.endpoint]);
+      sendJSON(res, 200, { ok: true });
+      return;
+    }
+
     // POST /api/chat - Ejen e-Gerak PPD Dalat (DeepSeek-powered)
     if (url.pathname === '/api/chat' && req.method === 'POST') {
       const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
@@ -938,6 +1026,7 @@ CARA MENJAWAB:
 
 // Initialize DB schema then start listening
 initDb()
+  .then(() => initVapid())
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);

@@ -2021,6 +2021,9 @@
         <i class="fa-solid fa-circle-user" style="color: var(--accent-cyan);"></i>
         <span id="header-user-name">User</span>
         <span class="user-position" id="header-user-pos">Penolong Pegawai Pendidikan</span>
+        <button id="notif-toggle-btn" class="logout-btn" onclick="togglePushNotifications()" title="Aktifkan Notifikasi Pergerakan" style="margin-right:2px;">
+          <i class="fa-solid fa-bell-slash"></i>
+        </button>
         <button class="logout-btn" onclick="handleLogout()" title="Log Keluar">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
@@ -5250,6 +5253,7 @@
         updateSelectedDayEvents(localDateStr());
         loadNotices();
         switchTab('utama');
+        initPushNotifications();
       } else {
         // Not identified yet — show sector selection first
         authPanel.style.display = 'flex';
@@ -6413,6 +6417,75 @@
           console.warn('Service worker registration failed:', err);
         });
       });
+    }
+
+    // ── Web Push Notifications ──────────────────────────────────────
+    let _pushSubscription = null;
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(base64);
+      return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    async function initPushNotifications() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) { _pushSubscription = existing; updateNotifBtn(true); return; }
+      } catch(e) {}
+      updateNotifBtn(false);
+    }
+
+    async function togglePushNotifications() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showToast('Pelayar ini tidak sokong notifikasi push.', 'error'); return;
+      }
+      if (_pushSubscription) {
+        // Unsubscribe
+        await _pushSubscription.unsubscribe();
+        await fetch('/api/push/unsubscribe', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ endpoint: _pushSubscription.endpoint }) });
+        _pushSubscription = null;
+        updateNotifBtn(false);
+        showToast('Notifikasi dimatikan.', 'info');
+        return;
+      }
+      // Subscribe
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') { showToast('Kebenaran notifikasi ditolak.', 'error'); return; }
+      try {
+        const keyRes = await fetch('/api/push/vapid-key');
+        const { publicKey } = await keyRes.json();
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
+        await fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: sub }) });
+        _pushSubscription = sub;
+        updateNotifBtn(true);
+        showToast('Notifikasi pergerakan diaktifkan!', 'success');
+      } catch(err) {
+        console.error(err);
+        showToast('Gagal mengaktifkan notifikasi.', 'error');
+      }
+    }
+
+    function updateNotifBtn(active) {
+      const btn = document.getElementById('notif-toggle-btn');
+      if (!btn) return;
+      if (active) {
+        btn.innerHTML = '<i class="fa-solid fa-bell"></i>';
+        btn.title = 'Notifikasi Aktif — Klik untuk matikan';
+        btn.style.color = '#16a34a';
+        btn.style.background = 'rgba(22,163,74,0.12)';
+        btn.style.borderColor = 'rgba(22,163,74,0.3)';
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-bell-slash"></i>';
+        btn.title = 'Aktifkan Notifikasi Pergerakan';
+        btn.style.color = '';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+      }
     }
   </script>
 
