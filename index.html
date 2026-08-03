@@ -1008,6 +1008,38 @@
       from { opacity: 0; transform: scale(0.95) translateY(4px); }
       to   { opacity: 1; transform: scale(1) translateY(0); }
     }
+    /* Mobile — bottom sheet instead of floating popup */
+    .cal-popup-sheet {
+      position: fixed;
+      z-index: 1000;
+      left: 0; right: 0; bottom: 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      background: rgba(10, 14, 30, 0.98);
+      border: 1px solid rgba(0, 200, 255, 0.25);
+      border-radius: 18px 18px 0 0;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      pointer-events: auto;
+      animation: sheetUp 0.22s ease;
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .cal-popup-sheet-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+    .cal-popup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0,0,0,0.4);
+    }
     .cal-popup-date {
       font-size: 0.7rem;
       font-weight: 700;
@@ -5031,7 +5063,36 @@
           badge.textContent = dayMovs.length;
           div.appendChild(badge);
 
+          const dateLabel = `${String(i).padStart(2,'0')} ${monthsShort[month]} ${year}`;
+          const popupItemsHtml = `
+            <div class="cal-popup-date"><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${dateLabel} · ${dayMovs.length} ${t('cal.movements')}</div>
+            ${dayMovs.map(r => `
+              <div class="cal-popup-item">
+                <span class="cal-popup-nama"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.6;"></i>${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.65rem;background:#e0e7ff;color:#3730a3;border-radius:3px;padding:0 5px;margin-left:4px;">${escapeHtml(r.sektor)}</span>`:''}</span>
+                <span class="cal-popup-dest"><i class="fa-solid fa-location-dot" style="margin-right:4px;color:var(--accent-cyan);"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
+                <span class="cal-popup-badge" style="color:${badgeColor(r.tujuan)};background:${badgeColor(r.tujuan)}18;border-color:${badgeColor(r.tujuan)}33;">${escapeHtml(r.tujuan||'')}</span>
+              </div>`).join('')}
+          `;
+
+          // Touch/mobile — bottom sheet
+          div.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.cal-popup-overlay,.cal-popup-sheet').forEach(el => el.remove());
+            const overlay = document.createElement('div');
+            overlay.className = 'cal-popup-overlay';
+            const sheet = document.createElement('div');
+            sheet.className = 'cal-popup-sheet';
+            sheet.innerHTML = `<div class="cal-popup-sheet-handle"></div>${popupItemsHtml}`;
+            const close = () => { overlay.remove(); sheet.remove(); };
+            overlay.addEventListener('touchstart', close);
+            sheet.addEventListener('touchstart', (ev) => ev.stopPropagation());
+            document.body.appendChild(overlay);
+            document.body.appendChild(sheet);
+          }, { passive: true });
+
+          // Desktop — hover popup
           div.addEventListener('mouseenter', () => {
+            if (window.matchMedia('(hover: none)').matches) return;
             let popup = document.getElementById('cal-hover-popup');
             if (!popup) {
               popup = document.createElement('div');
@@ -5039,22 +5100,15 @@
               popup.className = 'cal-popup';
               document.body.appendChild(popup);
             }
-            const dateLabel = `${String(i).padStart(2,'0')} ${monthsShort[month]} ${year}`;
-            popup.innerHTML = `
-              <div class="cal-popup-date"><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${dateLabel} · ${dayMovs.length} ${t('cal.movements')}</div>
-              ${dayMovs.map(r => `
-                <div class="cal-popup-item">
-                  <span class="cal-popup-nama"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.6;"></i>${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.65rem;background:#e0e7ff;color:#3730a3;border-radius:3px;padding:0 5px;margin-left:4px;">${escapeHtml(r.sektor)}</span>`:''}</span>
-                  <span class="cal-popup-dest"><i class="fa-solid fa-location-dot" style="margin-right:4px;color:var(--accent-cyan);"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
-                  <span class="cal-popup-badge" style="color:${badgeColor(r.tujuan)};background:${badgeColor(r.tujuan)}18;border-color:${badgeColor(r.tujuan)}33;">${escapeHtml(r.tujuan||'')}</span>
-                </div>`).join('')}
-            `;
+            popup.innerHTML = popupItemsHtml;
             const rect = div.getBoundingClientRect();
-            const pw = 280, ph = popup.offsetHeight || 160;
+            const vw = document.documentElement.clientWidth;
+            const pw = Math.min(300, vw - 16);
+            const ph = popup.offsetHeight || 160;
             let left = rect.left + rect.width / 2 - pw / 2;
             let top = rect.bottom + 8;
             if (top + ph > window.innerHeight - 12) top = rect.top - ph - 8;
-            left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+            left = Math.max(8, Math.min(left, vw - pw - 8));
             popup.style.cssText = `left:${left}px;top:${top}px;width:${pw}px;display:block;position:fixed;`;
           });
 
