@@ -1104,6 +1104,9 @@
       padding: 0.8rem;
       border-left: 2px solid var(--accent-cyan);
     }
+    @media (max-width: 640px) {
+      .day-events-container { display: none; }
+    }
 
     .day-events-title {
       font-size: 0.85rem;
@@ -6589,33 +6592,57 @@
       } catch (e) {}
     }
 
-    function renderNotices() {
+    const NOTICE_SHOW = 3;
+
+    function noticeCardHtml(n) {
+      const d = new Date(n.created_at);
+      const dateStr = d.toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
+      const timeStr = d.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
+      const isOwner = currentUserSession && n.created_by === currentUserSession.email;
+      const displayName = (n.nama && n.nama !== 'undefined' && n.nama !== 'null') ? escHtml(n.nama) : escHtml(n.created_by.split('@')[0]);
+      return `<div class="notice-card">
+        <div class="notice-card-head">
+          <div class="notice-card-icon"><i class="fa-solid fa-bullhorn"></i></div>
+          <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
+        </div>
+        <div class="notice-card-isi">${escHtml(n.isi)}</div>
+        <div class="notice-card-footer">
+          ${n.sektor ? `<span class="notice-badge-sektor">${escHtml(n.sektor)}</span>` : ''}
+          <span class="notice-card-author"><i class="fa-solid fa-circle-user" style="opacity:.6;margin-right:3px"></i>${displayName}</span>
+          <span class="notice-card-date">· ${dateStr}, ${timeStr}</span>
+        </div>
+        ${isOwner ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam"><i class="fa-solid fa-trash"></i></button>` : ''}
+      </div>`;
+    }
+
+    function renderNotices(expanded) {
       const list = document.getElementById('notice-list');
       if (!list) return;
       if (!_notices.length) {
         list.innerHTML = `<div class="notice-empty"><i class="fa-solid fa-bell-slash"></i><span>${t('notice.empty')}</span></div>`;
         return;
       }
-      list.innerHTML = _notices.map(n => {
-        const d = new Date(n.created_at);
-        const dateStr = d.toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
-        const timeStr = d.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
-        const isOwner = currentUserSession && n.created_by === currentUserSession.email;
-        const displayName = (n.nama && n.nama !== 'undefined' && n.nama !== 'null') ? escHtml(n.nama) : escHtml(n.created_by.split('@')[0]);
-        return `<div class="notice-card">
-          <div class="notice-card-head">
-            <div class="notice-card-icon"><i class="fa-solid fa-bullhorn"></i></div>
-            <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
-          </div>
-          <div class="notice-card-isi">${escHtml(n.isi)}</div>
-          <div class="notice-card-footer">
-            ${n.sektor ? `<span class="notice-badge-sektor">${escHtml(n.sektor)}</span>` : ''}
-            <span class="notice-card-author"><i class="fa-solid fa-circle-user" style="opacity:.6;margin-right:3px"></i>${displayName}</span>
-            <span class="notice-card-date">· ${dateStr}, ${timeStr}</span>
-          </div>
-          ${isOwner ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam"><i class="fa-solid fa-trash"></i></button>` : ''}
-        </div>`;
-      }).join('');
+      // newest first (already sorted), show top NOTICE_SHOW; hide older ones
+      const shown = _notices.slice(0, NOTICE_SHOW);
+      const hidden = _notices.slice(NOTICE_SHOW);
+      const hasMore = hidden.length > 0;
+
+      let html = shown.map(noticeCardHtml).join('');
+
+      if (hasMore) {
+        if (expanded) {
+          html += `<div id="notice-older">${hidden.map(noticeCardHtml).join('')}</div>`;
+          html += `<button onclick="renderNotices(false)" style="width:100%;margin-top:8px;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:transparent;color:var(--text-muted);font-size:0.8rem;cursor:pointer;">
+            <i class="fa-solid fa-chevron-up" style="margin-right:6px;"></i>Sembunyikan pemakluman lama
+          </button>`;
+        } else {
+          html += `<button onclick="renderNotices(true)" style="width:100%;margin-top:8px;padding:8px;border:1px solid var(--border-color);border-radius:8px;background:transparent;color:var(--text-muted);font-size:0.8rem;cursor:pointer;">
+            <i class="fa-solid fa-chevron-down" style="margin-right:6px;"></i>Lihat ${hidden.length} pemakluman lama lagi
+          </button>`;
+        }
+      }
+
+      list.innerHTML = html;
     }
 
     function escHtml(s) {
