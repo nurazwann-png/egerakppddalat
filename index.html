@@ -4101,6 +4101,23 @@
     }
 
     // --- Staf (roster) ---
+    // Mobile-safe Excel download — XLSX.writeFile fails on iOS/Android WebView
+    // because programmatic anchor clicks are blocked. We generate the binary,
+    // create a Blob URL, and fall back to window.open when the click is blocked.
+    function xlsxDownload(wb, filename) {
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // On iOS Safari the click may be suppressed; fall back to opening in new tab
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+
     const JAWATAN_ORDER = ['KPPD','Timbalan PPD','SIPartners+','SISC+','Kaunselor Pendidikan'];
     const SEKTOR_ORDER = ['SPr','SPb','SPbM','SPS','SPP/SPsK','SP','PTIS'];
 
@@ -4902,7 +4919,7 @@
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(ws_data);
       XLSX.utils.book_append_sheet(wb, ws, sektor.replace(/\//g,'-'));
-      XLSX.writeFile(wb, `Laporan_${sektor.replace(/\//g,'-')}_PPD_Dalat.xlsx`);
+      xlsxDownload(wb, `Laporan_${sektor.replace(/\//g,'-')}_PPD_Dalat.xlsx`);
     }
 
     function adminJanaAllPDF() {
@@ -4930,7 +4947,7 @@
         ...adminMovementData.sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')).map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])];
       const wsAll = XLSX.utils.aoa_to_sheet(allData);
       XLSX.utils.book_append_sheet(wb, wsAll, 'Semua');
-      XLSX.writeFile(wb, 'Laporan_Keseluruhan_PPD_Dalat.xlsx');
+      xlsxDownload(wb, 'Laporan_Keseluruhan_PPD_Dalat.xlsx');
     }
 
     // --- Admin Kalendar ---
@@ -6159,7 +6176,7 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Log Pergerakan");
         const periodSuffix = { day:'Harian', week:'Mingguan', month:'Bulanan', year:'Tahunan', all:'Semua' }[currentExportPeriod];
-        XLSX.writeFile(wb, `Log_Pergerakan_${scopeCode}_Dalat_${periodSuffix}.xlsx`);
+        xlsxDownload(wb, `Log_Pergerakan_${scopeCode}_Dalat_${periodSuffix}.xlsx`);
         showToast(t('toast.excelSuccess'), "success");
       } catch (err) {
         console.error(err);
