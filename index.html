@@ -4101,12 +4101,26 @@
     }
 
     // --- Staf (roster) ---
-    // Mobile-safe Excel download — XLSX.writeFile fails on iOS/Android WebView
-    // because programmatic anchor clicks are blocked. We generate the binary,
-    // create a Blob URL, and fall back to window.open when the click is blocked.
-    function xlsxDownload(wb, filename) {
+    // Mobile-safe Excel download.
+    // iOS PWA does not support the anchor `download` attribute, so we use the
+    // Web Share API (native share sheet) when available, which lets users save
+    // to Files, send via WhatsApp, etc.  Desktop browsers get the normal
+    // anchor-click download.
+    async function xlsxDownload(wb, filename) {
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const file = new File([blob], filename, { type: blob.type });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return; // user cancelled — not an error
+          // fall through to anchor method if share fails for other reason
+        }
+      }
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -4114,7 +4128,6 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      // On iOS Safari the click may be suppressed; fall back to opening in new tab
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
 
