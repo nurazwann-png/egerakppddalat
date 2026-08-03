@@ -1013,14 +1013,13 @@
       position: fixed;
       z-index: 1000;
       left: 0; right: 0; bottom: 0;
-      max-height: 70vh;
+      max-height: 72vh;
       overflow-y: auto;
-      background: rgba(10, 14, 30, 0.98);
-      border: 1px solid rgba(0, 200, 255, 0.25);
-      border-radius: 18px 18px 0 0;
-      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-      box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
-      backdrop-filter: blur(16px);
+      background: #ffffff;
+      border-top: 3px solid var(--primary-blue);
+      border-radius: 20px 20px 0 0;
+      padding: 16px 18px calc(20px + env(safe-area-inset-bottom));
+      box-shadow: 0 -6px 32px rgba(0,0,0,0.18);
       pointer-events: auto;
       animation: sheetUp 0.22s ease;
     }
@@ -1029,8 +1028,8 @@
       to   { transform: translateY(0); }
     }
     .cal-popup-sheet-handle {
-      width: 36px; height: 4px;
-      background: rgba(255,255,255,0.2);
+      width: 40px; height: 4px;
+      background: #cbd5e1;
       border-radius: 2px;
       margin: 0 auto 14px;
     }
@@ -1038,45 +1037,53 @@
       position: fixed;
       inset: 0;
       z-index: 999;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.35);
     }
     .cal-popup-date {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: var(--accent-cyan);
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+      color: var(--primary-blue);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .cal-popup-item {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding: 7px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 4px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid var(--primary-blue);
+      border-radius: 10px;
     }
-    .cal-popup-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .cal-popup-item:last-child { margin-bottom: 0; }
     .cal-popup-nama {
-      font-weight: 600;
-      font-size: 0.82rem;
-      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #1e293b;
     }
     .cal-popup-dest {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+      font-size: 0.78rem;
+      color: #475569;
     }
     .cal-popup-badge {
       display: inline-block;
-      margin-top: 3px;
-      padding: 2px 8px;
+      margin-top: 2px;
+      padding: 3px 10px;
       border-radius: 20px;
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      background: rgba(0,200,255,0.12);
-      color: var(--accent-cyan);
-      border: 1px solid rgba(0,200,255,0.2);
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      align-self: flex-start;
     }
     /* prettier dot for has-movement days */
     .calendar-day.has-movement {
