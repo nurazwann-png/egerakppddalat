@@ -6136,6 +6136,39 @@
       });
     }
 
+    // Fetch staff jawatan map: nama (uppercase) → { jawatan, sektor }
+    async function fetchStaffMap() {
+      try {
+        const res = await fetch('/api/staff/list');
+        const data = await res.json();
+        const map = {};
+        (data.staff || []).forEach(s => { map[(s.nama || '').toUpperCase().trim()] = s; });
+        return map;
+      } catch(e) { return {}; }
+    }
+
+    // Sort movement records by: sektor order → jawatan order → date → nama
+    function sortRecordsForReport(records, staffMap) {
+      return [...records].sort((a, b) => {
+        const sa = staffMap[(a.nama || '').toUpperCase().trim()] || {};
+        const sb = staffMap[(b.nama || '').toUpperCase().trim()] || {};
+        const sektorA = a.sektor || sa.sektor || '';
+        const sektorB = b.sektor || sb.sektor || '';
+        const siA = SEKTOR_ORDER.indexOf(sektorA), siB = SEKTOR_ORDER.indexOf(sektorB);
+        const sektOrdA = siA === -1 ? SEKTOR_ORDER.length : siA;
+        const sektOrdB = siB === -1 ? SEKTOR_ORDER.length : siB;
+        if (sektOrdA !== sektOrdB) return sektOrdA - sektOrdB;
+        // Within same sector: sort by jawatan hierarchy
+        const ka = staffSortKey({ jawatan: sa.jawatan || '', sektor: sektorA, nama: a.nama });
+        const kb = staffSortKey({ jawatan: sb.jawatan || '', sektor: sektorB, nama: b.nama });
+        for (let i = 0; i < ka.length; i++) {
+          if (ka[i] < kb[i]) return -1;
+          if (ka[i] > kb[i]) return 1;
+        }
+        return (a.tarikh || '').localeCompare(b.tarikh || '');
+      });
+    }
+
     // Generate PDF report — scope: 'sector' (current sector) or 'all' (whole PPD)
     async function generatePDF(scope) {
       scope = scope || 'sector';
@@ -6147,7 +6180,9 @@
           showToast('Memuatkan rekod keseluruhan PPD...', 'info');
           const emailQ2 = currentUserSession ? `email=${encodeURIComponent(currentUserSession.email)}` : '';
           const res = await fetch(`${API_BASE}/movements?${emailQ2}`);
+          if (!res.ok) throw new Error();
           records = await res.json();
+          if (!Array.isArray(records)) throw new Error();
           scopeLabel = 'Keseluruhan PPD Dalat';
         } catch(e) {
           showToast('Gagal memuatkan rekod PPD.', 'error');
@@ -6161,39 +6196,43 @@
         return;
       }
 
+      const staffMap = await fetchStaffMap();
+      const sorted = sortRecordsForReport(periodRecords, staffMap);
+
       const periodSuffix = { day:'Harian', week:'Mingguan', month:'Bulanan', year:'Tahunan', all:'Semua' }[currentExportPeriod] || 'Semua';
       const now = new Date();
       const tarikhCetak = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
       const masaCetak = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-      // Group by officer
-      const byName = {};
-      const nameOrder = [];
-      periodRecords.forEach(r => {
-        if (!byName[r.nama]) { byName[r.nama] = []; nameOrder.push(r.nama); }
-        byName[r.nama].push(r);
-      });
-
       const isAllScope = scope === 'all';
       let rowsHtml = '';
       let bil = 1;
-      nameOrder.forEach(nama => {
-        const recs = byName[nama].sort((a,b) => a.tarikh.localeCompare(b.tarikh));
-        recs.forEach(r => {
-          let tarikh = r.tarikh;
-          try { const p = r.tarikh.split('-'); tarikh = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
-          const sektorCell = isAllScope ? `<td>${escapeHtml(r.sektor || '-')}</td>` : '';
-          rowsHtml += `<tr>
-            <td style="text-align:center">${bil++}</td>
-            <td>${escapeHtml(r.nama)}</td>
-            ${sektorCell}
-            <td style="text-align:center">${tarikh}</td>
-            <td>${escapeHtml(r.destinasi)}</td>
-            <td>${escapeHtml(r.tujuan)}</td>
-            <td>${escapeHtml(r.masa || '-')}</td>
-            <td>${escapeHtml(r.nota || '-')}</td>
-          </tr>`;
-        });
+      let lastSektor = null;
+
+      sorted.forEach(r => {
+        let tarikh = r.tarikh;
+        try { const p = r.tarikh.split('-'); tarikh = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+        const sektor = r.sektor || '-';
+        const staffInfo = staffMap[(r.nama || '').toUpperCase().trim()] || {};
+        const jawatan = staffInfo.jawatan || '-';
+        const colSpan = isAllScope ? 8 : 7;
+
+        if (isAllScope && sektor !== lastSektor) {
+          rowsHtml += `<tr><td colspan="${colSpan}" style="background:#003580;color:#fff;font-weight:700;font-size:8.5pt;padding:6px 10px;letter-spacing:0.04em;">SEKTOR: ${escapeHtml(sektor)}</td></tr>`;
+          bil = 1;
+          lastSektor = sektor;
+        }
+
+        rowsHtml += `<tr>
+          <td style="text-align:center;width:28px">${bil++}</td>
+          <td style="font-weight:600">${escapeHtml(r.nama)}</td>
+          ${isAllScope ? '' : `<td style="font-size:7.5pt;color:#555">${escapeHtml(jawatan)}</td>`}
+          <td style="text-align:center;white-space:nowrap">${tarikh}</td>
+          <td>${escapeHtml(r.destinasi)}</td>
+          <td>${escapeHtml(r.tujuan)}</td>
+          <td style="white-space:nowrap">${escapeHtml(r.masa || '-')}</td>
+          <td style="font-size:7.5pt">${escapeHtml(r.nota || '-')}</td>
+        </tr>`;
       });
 
       const html = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8">
@@ -6224,13 +6263,13 @@
 </div>
 <table>
   <thead><tr>
-    <th style="width:30px">Bil</th>
+    <th style="width:28px">Bil</th>
     <th>Nama Pegawai</th>
-    ${isAllScope ? '<th style="width:100px">Sektor</th>' : ''}
-    <th style="width:80px">Tarikh</th>
+    ${isAllScope ? '' : '<th style="width:110px">Jawatan</th>'}
+    <th style="width:76px">Tarikh</th>
     <th>Destinasi / Lokasi</th>
-    <th style="width:120px">Tujuan</th>
-    <th style="width:90px">Masa</th>
+    <th style="width:115px">Tujuan</th>
+    <th style="width:80px">Masa</th>
     <th>Nota</th>
   </tr></thead>
   <tbody>${rowsHtml}</tbody>
@@ -6276,25 +6315,53 @@
       }
 
       try {
-        const exportData = exportRecords.map(r => {
-          let dateFormatted = r.tarikh;
-          try { const p = r.tarikh.split('-'); dateFormatted = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
-          return {
-            "SEKTOR": r.sektor || scopeCode,
-            "NAMA PEGAWAI": r.nama,
-            "TARIKH PERGERAKAN": dateFormatted,
-            "DESTINASI / LOKASI": r.destinasi,
-            "TUJUAN": r.tujuan,
-            "MASA": r.masa || '-',
-            "NOTA": r.nota || "-"
-          };
-        });
-
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        ws['!cols'] = [{ wch:12 },{ wch:35 },{ wch:16 },{ wch:28 },{ wch:18 },{ wch:14 },{ wch:40 }];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Log Pergerakan");
+        const staffMap = await fetchStaffMap();
+        const sorted = sortRecordsForReport(exportRecords, staffMap);
         const periodSuffix = { day:'Harian', week:'Mingguan', month:'Bulanan', year:'Tahunan', all:'Semua' }[currentExportPeriod];
+        const wb = XLSX.utils.book_new();
+
+        if (scope === 'all') {
+          // One sheet per sector + one combined sheet
+          const bySector = {};
+          sorted.forEach(r => {
+            const s = r.sektor || 'Lain';
+            if (!bySector[s]) bySector[s] = [];
+            bySector[s].push(r);
+          });
+          const sectorKeys = [...SEKTOR_ORDER.filter(s => bySector[s]), ...Object.keys(bySector).filter(s => !SEKTOR_ORDER.includes(s))];
+          sectorKeys.forEach(sek => {
+            const rows = bySector[sek].map(r => {
+              let dateFormatted = r.tarikh;
+              try { const p = r.tarikh.split('-'); dateFormatted = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+              const staffInfo = staffMap[(r.nama||'').toUpperCase().trim()] || {};
+              return { "SEKTOR": sek, "NAMA PEGAWAI": r.nama, "JAWATAN": staffInfo.jawatan||'-', "TARIKH": dateFormatted, "DESTINASI / LOKASI": r.destinasi, "TUJUAN": r.tujuan, "MASA": r.masa||'-', "NOTA": r.nota||'-' };
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [{wch:8},{wch:32},{wch:22},{wch:12},{wch:28},{wch:18},{wch:10},{wch:35}];
+            XLSX.utils.book_append_sheet(wb, ws, sek.replace(/\//g,'-'));
+          });
+          // Combined sheet
+          const allRows = sorted.map(r => {
+            let dateFormatted = r.tarikh;
+            try { const p = r.tarikh.split('-'); dateFormatted = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+            const staffInfo = staffMap[(r.nama||'').toUpperCase().trim()] || {};
+            return { "SEKTOR": r.sektor||'-', "NAMA PEGAWAI": r.nama, "JAWATAN": staffInfo.jawatan||'-', "TARIKH": dateFormatted, "DESTINASI / LOKASI": r.destinasi, "TUJUAN": r.tujuan, "MASA": r.masa||'-', "NOTA": r.nota||'-' };
+          });
+          const wsAll = XLSX.utils.json_to_sheet(allRows);
+          wsAll['!cols'] = [{wch:8},{wch:32},{wch:22},{wch:12},{wch:28},{wch:18},{wch:10},{wch:35}];
+          XLSX.utils.book_append_sheet(wb, wsAll, 'Semua');
+        } else {
+          const rows = sorted.map(r => {
+            let dateFormatted = r.tarikh;
+            try { const p = r.tarikh.split('-'); dateFormatted = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+            const staffInfo = staffMap[(r.nama||'').toUpperCase().trim()] || {};
+            return { "NAMA PEGAWAI": r.nama, "JAWATAN": staffInfo.jawatan||'-', "TARIKH": dateFormatted, "DESTINASI / LOKASI": r.destinasi, "TUJUAN": r.tujuan, "MASA": r.masa||'-', "NOTA": r.nota||'-' };
+          });
+          const ws = XLSX.utils.json_to_sheet(rows);
+          ws['!cols'] = [{wch:32},{wch:22},{wch:12},{wch:28},{wch:18},{wch:10},{wch:35}];
+          XLSX.utils.book_append_sheet(wb, ws, scopeCode);
+        }
+
         xlsxDownload(wb, `Log_Pergerakan_${scopeCode}_Dalat_${periodSuffix}.xlsx`);
         showToast(t('toast.excelSuccess'), "success");
       } catch (err) {
