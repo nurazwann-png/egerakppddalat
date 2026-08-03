@@ -6246,8 +6246,11 @@
       if (scope === 'all') {
         try {
           showToast('Memuatkan rekod keseluruhan PPD...', 'info');
-          const res = await fetch(`${API_BASE}/movements`);
+          const emailQ = currentUserSession ? `email=${encodeURIComponent(currentUserSession.email)}` : '';
+          const res = await fetch(`${API_BASE}/movements?${emailQ}`);
+          if (!res.ok) throw new Error(`${res.status}`);
           records = await res.json();
+          if (!Array.isArray(records)) throw new Error('bukan array');
           scopeCode = 'PPD';
           scopeLabel = 'Keseluruhan PPD Dalat';
         } catch(e) {
