@@ -4101,13 +4101,39 @@
     }
 
     // --- Staf (roster) ---
+    const JAWATAN_ORDER = ['KPPD','Timbalan PPD','SIPartners+','SISC+','Kaunselor Pendidikan'];
+    const SEKTOR_ORDER = ['SPr','SPb','SPbM','SPS','SPP/SPsK','SP','PTIS'];
+
+    function staffSortKey(s) {
+      const jawatan = (s.jawatan || '').trim();
+      const sektor  = (s.sektor  || '').trim();
+      const jIdx = JAWATAN_ORDER.findIndex(j => jawatan.toLowerCase().includes(j.toLowerCase()));
+      const sIdx = SEKTOR_ORDER.indexOf(sektor);
+      const sektOrd = sIdx === -1 ? SEKTOR_ORDER.length : sIdx;
+      if (jIdx !== -1) return [0, jIdx, sektOrd, jawatan, s.nama || ''];
+      if (jawatan.toLowerCase().includes('pelatih') || jawatan.toLowerCase().includes('latihan industri')) return [3, 0, sektOrd, jawatan, s.nama || ''];
+      if (jawatan.toLowerCase().includes('penolong pegawai')) return [1, 0, sektOrd, jawatan, s.nama || ''];
+      return [2, 0, sektOrd, jawatan, s.nama || ''];
+    }
+
+    function sortStaffList(list) {
+      return [...list].sort((a, b) => {
+        const ka = staffSortKey(a), kb = staffSortKey(b);
+        for (let i = 0; i < ka.length; i++) {
+          if (ka[i] < kb[i]) return -1;
+          if (ka[i] > kb[i]) return 1;
+        }
+        return 0;
+      });
+    }
+
     async function renderStaffTable() {
       const tbody = document.getElementById('staff-table-body');
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
-        const staffList = await res.json();
+        const staffList = sortStaffList(await res.json());
 
-        const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
+        const SEKTORS = ['SPr','SPb','SPbM','SPS','SPP/SPsK','SP','PTIS'];
         tbody.innerHTML = staffList.map((s) => `
           <tr>
             <td style="font-weight:600; color:var(--text-main);">${escapeHtml(s.nama)}</td>
@@ -5306,7 +5332,7 @@
               fromMovements.push({ nama: r.nama, jawatan: '-', sektor: sektor || '-', fromMovement: true });
             }
           });
-          const list = [...registered, ...fromMovements];
+          const list = sortStaffList([...registered, ...fromMovements]);
           if (!list.length) { body.innerHTML = `<div class="detail-empty">${t('admin.staff.empty')}</div>`; return; }
           body.innerHTML = `<table>
             <thead><tr><th>#</th><th>${t('col.nama')}</th><th>${t('admin.staff.jawatanLabel')}</th></tr></thead>
