@@ -1524,12 +1524,13 @@
     /* Cosmic Toast Alert */
     .toast-container {
       position: fixed;
-      bottom: 20px;
+      bottom: 92px; /* bagi ruang atas ikon ejen-avatar (58px + 24px bawah + gap) */
       right: 20px;
       z-index: 9999;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      max-width: calc(100vw - 40px);
     }
 
     .toast {
@@ -2012,7 +2013,7 @@
   <header>
     <div class="logo-container">
       <img src="images/logo-ppd.jpg" alt="Logo PPD Dalat" class="logo-img" style="height:50px; background:#fff; border-radius:6px; padding:2px;">
-      <h1 id="app-title">e-Gerak PPD Dalat</h1>
+      <h1 id="app-title" data-i18n="app.title">e-Gerak PPD Dalat</h1>
     </div>
 
     <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
@@ -2021,10 +2022,10 @@
         <i class="fa-solid fa-circle-user" style="color: var(--accent-cyan);"></i>
         <span id="header-user-name">User</span>
         <span class="user-position" id="header-user-pos">Penolong Pegawai Pendidikan</span>
-        <button id="notif-toggle-btn" class="logout-btn" onclick="togglePushNotifications()" title="Aktifkan Notifikasi Pergerakan" style="margin-right:2px;">
+        <button id="notif-toggle-btn" class="logout-btn" onclick="togglePushNotifications()" title="Aktifkan Notifikasi Pergerakan" data-i18n-title="header.notifTitle" style="margin-right:2px;">
           <i class="fa-solid fa-bell-slash"></i>
         </button>
-        <button class="logout-btn" onclick="handleLogout()" title="Log Keluar">
+        <button class="logout-btn" onclick="handleLogout()" title="Log Keluar" data-i18n-title="header.logoutTitle">
           <i class="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>
@@ -2207,7 +2208,7 @@
               <i class="fa-solid fa-envelope-open-text"></i>
             </div>
           </div>
-          <h2 style="margin:0.8rem 0 0.3rem;font-size:1.35rem;color:var(--text-primary)">Semak E-mel Anda</h2>
+          <h2 style="margin:0.8rem 0 0.3rem;font-size:1.35rem;color:var(--text-primary)" data-i18n="auth.otp.title">Semak E-mel Anda</h2>
           <p id="activation-subtitle" style="font-size:0.83rem;color:var(--text-muted);margin:0;line-height:1.5">
             Kod aktivasi 6-digit telah dihantar ke<br>
             <strong id="activation-email-display" style="color:var(--accent-blue)"></strong>
@@ -2218,7 +2219,7 @@
         <div style="text-align:center;margin-bottom:1rem">
           <div class="otp-timer" id="otp-timer-wrap">
             <i class="fa-regular fa-clock"></i>
-            Kod sah selama <span id="otp-countdown" style="font-weight:700;color:var(--accent-blue)">10:00</span>
+            <span data-i18n="auth.otp.timerLabel">Kod sah selama</span> <span id="otp-countdown" style="font-weight:700;color:var(--accent-blue)">10:00</span>
           </div>
         </div>
 
@@ -2230,7 +2231,7 @@
 
         <!-- OTP boxes -->
         <form onsubmit="handleActivationSubmit(event)">
-          <label class="form-label" style="text-align:center;display:block;margin-bottom:0.75rem;letter-spacing:0.05em">
+          <label class="form-label" style="text-align:center;display:block;margin-bottom:0.75rem;letter-spacing:0.05em" data-i18n="auth.otp.label">
             MASUKKAN KOD AKTIVASI
           </label>
           <div class="otp-boxes" id="otp-boxes">
@@ -2246,19 +2247,19 @@
           <input type="hidden" id="activation-code">
 
           <button type="submit" class="submit-btn" id="activation-submit-btn" style="margin-top:1.5rem">
-            <i class="fa-solid fa-shield-check"></i> Sahkan & Daftar
+            <i class="fa-solid fa-shield-check"></i> <span data-i18n="auth.otp.submit">Sahkan & Daftar</span>
           </button>
         </form>
 
         <div style="text-align:center;margin-top:1.1rem;font-size:0.82rem;color:var(--text-muted)">
-          Tidak terima e-mel? &nbsp;
-          <a href="#" onclick="handleResendCode(event)" id="resend-link" style="color:var(--accent-blue);text-decoration:none;font-weight:600">
+          <span data-i18n="auth.otp.noEmail">Tidak terima e-mel?</span> &nbsp;
+          <a href="#" onclick="handleResendCode(event)" id="resend-link" style="color:var(--accent-blue);text-decoration:none;font-weight:600" data-i18n="auth.otp.resend">
             Hantar semula
           </a>
         </div>
 
         <div style="text-align:center;margin-top:0.6rem">
-          <a href="#" onclick="showIdentifyView(event)" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none">
+          <a href="#" onclick="showIdentifyView(event)" style="font-size:0.82rem;color:var(--text-muted);text-decoration:none" data-i18n="auth.otp.back">
             &larr; Kembali
           </a>
         </div>
@@ -2274,7 +2275,7 @@
 
         <div class="error-msg" id="admin-pin-error">
           <i class="fa-solid fa-triangle-exclamation"></i>
-          <span>PIN admin tidak sah.</span>
+          <span data-i18n="auth.admin.pinError">PIN admin tidak sah.</span>
         </div>
 
         <form onsubmit="handleAdminPinSubmit(event)">
@@ -2434,7 +2435,7 @@
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" for="staff-email" data-i18n="admin.staff.emailLabel">E-mel</label>
-                <input class="form-input" style="padding-left:14px;" type="email" id="staff-email" placeholder="nama@moe.gov.my" required>
+                <input class="form-input" style="padding-left:14px;" type="email" id="staff-email" placeholder="nama@moe.gov.my" data-i18n-placeholder="admin.staff.emailPlaceholder" required>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" for="staff-jawatan" data-i18n="admin.staff.jawatanLabel">Jawatan</label>
@@ -2531,10 +2532,10 @@
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button onclick="adminJanaAllPDF()" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;">
-                  <i class="fa-solid fa-file-pdf"></i> PDF
+                  <i class="fa-solid fa-file-pdf"></i> <span data-i18n="admin.jana.pdfBtn">PDF</span>
                 </button>
                 <button onclick="adminJanaAllExcel()" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;">
-                  <i class="fa-solid fa-file-excel"></i> Excel
+                  <i class="fa-solid fa-file-excel"></i> <span data-i18n="admin.jana.excelBtn">Excel</span>
                 </button>
               </div>
             </div>
@@ -2542,7 +2543,7 @@
             <!-- Delete All Data -->
             <div style="border:1.5px solid #fca5a5;border-radius:12px;padding:16px 20px;background:#fff5f5;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
               <div>
-                <div style="font-size:0.88rem;font-weight:700;color:#dc2626;margin-bottom:3px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i>Zon Berbahaya</div>
+                <div style="font-size:0.88rem;font-weight:700;color:#dc2626;margin-bottom:3px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i><span data-i18n="jana.dangerZone">Zon Berbahaya</span></div>
                 <div style="font-size:0.78rem;color:#7f1d1d;" data-i18n="jana.deleteWarning">Perhatian: Tindakan ini akan memadamkan kesemua data pergerakan secara kekal. Sila pastikan anda telah membuat sandaran terlebih dahulu.</div>
               </div>
               <button class="reset-btn" onclick="resetSystemData()" style="flex-shrink:0;">
@@ -2753,11 +2754,11 @@
               <label class="form-label"><span data-i18n="form.masaLabel">Masa</span> <span style="font-weight:400; color:var(--text-muted);" data-i18n="form.masaOptional">(Pilihan)</span></label>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div class="input-wrapper">
-                  <input class="form-input" type="time" id="masa_bertolak" placeholder="Bertolak">
+                  <input class="form-input" type="time" id="masa_bertolak" placeholder="Bertolak" data-i18n-placeholder="form.masaBertolak">
                   <i class="fa-solid fa-plane-departure"></i>
                 </div>
                 <div class="input-wrapper">
-                  <input class="form-input" type="time" id="masa_balik" placeholder="Balik">
+                  <input class="form-input" type="time" id="masa_balik" placeholder="Balik" data-i18n-placeholder="form.masaBalik">
                   <i class="fa-solid fa-plane-arrival"></i>
                 </div>
               </div>
@@ -2912,15 +2913,16 @@
   <!-- Footer Section -->
   <!-- Footer -->
   <footer id="app-footer" style="text-align: center;">
-    <p style="margin-bottom: 2px; opacity: 0.75;">e-Gerak PPD Dalat</p>
-    <p style="margin-bottom: 4px; opacity: 0.75;">Sistem Pengurusan Rekod Pergerakan Pegawai</p>
-    <p style="font-weight: 700;">Pejabat Pendidikan Daerah Dalat</p>
+    <p style="margin-bottom: 2px; opacity: 0.75;" data-i18n="app.title">e-Gerak PPD Dalat</p>
+    <p style="margin-bottom: 4px; opacity: 0.75;" data-i18n="footer.desc">Sistem Pengurusan Rekod Pergerakan Pegawai</p>
+    <p style="font-weight: 700;" data-i18n="footer.org">Pejabat Pendidikan Daerah Dalat</p>
   </footer>
 
   <script>
     // ===== LANGUAGE SYSTEM =====
     const LANG_STRINGS = {
       bm: {
+        'app.title': 'e-Gerak PPD Dalat',
         'auth.sector.title': 'Pilih Sektor',
         'auth.sector.sub': 'Sila pilih sektor anda di PPD Dalat',
         'auth.sector.continue': 'Teruskan',
@@ -3168,8 +3170,45 @@
         'pdf.noRecord': 'Tiada rekod untuk dijana sebagai PDF.',
         'dow.1': 'Isnin', 'dow.2': 'Selasa', 'dow.3': 'Rabu',
         'dow.4': 'Khamis', 'dow.5': 'Jumaat',
+        'header.notifTitle': 'Aktifkan Notifikasi Pergerakan',
+        'header.logoutTitle': 'Log Keluar',
+        'auth.otp.title': 'Semak E-mel Anda',
+        'auth.otp.timerLabel': 'Kod sah selama',
+        'auth.otp.label': 'MASUKKAN KOD AKTIVASI',
+        'auth.otp.submit': 'Sahkan & Daftar',
+        'auth.otp.noEmail': 'Tidak terima e-mel?',
+        'auth.otp.resend': 'Hantar semula',
+        'auth.otp.back': '← Kembali',
+        'auth.admin.pinError': 'PIN admin tidak sah.',
+        'form.masaBertolak': 'Bertolak',
+        'form.masaBalik': 'Balik',
+        'footer.desc': 'Sistem Pengurusan Rekod Pergerakan Pegawai',
+        'footer.org': 'Pejabat Pendidikan Daerah Dalat',
+        'modal.edit.title': 'Edit Rekod Pergerakan',
+        'modal.edit.tarikh': 'Tarikh',
+        'modal.edit.masaLabel': 'Masa Balik (pilihan)',
+        'modal.edit.masaPlaceholder': 'cth: 5:00 PTG',
+        'modal.edit.notaLabel': 'Nota (pilihan)',
+        'modal.edit.save': 'Simpan',
+        'modal.edit.cancel': 'Batal',
+        'notice.modal.tajukPlaceholder': 'Contoh: Bengkel ICT 5 Ogos 2026',
+        'notice.modal.isiPlaceholder': 'Tulis butiran pemakluman di sini...',
+        'ejen.avatarLabel': 'Ejen',
+        'jana.dangerZone': 'Zon Berbahaya',
+        'admin.staff.emailPlaceholder': 'nama@moe.gov.my',
+        'admin.staff.jawatanDefault': 'Pilih...',
+        'admin.jana.pdfBtn': 'PDF',
+        'admin.jana.excelBtn': 'Excel',
+        'admin.filter.SPr': 'SPr — Sektor Perancangan',
+        'admin.filter.SPb': 'SPb — Sektor Pembelajaran',
+        'admin.filter.SPbM': 'SPbM — Pembangunan Murid',
+        'admin.filter.SP': 'SP — Sektor Pengurusan',
+        'admin.filter.SPS': 'SPS — Pengurusan Sekolah',
+        'admin.filter.SPPSPsK': 'SPP/SPsK — Pentaksiran',
+        'admin.filter.PTIS': 'PTIS — ICT Sekolah',
       },
       en: {
+        'app.title': 'e-Gerak PPD Dalat',
         'auth.sector.title': 'Select Sector',
         'auth.sector.sub': 'Please select your sector at PPD Dalat',
         'auth.sector.continue': 'Continue',
@@ -3417,6 +3456,42 @@
         'pdf.noRecord': 'No records to generate as PDF.',
         'dow.1': 'Monday', 'dow.2': 'Tuesday', 'dow.3': 'Wednesday',
         'dow.4': 'Thursday', 'dow.5': 'Friday',
+        'header.notifTitle': 'Enable Movement Notifications',
+        'header.logoutTitle': 'Sign Out',
+        'auth.otp.title': 'Check Your Email',
+        'auth.otp.timerLabel': 'Code valid for',
+        'auth.otp.label': 'ENTER ACTIVATION CODE',
+        'auth.otp.submit': 'Verify & Register',
+        'auth.otp.noEmail': "Didn't receive email?",
+        'auth.otp.resend': 'Resend',
+        'auth.otp.back': '← Back',
+        'auth.admin.pinError': 'Invalid admin PIN.',
+        'form.masaBertolak': 'Depart',
+        'form.masaBalik': 'Return',
+        'footer.desc': 'Officer Movement Record Management System',
+        'footer.org': 'Dalat District Education Office',
+        'modal.edit.title': 'Edit Movement Record',
+        'modal.edit.tarikh': 'Date',
+        'modal.edit.masaLabel': 'Return Time (optional)',
+        'modal.edit.masaPlaceholder': 'e.g. 5:00 PM',
+        'modal.edit.notaLabel': 'Notes (optional)',
+        'modal.edit.save': 'Save',
+        'modal.edit.cancel': 'Cancel',
+        'notice.modal.tajukPlaceholder': 'e.g. ICT Workshop 5 Aug 2026',
+        'notice.modal.isiPlaceholder': 'Write notice details here...',
+        'ejen.avatarLabel': 'Agent',
+        'jana.dangerZone': 'Danger Zone',
+        'admin.staff.emailPlaceholder': 'name@moe.gov.my',
+        'admin.staff.jawatanDefault': 'Select...',
+        'admin.jana.pdfBtn': 'PDF',
+        'admin.jana.excelBtn': 'Excel',
+        'admin.filter.SPr': 'SPr — Planning Sector',
+        'admin.filter.SPb': 'SPb — Learning Sector',
+        'admin.filter.SPbM': 'SPbM — Student Development',
+        'admin.filter.SP': 'SP — Management Sector',
+        'admin.filter.SPS': 'SPS — School Management',
+        'admin.filter.SPPSPsK': 'SPP/SPsK — Assessment',
+        'admin.filter.PTIS': 'PTIS — School ICT',
       }
     };
 
@@ -3454,6 +3529,53 @@
         divs.forEach((d, i) => { if (days[i]) d.textContent = days[i]; });
       }
       if (typeof applyEjenLanguage === 'function') applyEjenLanguage();
+
+      // Rebuild datalist tujuan (borang)
+      const dl = document.getElementById('tujuan-datalist');
+      if (dl) {
+        const tujuanKeys = ['tujuan.pejabat','tujuan.mesyuarat','tujuan.bengkel','tujuan.kursus',
+          'tujuan.pemantauan','tujuan.cutiUmum','tujuan.pelepasan','tujuan.cuti','tujuan.lain'];
+        dl.innerHTML = tujuanKeys.map(k => `<option value="${t(k)}">`).join('');
+      }
+
+      // Rebuild edit-tujuan select
+      const editTujuan = document.getElementById('edit-tujuan');
+      if (editTujuan) {
+        const cur = editTujuan.value;
+        const opts = [
+          ['tujuan.mesyuarat','Mesyuarat / Perbincangan'],
+          ['tujuan.pemantauan','Pemantauan Sekolah'],
+          ['tujuan.kursus','Kursus / Latihan'],
+          ['tujuan.lain','Tugas Rasmi Lain'],
+          ['tujuan.cuti','Cuti Rehat / Cuti Sakit'],
+          ['tujuan.pejabat','Berada di Pejabat'],
+          ['tujuan.bengkel','Bengkel Kerja'],
+          ['tujuan.pelepasan','Pelepasan'],
+        ];
+        editTujuan.innerHTML = opts.map(([k, bm]) => `<option value="${bm}">${t(k)}</option>`).join('');
+        editTujuan.value = cur;
+      }
+
+      // Rebuild admin sector filter options (kekalkan value, tukar label)
+      const sf = document.getElementById('admin-sector-filter');
+      if (sf) {
+        const sektorOpts = [
+          ['','admin.records.allSektor'],
+          ['SPr','admin.filter.SPr'],['SPb','admin.filter.SPb'],['SPbM','admin.filter.SPbM'],
+          ['SP','admin.filter.SP'],['SPS','admin.filter.SPS'],
+          ['SPP/SPsK','admin.filter.SPPSPsK'],['PTIS','admin.filter.PTIS'],
+        ];
+        const curSf = sf.value;
+        sf.innerHTML = sektorOpts.map(([v,k]) => `<option value="${v}">${t(k)}</option>`).join('');
+        sf.value = curSf;
+      }
+
+      // Update staff jawatan default option
+      const sj = document.getElementById('staff-jawatan');
+      if (sj) {
+        const defOpt = sj.querySelector('option[value=""]');
+        if (defOpt) defOpt.textContent = t('admin.staff.jawatanDefault');
+      }
     }
 
     function reRenderAll() {
@@ -6609,21 +6731,21 @@
   <div id="edit-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
     <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:24px;width:min(480px,95vw);box-shadow:0 20px 60px rgba(0,0,0,0.5);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-        <h3 style="color:#fff;font-size:1rem;font-weight:700;margin:0;"><i class="fa-solid fa-pen" style="margin-right:8px;color:var(--accent-cyan);"></i>Edit Rekod Pergerakan</h3>
+        <h3 style="color:#fff;font-size:1rem;font-weight:700;margin:0;"><i class="fa-solid fa-pen" style="margin-right:8px;color:var(--accent-cyan);"></i><span data-i18n="modal.edit.title">Edit Rekod Pergerakan</span></h3>
         <button onclick="closeEditModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1.2rem;">&times;</button>
       </div>
       <form id="edit-modal-form" onsubmit="submitEditModal(event)">
         <input type="hidden" id="edit-record-id">
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Tarikh</label>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.tarikh">Tarikh</label>
           <input type="date" id="edit-tarikh" class="form-input" required style="width:100%;box-sizing:border-box;">
         </div>
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Destinasi / Lokasi</label>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="form.destLabel">Destinasi / Lokasi</label>
           <input type="text" id="edit-destinasi" class="form-input" required maxlength="300" style="width:100%;box-sizing:border-box;">
         </div>
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Tujuan</label>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="col.tujuan">Tujuan</label>
           <select id="edit-tujuan" class="form-select" required style="width:100%;box-sizing:border-box;">
             <option value="Mesyuarat">Mesyuarat</option>
             <option value="Mesyuarat / Perbincangan">Mesyuarat / Perbincangan</option>
@@ -6635,16 +6757,16 @@
           </select>
         </div>
         <div style="margin-bottom:12px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Masa Balik (pilihan)</label>
-          <input type="text" id="edit-masa" class="form-input" maxlength="50" placeholder="cth: 5:00 PTG" style="width:100%;box-sizing:border-box;">
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.masaLabel">Masa Balik (pilihan)</label>
+          <input type="text" id="edit-masa" class="form-input" maxlength="50" placeholder="cth: 5:00 PTG" data-i18n-placeholder="modal.edit.masaPlaceholder" style="width:100%;box-sizing:border-box;">
         </div>
         <div style="margin-bottom:18px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">Nota (pilihan)</label>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.notaLabel">Nota (pilihan)</label>
           <textarea id="edit-nota" class="form-textarea" maxlength="1000" rows="2" style="width:100%;box-sizing:border-box;"></textarea>
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button type="button" onclick="closeEditModal()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:0.85rem;">Batal</button>
-          <button type="submit" class="submit-btn" style="width:auto;padding:8px 20px;font-size:0.85rem;"><i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i>Simpan</button>
+          <button type="button" onclick="closeEditModal()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:0.85rem;" data-i18n="modal.edit.cancel">Batal</button>
+          <button type="submit" class="submit-btn" style="width:auto;padding:8px 20px;font-size:0.85rem;"><i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i><span data-i18n="modal.edit.save">Simpan</span></button>
         </div>
       </form>
     </div>
@@ -6662,9 +6784,9 @@
       </div>
       <div class="notice-modal-body">
         <label data-i18n="notice.modal.tajuk">Tajuk</label>
-        <input id="notice-tajuk" type="text" maxlength="120" placeholder="Contoh: Bengkel ICT 5 Ogos 2026">
+        <input id="notice-tajuk" type="text" maxlength="120" placeholder="Contoh: Bengkel ICT 5 Ogos 2026" data-i18n-placeholder="notice.modal.tajukPlaceholder">
         <label data-i18n="notice.modal.isi">Butiran / Penerangan</label>
-        <textarea id="notice-isi" maxlength="800" placeholder="Tulis butiran pemakluman di sini..."></textarea>
+        <textarea id="notice-isi" maxlength="800" placeholder="Tulis butiran pemakluman di sini..." data-i18n-placeholder="notice.modal.isiPlaceholder"></textarea>
         <div class="notice-modal-btns">
           <button class="notice-cancel-btn" onclick="closeNoticeModal()" data-i18n="notice.modal.cancel">Batal</button>
           <button class="notice-submit-btn" onclick="submitNotice()" data-i18n="notice.modal.submit">Hantar</button>
@@ -6674,10 +6796,10 @@
   </div>
 
   <!-- Avatar button -->
-  <div id="ejen-avatar" title="Ejen e-Gerak PPD Dalat">
+  <div id="ejen-avatar" title="Ejen e-Gerak PPD Dalat" data-i18n-title="ejen.title">
     <div class="ejen-badge"></div>
     <div class="avatar-icon">🤖</div>
-    <div class="avatar-label">Ejen</div>
+    <div class="avatar-label" data-i18n="ejen.avatarLabel">Ejen</div>
   </div>
 
   <!-- Chat panel -->
