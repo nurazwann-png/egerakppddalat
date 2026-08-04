@@ -6434,7 +6434,13 @@
       try {
         const reg = await navigator.serviceWorker.ready;
         const existing = await reg.pushManager.getSubscription();
-        if (existing) { _pushSubscription = existing; updateNotifBtn(true); return; }
+        if (existing) {
+          _pushSubscription = existing;
+          updateNotifBtn(true);
+          // Pastikan server juga ada subscription ini (e.g. lepas DB reset)
+          fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: existing }) }).catch(()=>{});
+          return;
+        }
       } catch(e) {}
       updateNotifBtn(false);
     }

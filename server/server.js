@@ -290,6 +290,9 @@ async function initDb() {
       created_at TEXT NOT NULL
     )
   `);
+
+  // Kolum push_sent_at untuk scheduled notifications
+  await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS push_sent_at TEXT`);
 }
 
 let vapidPublicKey = '';
@@ -312,16 +315,79 @@ async function initVapid() {
 
 async function sendPushToAll(payload) {
   const { rows } = await pool.query('SELECT endpoint, subscription FROM push_subscriptions');
+  console.log(`[push] Menghantar notifikasi kepada ${rows.length} pelanggan`);
+  if (!rows.length) return;
   const dead = [];
   await Promise.allSettled(rows.map(async row => {
     try {
       await webpush.sendNotification(JSON.parse(row.subscription), JSON.stringify(payload));
+      console.log(`[push] OK: ${row.endpoint.slice(0, 60)}...`);
     } catch (err) {
+      console.error(`[push] Gagal: ${row.endpoint.slice(0, 60)}... — ${err.statusCode} ${err.message}`);
       if (err.statusCode === 404 || err.statusCode === 410) dead.push(row.endpoint);
     }
   }));
   if (dead.length) {
+    console.log(`[push] Membuang ${dead.length} langganan mati`);
     await Promise.allSettled(dead.map(ep => pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1', [ep])));
+  }
+}
+
+// Scheduler: hantar notifikasi 30 minit sebelum masa pergerakan (WIB+8)
+function getMalaysiaDateStr() {
+  const myt = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  return myt.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function parseMasaToMinutes(masa) {
+  if (!masa) return null;
+  const m = masa.trim().match(/^(\d{1,2})[:.h](\d{2})/);
+  if (!m) return null;
+  return parseInt(m[1]) * 60 + parseInt(m[2]);
+}
+
+async function checkScheduledPush() {
+  try {
+    const today = getMalaysiaDateStr();
+    const myt = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    const nowMinutes = myt.getUTCHours() * 60 + myt.getUTCMinutes();
+
+    const { rows } = await pool.query(
+      'SELECT id, nama, tarikh, destinasi, tujuan, masa, sektor FROM movements WHERE tarikh = $1 AND push_sent_at IS NULL',
+      [today]
+    );
+    if (!rows.length) return;
+
+    const toNotify = rows.filter(row => {
+      const masaMin = parseMasaToMinutes(row.masa);
+      // Hantar 30 minit sebelum masa, atau 7:00 pagi kalau tiada masa
+      const targetMin = masaMin !== null ? masaMin - 30 : 7 * 60;
+      return nowMinutes >= targetMin;
+    });
+
+    if (!toNotify.length) return;
+
+    // Tandakan dulu supaya tak hantar berganda
+    const ids = toNotify.map(r => r.id);
+    await pool.query(
+      `UPDATE movements SET push_sent_at = $1 WHERE id = ANY($2::text[])`,
+      [new Date().toISOString(), ids]
+    );
+    console.log(`[push-scheduler] Menghantar notifikasi berjadual: ${ids.length} pergerakan pada ${today}`);
+
+    for (const row of toNotify) {
+      const masaStr = row.masa ? ` pukul ${row.masa}` : '';
+      await sendPushToAll({
+        title: `e-Gerak PPD Dalat — ${today}`,
+        body: `${row.nama}${masaStr}: ${row.destinasi} — ${row.tujuan}`,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: `sched-${row.id}`,
+        data: { url: '/' }
+      }).catch(e => console.error('[push-scheduler]', e.message));
+    }
+  } catch (err) {
+    console.error('[push-scheduler] Error:', err.message);
   }
 }
 
@@ -462,16 +528,6 @@ const server = http.createServer(async (req, res) => {
         [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr']
       );
       sendJSON(res, 201, { ok: true });
-      // Send push notification to all subscribers (non-blocking)
-      const masaStr = masa ? ` (${masa})` : '';
-      sendPushToAll({
-        title: 'e-Gerak PPD Dalat',
-        body: `${nama}: ${destinasi} — ${tujuan}${masaStr}`,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
-        tag: `movement-${tarikh}-${id}`,
-        data: { url: '/' }
-      }).catch(() => {});
       return;
     }
 
@@ -1030,6 +1086,9 @@ initDb()
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
+    // Scheduled push: semak setiap 5 minit
+    checkScheduledPush();
+    setInterval(checkScheduledPush, 5 * 60 * 1000);
     server.listen(PORT, () => {
       console.log(`e-Gerak PPD backend (PostgreSQL) listening on port ${PORT}`);
     });
