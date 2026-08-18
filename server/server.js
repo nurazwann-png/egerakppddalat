@@ -291,8 +291,9 @@ async function initDb() {
     )
   `);
 
-  // Kolum push_sent_at untuk scheduled notifications
+  // Kolum untuk scheduled notifications
   await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS push_sent_at TEXT`);
+  await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS created_at TEXT`);
 }
 
 let vapidPublicKey = '';
@@ -333,10 +334,9 @@ async function sendPushToAll(payload) {
   }
 }
 
-// Scheduler: hantar notifikasi 30 minit sebelum masa pergerakan (WIB+8)
 function getMalaysiaDateStr() {
   const myt = new Date(Date.now() + 8 * 60 * 60 * 1000);
-  return myt.toISOString().slice(0, 10); // YYYY-MM-DD
+  return myt.toISOString().slice(0, 10);
 }
 
 function parseMasaToMinutes(masa) {
@@ -348,38 +348,53 @@ function parseMasaToMinutes(masa) {
 
 async function checkScheduledPush() {
   try {
+    const now = Date.now();
     const today = getMalaysiaDateStr();
-    const myt = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    const myt = new Date(now + 8 * 60 * 60 * 1000);
     const nowMinutes = myt.getUTCHours() * 60 + myt.getUTCMinutes();
 
+    // Ambil semua pergerakan yang belum dinotifikasi:
+    // - Ada masa: hanya hari ini
+    // - Tiada masa: mana-mana tarikh (5 min selepas created_at)
     const { rows } = await pool.query(
-      'SELECT id, nama, tarikh, destinasi, tujuan, masa, sektor FROM movements WHERE tarikh = $1 AND push_sent_at IS NULL',
+      `SELECT id, nama, tarikh, destinasi, tujuan, masa, sektor, created_at
+       FROM movements
+       WHERE push_sent_at IS NULL
+         AND (masa IS NOT NULL AND masa != '' AND tarikh = $1
+              OR masa IS NULL OR masa = '')`,
       [today]
     );
     if (!rows.length) return;
 
     const toNotify = rows.filter(row => {
       const masaMin = parseMasaToMinutes(row.masa);
-      // Hantar 30 minit sebelum masa, atau 7:00 pagi kalau tiada masa
-      const targetMin = masaMin !== null ? masaMin - 30 : 7 * 60;
-      return nowMinutes >= targetMin;
+
+      if (masaMin !== null) {
+        // Ada masa: hantar 30 minit sebelum, pada hari pergerakan sahaja
+        if (row.tarikh !== today) return false;
+        return nowMinutes >= masaMin - 30;
+      } else {
+        // Tiada masa: hantar 5 minit selepas rekod dicipta
+        if (!row.created_at) return true; // rekod lama tanpa created_at — hantar segera
+        return now >= new Date(row.created_at).getTime() + 5 * 60 * 1000;
+      }
     });
 
     if (!toNotify.length) return;
 
-    // Tandakan dulu supaya tak hantar berganda
     const ids = toNotify.map(r => r.id);
     await pool.query(
       `UPDATE movements SET push_sent_at = $1 WHERE id = ANY($2::text[])`,
       [new Date().toISOString(), ids]
     );
-    console.log(`[push-scheduler] Menghantar notifikasi berjadual: ${ids.length} pergerakan pada ${today}`);
+    console.log(`[push-scheduler] Menghantar ${ids.length} notifikasi`);
 
     for (const row of toNotify) {
       const masaStr = row.masa ? ` pukul ${row.masa}` : '';
+      const tarikhStr = row.tarikh !== today ? ` (${row.tarikh})` : '';
       await sendPushToAll({
-        title: `e-Gerak PPD Dalat — ${today}`,
-        body: `${row.nama}${masaStr}: ${row.destinasi} — ${row.tujuan}`,
+        title: `e-Gerak PPD Dalat`,
+        body: `${row.nama}${tarikhStr}${masaStr}: ${row.destinasi} — ${row.tujuan}`,
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
         tag: `sched-${row.id}`,
@@ -522,10 +537,11 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      const createdAt = new Date().toISOString();
       await pool.query(
-        `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr']
+        `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr', createdAt]
       );
       sendJSON(res, 201, { ok: true });
       return;

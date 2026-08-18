@@ -2741,7 +2741,7 @@
                   <option value="Kursus / Latihan">
                   <option value="Pemantauan Sekolah">
                   <option value="Cuti Umum">
-                  <option value="Pelepasan">
+                  <option value="Kebenaran Keluar Pejabat">
                   <option value="Cuti Rehat / Cuti Sakit">
                   <option value="Tugas Rasmi Lain">
                 </datalist>
@@ -2993,7 +2993,7 @@
         'tujuan.kursus': 'Kursus / Latihan',
         'tujuan.pemantauan': 'Pemantauan Sekolah',
         'tujuan.cutiUmum': 'Cuti Umum',
-        'tujuan.pelepasan': 'Pelepasan',
+        'tujuan.pelepasan': 'Kebenaran Keluar Pejabat',
         'tujuan.cuti': 'Cuti Rehat / Cuti Sakit',
         'tujuan.lain': 'Tugas Rasmi Lain',
         'analisis.title': 'Log & Analisis Pergerakan',
@@ -3279,7 +3279,7 @@
         'tujuan.kursus': 'Course / Training',
         'tujuan.pemantauan': 'School Monitoring',
         'tujuan.cutiUmum': 'Public Holiday',
-        'tujuan.pelepasan': 'Release',
+        'tujuan.pelepasan': 'Leave Office Permit',
         'tujuan.cuti': 'Annual / Sick Leave',
         'tujuan.lain': 'Other Official Duties',
         'analisis.title': 'Movement Log & Analysis',
@@ -3550,7 +3550,7 @@
           ['tujuan.cuti','Cuti Rehat / Cuti Sakit'],
           ['tujuan.pejabat','Berada di Pejabat'],
           ['tujuan.bengkel','Bengkel Kerja'],
-          ['tujuan.pelepasan','Pelepasan'],
+          ['tujuan.pelepasan','Kebenaran Keluar Pejabat'],
         ];
         editTujuan.innerHTML = opts.map(([k, bm]) => `<option value="${bm}">${t(k)}</option>`).join('');
         editTujuan.value = cur;
@@ -4805,7 +4805,7 @@
       if (tj.includes('kursus')) return 'badge-kursus';
       if (tj.includes('pemantauan')) return 'badge-pemantauan';
       if (tj.includes('cuti umum')) return 'badge-cuti-umum';
-      if (tj.includes('pelepasan')) return 'badge-pelepasan';
+      if (tj.includes('kebenaran keluar')) return 'badge-pelepasan';
       if (tj.includes('cuti')) return 'badge-cuti';
       return 'badge-lain';
     }
@@ -5174,7 +5174,7 @@
         if (tj.includes('Kursus')) return '#ffc14a';
         if (tj.includes('Pemantauan')) return '#00e5a0';
         if (tj.includes('Cuti')) return '#ff7eb3';
-        if (tj.includes('Pelepasan')) return '#ff9f7a';
+        if (tj.includes('Kebenaran Keluar')) return '#ff9f7a';
         if (tj.includes('Pejabat')) return '#7adfff';
         return '#aaa';
       };
@@ -5925,7 +5925,7 @@
         else if (tj.includes('kursus')) badgeClass = 'badge-kursus';
         else if (tj.includes('pemantauan')) badgeClass = 'badge-pemantauan';
         else if (tj.includes('cuti umum')) badgeClass = 'badge-cuti-umum';
-        else if (tj.includes('pelepasan')) badgeClass = 'badge-pelepasan';
+        else if (tj.includes('kebenaran keluar')) badgeClass = 'badge-pelepasan';
         else if (tj.includes('cuti')) badgeClass = 'badge-cuti';
 
         const dateStr = group.length > 1
@@ -6032,7 +6032,7 @@
       const container = document.getElementById('insights-bars');
       container.innerHTML = '';
 
-      const tujuans = ["Berada di Pejabat", "Mesyuarat", "Bengkel", "Kursus", "Pemantauan", "Cuti Umum", "Pelepasan", "Cuti", "Tugas Rasmi Lain"];
+      const tujuans = ["Berada di Pejabat", "Mesyuarat", "Bengkel", "Kursus", "Pemantauan", "Cuti Umum", "Kebenaran Keluar Pejabat", "Cuti", "Tugas Rasmi Lain"];
       const counts = {};
       tujuans.forEach(t => counts[t] = 0);
 
@@ -6055,7 +6055,7 @@
         'Kursus': '#d97706',
         'Pemantauan': '#0891b2',
         'Cuti Umum': '#64748b',
-        'Pelepasan': '#0e9488',
+        'Kebenaran Keluar Pejabat': '#0e9488',
         'Cuti': '#dc2626',
         'Tugas Rasmi Lain': '#db2777',
       };
@@ -6147,7 +6147,7 @@
             if (tj.includes('Kursus')) return '#ffc14a';
             if (tj.includes('Pemantauan')) return '#00e5a0';
             if (tj.includes('Cuti')) return '#ff7eb3';
-            if (tj.includes('Pelepasan')) return '#ff9f7a';
+            if (tj.includes('Kebenaran Keluar')) return '#ff9f7a';
             if (tj.includes('Pejabat')) return '#7adfff';
             return '#aaa';
           };
