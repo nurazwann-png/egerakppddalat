@@ -890,6 +890,116 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // POST /api/admin/seed-demo — populate demo database (one-time use)
+      if (url.pathname === '/api/admin/seed-demo' && req.method === 'POST') {
+        const STAFF_DEMO = [
+          { email: 'andrian.lang@ppddalat.edu.my',      nama: 'ANDRIAN BIN LANG',                    jawatan: 'Timbalan PPD',               sektor: 'SPr' },
+          { email: 'johan.senen@ppddalat.edu.my',        nama: 'JOHAN BIN SENEN',                     jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPr' },
+          { email: 'nurazwann.ismail@ppddalat.edu.my',   nama: 'NURAZWANN BIN ISMAIL',                jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPr' },
+          { email: 'aiphonsus.lang@ppddalat.edu.my',     nama: 'AIPHONSUS BIN LANG',                  jawatan: 'SISC+',                      sektor: 'SPb' },
+          { email: 'ajibah.melahi@ppddalat.edu.my',      nama: 'AJIBAH BINTI MELAHI',                 jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPb' },
+          { email: 'christina.phoa@ppddalat.edu.my',     nama: 'CHRISTINA PHOA',                      jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPb' },
+          { email: 'erik.dan@ppddalat.edu.my',           nama: 'ERIK BIN DAN',                        jawatan: 'SISC+',                      sektor: 'SPb' },
+          { email: 'faridah.jahori@ppddalat.edu.my',     nama: 'FARIDAH BINTI JAHORI',                jawatan: 'SISC+',                      sektor: 'SPb' },
+          { email: 'kamsiah.uki@ppddalat.edu.my',        nama: 'KAMSIAH BINTI UKI',                   jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPb' },
+          { email: 'nujaimi.kaman@ppddalat.edu.my',      nama: 'NUJAIMI BIN KAMAN',                   jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPb' },
+          { email: 'rahanah.bana@ppddalat.edu.my',       nama: 'RAHANAH BINTI BANA',                  jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPb' },
+          { email: 'mathew.muhan@ppddalat.edu.my',       nama: 'MATHEW MUHAN BIN KUSANG',             jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPbM' },
+          { email: 'syukmar.japar@ppddalat.edu.my',      nama: 'SYUKMAR BIN JAPAR',                   jawatan: 'Pembantu Tadbir',            sektor: 'SPbM' },
+          { email: 'hasbiee.amit@ppddalat.edu.my',       nama: 'HASBIEE BIN AMIT',                    jawatan: 'Timbalan PPD',               sektor: 'SPbM' },
+          { email: 'nursherrima.baharim@ppddalat.edu.my',nama: 'NUR SHERRIMA BINTI BAHARIM',          jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPbM' },
+          { email: 'naraida.mudah@ppddalat.edu.my',      nama: 'NARAIDA BINTI MUDAH',                 jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPbM' },
+          { email: 'arni.gunong@ppddalat.edu.my',        nama: 'ARNI BINTI GUNONG MORISON',           jawatan: 'Penolong Pegawai Tadbir',    sektor: 'SP' },
+          { email: 'azlan.mohamad@ppddalat.edu.my',      nama: 'AZLAN BIN MOHAMAD',                   jawatan: 'Penolong Akauntan',          sektor: 'SP' },
+          { email: 'christine.lolly@ppddalat.edu.my',    nama: 'CHRISTINE LOLLY ANAK ANTHONY',        jawatan: 'Pembantu Tadbir',            sektor: 'SP' },
+          { email: 'dayang.maslemah@ppddalat.edu.my',    nama: 'DAYANG MASLEMAH BINTI AWANG USUP',    jawatan: 'Pembantu Tadbir(P/O)',       sektor: 'SP' },
+          { email: 'evelyne.boniface@ppddalat.edu.my',   nama: 'EVELYNE BINTI BONIFACE GUANG',        jawatan: 'Pembantu Tadbir',            sektor: 'SP' },
+          { email: 'fauziah.fauzi@ppddalat.edu.my',      nama: 'FAUZIAH BINTI FAUZI',                 jawatan: 'Pembantu Tadbir(P/O)',       sektor: 'SP' },
+          { email: 'jamalia.mawi@ppddalat.edu.my',       nama: 'JAMALIA BINTI MAWI',                  jawatan: 'Pembantu Tadbir',            sektor: 'SP' },
+          { email: 'josielin.kubang@ppddalat.edu.my',    nama: 'JOSIELIN BINTI KUBANG',               jawatan: 'Pembantu Tadbir(P/O)',       sektor: 'SP' },
+          { email: 'lanida.devies@ppddalat.edu.my',      nama: 'LANIDA ANAK DEVIES',                  jawatan: 'Penolong Pegawai Tadbir',    sektor: 'SP' },
+          { email: 'mohd.haffis@ppddalat.edu.my',        nama: 'MOHD. HAFFIS BIN JAPAR',              jawatan: 'Juruteknik Komputer',        sektor: 'SP' },
+          { email: 'noraini.amit@ppddalat.edu.my',       nama: 'NORAINI BINTI AMIT',                  jawatan: 'Pembantu Tadbir(P/O)',       sektor: 'SP' },
+          { email: 'nurqistina.johini@ppddalat.edu.my',  nama: 'NURQISTINA BALQIS BINTI JOHINI',      jawatan: 'Pembantu Akauntan',          sektor: 'SP' },
+          { email: 'nurrahman.moris@ppddalat.edu.my',    nama: 'NUR RAHMAN BIN MORIS',                jawatan: 'Pembantu Khidmat Am',        sektor: 'SP' },
+          { email: 'reta.jalani@ppddalat.edu.my',        nama: 'RETA BINTI JALANI',                   jawatan: 'Pembantu Tadbir(P/O)',       sektor: 'SP' },
+          { email: 'reynilda.jite@ppddalat.edu.my',      nama: 'REYNILDA BINTI JITE',                 jawatan: 'Pembantu Tadbir(P/O)',       sektor: 'SP' },
+          { email: 'zainab.nen@ppddalat.edu.my',         nama: 'ZAINAB BINTI NEN',                    jawatan: 'Pembantu Tadbir',            sektor: 'SP' },
+          { email: 'angelia.batan@ppddalat.edu.my',      nama: 'ANGELIA BINTI NICHOLAS BATAN',        jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
+          { email: 'eduine.kusai@ppddalat.edu.my',       nama: 'EDUINE BIN KUSAI',                    jawatan: 'Timbalan PPD',               sektor: 'SPS' },
+          { email: 'haneem.hosman@ppddalat.edu.my',      nama: 'HANEEM BINTI HOSMAN',                 jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
+          { email: 'lisa.pey@ppddalat.edu.my',           nama: 'LISA DEBRA PEY ADUM',                 jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
+          { email: 'mohamad.sahrin@ppddalat.edu.my',     nama: 'MOHAMAD SAHRIN BIN SULAIMAN',         jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
+          { email: 'nonita.jidi@ppddalat.edu.my',        nama: 'NONITA BINTI MOHAMAD JIDI',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
+          { email: 'sahran.sahren@ppddalat.edu.my',      nama: 'SAHRAN BIN SAHREN',                   jawatan: 'Pembantu Tadbir',            sektor: 'SPS' },
+          { email: 'tan.miangseng@ppddalat.edu.my',      nama: 'TAN MIANG SENG',                      jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
+          { email: 'loo.ahsing@ppddalat.edu.my',         nama: 'LOO AH SING',                         jawatan: 'Kaunselor Pendidikan',       sektor: 'SPP/SPsK' },
+          { email: 'johari.moshidi@ppddalat.edu.my',     nama: 'JOHARI BIN MOSHIDI',                  jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP/SPsK' },
+          { email: 'kettlin.ason@ppddalat.edu.my',       nama: 'KETTLIN SAFIYA BINTI ASON',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP/SPsK' },
+          { email: 'amriee.yusup@ppddalat.edu.my',       nama: 'AMRIEE BIN YUSUP',                    jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
+          { email: 'iswandy.ho@ppddalat.edu.my',         nama: 'ISWANDY HO BIN AHMAD HO',             jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
+          { email: 'mohammad.tawfik@ppddalat.edu.my',    nama: 'MOHAMMAD TAWFIK BIN HAMBALI',         jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
+          { email: 'ruqayyah.sedaka@ppddalat.edu.my',    nama: 'RUQAYYAH BINTI AL SEDAKA',            jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
+          { email: 'vincent.asam@ppddalat.edu.my',       nama: 'VINCENT BIN ANTHONY ASAM',            jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
+          { email: 'zaimayani.drahman@ppddalat.edu.my',  nama: 'ZAIMAYANI BINTI DRAHMAN BUJANG',      jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
+        ];
+        const DESTS_DEMO = ['SMK Dalat','SMK Oya','SK Sg. Maw','SK Balingian','SK Igan','SK Dalat','SMK Balingian','SK Sg. Lau','SK Bilal','JPN Sarawak, Kuching','PPD Mukah','Institut Aminuddin Baki (IAB)','Hotel Grand Merdeka Mukah','Dewan Suarah Mukah','Pejabat PPD Dalat'];
+        const TUJUAN_DEMO = [
+          { t: 'Pemantauan Sekolah',       s: ['SPb','SPbM','SPS','SPr'] },
+          { t: 'Mesyuarat / Perbincangan', s: null },
+          { t: 'Kursus / Latihan',         s: ['SPb','SPS','SPbM','PTIS','SP'] },
+          { t: 'Bengkel Kerja',            s: ['SPb','SPS','SPbM','SPr','SPP/SPsK'] },
+          { t: 'Tugas Rasmi Lain',         s: ['SP','PTIS','SPr','SPS'] },
+          { t: 'Berada di Pejabat',        s: ['SP','PTIS','SPP/SPsK'] },
+          { t: 'Cuti Rehat / Cuti Sakit',  s: null },
+        ];
+        const MASA_DEMO = [['07:30','17:00'],['08:00','17:00'],['08:00','13:00'],['09:00','17:00'],['07:30','13:00'],['','']];
+        const rndD = a => a[Math.floor(Math.random()*a.length)];
+        const uid2 = () => crypto.randomBytes(8).toString('hex');
+        function isWeekendD(d) { return d.getDay()===0||d.getDay()===6; }
+        function isHolD(ds) { return ['2025-06-02','2025-07-07','2025-08-01','2025-08-31'].includes(ds); }
+        function myDateStr(d) { return new Date(d.getTime()+8*3600000).toISOString().slice(0,10); }
+        function mkRec(staff, ds, nota) {
+          const tj = rndD(TUJUAN_DEMO.filter(t=>!t.s||t.s.includes(staff.sektor))).t;
+          const dest = tj==='Berada di Pejabat'?'Pejabat PPD Dalat':tj==='Cuti Rehat / Cuti Sakit'?'Pejabat PPD Dalat':rndD(DESTS_DEMO);
+          const [m,mb] = rndD(MASA_DEMO);
+          return [uid2(),staff.nama,ds,dest,tj,nota||'',m,mb,staff.email,staff.sektor,new Date(ds+'T07:00:00+08:00').toISOString()];
+        }
+        await pool.query('DELETE FROM movements');
+        await pool.query('DELETE FROM staff');
+        await pool.query('DELETE FROM notices');
+        const now2 = new Date().toISOString();
+        for (const s of STAFF_DEMO) {
+          await pool.query('INSERT INTO staff(email,nama,jawatan,sektor,addedat) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',[s.email,s.nama,s.jawatan,s.sektor,now2]);
+          await pool.query('INSERT INTO jawatan_list(jawatan) VALUES($1) ON CONFLICT DO NOTHING',[s.jawatan]);
+        }
+        let total=0;
+        const start=new Date('2025-06-01T00:00:00Z'), end=new Date('2025-08-19T00:00:00Z');
+        for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+          const ds=myDateStr(d);
+          if(isWeekendD(d)||isHolD(ds)) continue;
+          const mo=d.getMonth()+1;
+          let rate,sekt;
+          if(mo===6){sekt=['SPr','SPb','SPbM'];rate=0.6;}
+          else if(mo===7){sekt=['SPr','SPb','SPbM','SPS','SP'];rate=0.65;}
+          else{sekt=null;rate=0.88;}
+          const pool_=sekt?STAFF_DEMO.filter(s=>sekt.includes(s.sektor)):STAFF_DEMO;
+          const today=[...pool_].sort(()=>Math.random()-0.5).slice(0,Math.ceil(pool_.length*rate));
+          for(const s of today){
+            const r1=mkRec(s,ds,''); await pool.query('INSERT INTO movements(id,nama,tarikh,destinasi,tujuan,nota,masa,submittedby,sektor,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[r1[0],r1[1],r1[2],r1[3],r1[4],r1[5],r1[6],r1[8],r1[9],r1[10]]);
+            total++;
+            if(Math.random()<0.15&&mo>=7){
+              const r2=mkRec(s,ds,'Perjalanan ke-2'); await pool.query('INSERT INTO movements(id,nama,tarikh,destinasi,tujuan,nota,masa,submittedby,sektor,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[r2[0],r2[1],r2[2],r2[3],r2[4],r2[5],r2[6],r2[8],r2[9],r2[10]]);
+              total++;
+            }
+          }
+        }
+        await pool.query(`INSERT INTO notices(id,tajuk,isi,created_by,nama,sektor,created_at) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING`,[uid2(),'Selamat Datang ke e-Gerak PPD Dalat!','Sistem e-Gerak PPD Dalat kini telah dilancarkan secara rasmi.','nurazwann.ismail@ppddalat.edu.my','NURAZWANN BIN ISMAIL','SPr','2025-06-02T08:00:00.000Z']);
+        await pool.query(`INSERT INTO notices(id,tajuk,isi,created_by,nama,sektor,created_at) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT DO NOTHING`,[uid2(),'Peringatan: Rekod Pergerakan Wajib Dikemas Kini','Semua pegawai diwajibkan merekod pergerakan harian dalam sistem e-Gerak.','nurazwann.ismail@ppddalat.edu.my','NURAZWANN BIN ISMAIL','SPr','2025-07-07T08:00:00.000Z']);
+        sendJSON(res, 200, { ok: true, staf: STAFF_DEMO.length, rekod: total });
+        return;
+      }
+
       sendJSON(res, 404, { error: 'Not found' });
       return;
     }

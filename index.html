@@ -2511,31 +2511,63 @@
           <div style="max-width:760px;margin:0 auto;">
             <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
               <i class="fa-solid fa-file-arrow-down" style="color:var(--primary-blue)"></i>
-              <span data-i18n="admin.jana.title">Jana & Muat Turun Laporan</span>
+              Jana &amp; Muat Turun Laporan
             </h3>
-            <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.5rem;" data-i18n="admin.jana.sub">Jana laporan pergerakan dalam format PDF atau Excel mengikut sektor atau keseluruhan PPD.</p>
+            <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1.2rem;">Jana laporan pergerakan dalam format PDF atau Excel mengikut tempoh masa dan sektor.</p>
 
-            <!-- Per sector -->
-            <div style="margin-bottom:1.5rem;">
+            <!-- ── PENAPIS TARIKH ── -->
+            <div style="background:var(--card-bg,#fff);border:1.5px solid var(--border-color,#e2e8f0);border-radius:14px;padding:18px 20px;margin-bottom:1.2rem;">
+              <div style="font-weight:700;font-size:0.85rem;color:var(--text-main);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-filter" style="color:var(--primary-blue);font-size:0.85rem;"></i> Penapis Laporan
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+                <!-- Tempoh -->
+                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;">
+                  <label style="font-size:0.75rem;font-weight:600;color:var(--text-muted);">Tempoh</label>
+                  <select id="jana-tempoh" onchange="janaOnTempohChange()" style="padding:7px 10px;border:1.5px solid var(--border-color,#e2e8f0);border-radius:8px;font-size:0.83rem;background:var(--card-bg,#fff);color:var(--text-main);cursor:pointer;">
+                    <option value="semua">Semua</option>
+                    <option value="tahun">Tahun</option>
+                    <option value="bulan">Bulan</option>
+                    <option value="minggu">Minggu</option>
+                    <option value="hari">Hari</option>
+                  </select>
+                </div>
+                <!-- Nilai tempoh (dinamik) -->
+                <div id="jana-nilai-wrap" style="display:none;flex-direction:column;gap:4px;flex:1;min-width:140px;">
+                  <label id="jana-nilai-label" style="font-size:0.75rem;font-weight:600;color:var(--text-muted);">Pilih</label>
+                  <select id="jana-nilai-sel" onchange="janaUpdateCount()" style="padding:7px 10px;border:1.5px solid var(--border-color,#e2e8f0);border-radius:8px;font-size:0.83rem;background:var(--card-bg,#fff);color:var(--text-main);cursor:pointer;display:none;"></select>
+                  <input id="jana-nilai-date" type="date" onchange="janaUpdateCount()" style="padding:7px 10px;border:1.5px solid var(--border-color,#e2e8f0);border-radius:8px;font-size:0.83rem;background:var(--card-bg,#fff);color:var(--text-main);display:none;">
+                  <input id="jana-nilai-week" type="week" onchange="janaUpdateCount()" style="padding:7px 10px;border:1.5px solid var(--border-color,#e2e8f0);border-radius:8px;font-size:0.83rem;background:var(--card-bg,#fff);color:var(--text-main);display:none;">
+                </div>
+              </div>
+              <!-- Keputusan kiraan -->
+              <div id="jana-count-info" style="margin-top:12px;padding:10px 14px;background:linear-gradient(90deg,#eff6ff,#f0fdf4);border-radius:8px;font-size:0.82rem;color:var(--text-main);display:none;">
+                <i class="fa-solid fa-circle-info" style="color:var(--primary-blue);margin-right:6px;"></i>
+                <span id="jana-count-text"></span>
+              </div>
+            </div>
+
+            <!-- ── SEKTOR GRID ── -->
+            <div style="margin-bottom:1.2rem;">
               <div style="font-weight:700;font-size:0.85rem;color:var(--text-main);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
                 <i class="fa-solid fa-layer-group" style="color:#7c3aed;font-size:0.9rem;"></i>
-                <span data-i18n="admin.jana.bySector">Jana Mengikut Sektor</span>
+                Muat Turun Mengikut Sektor
               </div>
               <div id="admin-jana-sector-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
             </div>
 
-            <!-- All PPD -->
+            <!-- ── KESELURUHAN PPD ── -->
             <div style="background:linear-gradient(135deg,#003580 0%,#1d4ed8 100%);border-radius:14px;padding:20px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;">
               <div>
-                <div style="font-size:1rem;font-weight:700;margin-bottom:4px;" data-i18n="admin.jana.allTitle">Keseluruhan PPD Dalat</div>
-                <div style="font-size:0.78rem;opacity:0.8;" data-i18n="admin.jana.allSub">Semua sektor digabungkan dalam satu laporan.</div>
+                <div style="font-size:1rem;font-weight:700;margin-bottom:4px;">Keseluruhan PPD Dalat</div>
+                <div style="font-size:0.78rem;opacity:0.8;">Semua sektor digabungkan dalam satu laporan.</div>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button onclick="adminJanaAllPDF()" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;">
-                  <i class="fa-solid fa-file-pdf"></i> <span data-i18n="admin.jana.pdfBtn">PDF</span>
+                  <i class="fa-solid fa-file-pdf"></i> PDF
                 </button>
                 <button onclick="adminJanaAllExcel()" style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;">
-                  <i class="fa-solid fa-file-excel"></i> <span data-i18n="admin.jana.excelBtn">Excel</span>
+                  <i class="fa-solid fa-file-excel"></i> Excel
                 </button>
               </div>
             </div>
@@ -4586,6 +4618,7 @@
       document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById('admin-tab-' + tab).style.display = '';
       btn.classList.add('active');
+      if (tab === 'jana') janaUpdateCount();
     }
 
     // --- Trend pergerakan bulanan (6 bulan lepas) ---
@@ -4916,10 +4949,17 @@
     function renderAdminJanaSectorGrid() {
       const grid = document.getElementById('admin-jana-sector-grid');
       if (!grid) return;
+      // Get date range from current filter (ignore sektor filter — each card is its own sektor)
+      const range = typeof janaGetDateRange === 'function' ? janaGetDateRange() : null;
       grid.innerHTML = JANA_SEKTORS.map((s, i) => {
         const color = JANA_SEKTOR_COLORS[i % JANA_SEKTOR_COLORS.length];
-        const count = adminMovementData.filter(r => r.sektor === s).length;
-        return `<div style="background:#fff;border:1.5px solid ${color}33;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+        const count = adminMovementData.filter(r => {
+          if (r.sektor !== s) return false;
+          if (range && ((r.tarikh||'') < range.from || (r.tarikh||'') > range.to)) return false;
+          return true;
+        }).length;
+        const dim = count === 0 ? 'opacity:0.5;' : '';
+        return `<div style="background:var(--card-bg,#fff);border:1.5px solid ${color}33;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;${dim}">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;"></span>
             <span style="font-weight:700;font-size:0.83rem;color:var(--text-main);">${s}</span>
@@ -5100,9 +5140,187 @@
       </body></html>`;
     }
 
+    // ── Jana filter helpers ──────────────────────────────────────────────────
+
+    function janaOnTempohChange() {
+      const tempoh = document.getElementById('jana-tempoh').value;
+      const wrap = document.getElementById('jana-nilai-wrap');
+      const selEl = document.getElementById('jana-nilai-sel');
+      const dateEl = document.getElementById('jana-nilai-date');
+      const weekEl = document.getElementById('jana-nilai-week');
+      const label = document.getElementById('jana-nilai-label');
+
+      selEl.style.display = 'none';
+      dateEl.style.display = 'none';
+      weekEl.style.display = 'none';
+
+      if (tempoh === 'semua') {
+        wrap.style.display = 'none';
+        janaUpdateCount(); return;
+      }
+      wrap.style.display = 'flex';
+
+      if (tempoh === 'tahun') {
+        label.textContent = 'Tahun';
+        const years = [...new Set(adminMovementData.map(r => (r.tarikh||'').slice(0,4)))].filter(Boolean).sort().reverse();
+        selEl.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        selEl.style.display = '';
+      } else if (tempoh === 'bulan') {
+        label.textContent = 'Bulan & Tahun';
+        const months = [...new Set(adminMovementData.map(r => (r.tarikh||'').slice(0,7)))].filter(Boolean).sort().reverse();
+        const namaBulan = ['','Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
+        selEl.innerHTML = months.map(m => {
+          const [y,mo] = m.split('-');
+          return `<option value="${m}">${namaBulan[parseInt(mo)||0]||mo} ${y}</option>`;
+        }).join('');
+        selEl.style.display = '';
+      } else if (tempoh === 'minggu') {
+        label.textContent = 'Minggu';
+        weekEl.style.display = '';
+        const today = new Date(); const iso = today.toISOString().slice(0,10);
+        weekEl.value = iso.slice(0,7) + '-W' + getISOWeekStr(today);
+      } else if (tempoh === 'hari') {
+        label.textContent = 'Tarikh';
+        dateEl.style.display = '';
+        dateEl.value = new Date().toISOString().slice(0,10);
+      }
+      janaUpdateCount();
+    }
+
+    function getISOWeekStr(d) {
+      const tmp = new Date(d); tmp.setHours(0,0,0,0);
+      tmp.setDate(tmp.getDate() + 3 - (tmp.getDay()+6)%7);
+      const week1 = new Date(tmp.getFullYear(),0,4);
+      const wk = 1 + Math.round(((tmp-week1)/86400000 - 3 + (week1.getDay()+6)%7)/7);
+      return String(wk).padStart(2,'0');
+    }
+
+    function janaGetDateRange() {
+      const tempoh = document.getElementById('jana-tempoh').value;
+      if (tempoh === 'semua') return null;
+      if (tempoh === 'tahun') {
+        const y = document.getElementById('jana-nilai-sel').value;
+        return { from: `${y}-01-01`, to: `${y}-12-31` };
+      }
+      if (tempoh === 'bulan') {
+        const m = document.getElementById('jana-nilai-sel').value; // YYYY-MM
+        const [y,mo] = m.split('-').map(Number);
+        const last = new Date(y, mo, 0).getDate();
+        return { from: m+'-01', to: `${m}-${String(last).padStart(2,'0')}` };
+      }
+      if (tempoh === 'minggu') {
+        const wv = document.getElementById('jana-nilai-week').value; // YYYY-Www
+        if (!wv) return null;
+        const [yr, wk] = wv.split('-W').map(Number);
+        // Monday of that ISO week
+        const jan4 = new Date(yr,0,4);
+        const dayOfWeek = (jan4.getDay()+6)%7;
+        const mon = new Date(jan4.getTime() + (wk-1)*7*86400000 - dayOfWeek*86400000);
+        const sun = new Date(mon.getTime() + 6*86400000);
+        const fmt = d => d.toISOString().slice(0,10);
+        return { from: fmt(mon), to: fmt(sun) };
+      }
+      if (tempoh === 'hari') {
+        const d = document.getElementById('jana-nilai-date').value;
+        return d ? { from: d, to: d } : null;
+      }
+      return null;
+    }
+
+    function filterJanaRecords() {
+      const range = janaGetDateRange();
+      return adminMovementData.filter(r => {
+        const td = r.tarikh || '';
+        if (range && (td < range.from || td > range.to)) return false;
+        return true;
+      }).sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+    }
+
+    function janaUpdateCount() {
+      const range = janaGetDateRange();
+      const tempoh = document.getElementById('jana-tempoh').value;
+      const info = document.getElementById('jana-count-info');
+      const txt = document.getElementById('jana-count-text');
+      // Count all records in range (ignore sektor filter — shown per card)
+      const total = adminMovementData.filter(r => {
+        if (range && ((r.tarikh||'') < range.from || (r.tarikh||'') > range.to)) return false;
+        return true;
+      }).length;
+      info.style.display = '';
+      const periodeStr = tempoh === 'semua' ? 'semua tarikh' : range ? `${range.from} hingga ${range.to}` : '';
+      txt.textContent = `${total} rekod dalam tempoh: ${periodeStr}.`;
+      // Refresh sector cards with updated counts
+      renderAdminJanaSectorGrid();
+    }
+
+    function janaLabelForExport() {
+      const tempoh = document.getElementById('jana-tempoh').value;
+      const sektor = document.getElementById('jana-sektor').value;
+      const range = janaGetDateRange();
+      const periodeStr = range ? `${range.from}_${range.to}` : 'Semua';
+      const sektorStr = sektor === 'semua' ? 'Semua_Sektor' : sektor.replace(/\//g,'-');
+      return `${sektorStr}_${periodeStr}`;
+    }
+
+    function adminJanaFilteredPDF() {
+      const records = filterJanaRecords();
+      if (!records.length) { alert('Tiada rekod untuk tempoh dan sektor yang dipilih.'); return; }
+      const sektor = document.getElementById('jana-sektor').value === 'semua' ? 'SEMUA' : document.getElementById('jana-sektor').value;
+      const html = buildSektorReport(sektor, records);
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => w.print(), 600);
+    }
+
+    function adminJanaFilteredExcel() {
+      const records = filterJanaRecords();
+      if (!records.length) { alert('Tiada rekod untuk tempoh dan sektor yang dipilih.'); return; }
+      const sektor = document.getElementById('jana-sektor').value;
+      const wb = XLSX.utils.book_new();
+      if (sektor === 'semua') {
+        // Sheet per sektor + sheet semua
+        JANA_SEKTORS.forEach(s => {
+          const rows = records.filter(r => r.sektor === s);
+          if (!rows.length) return;
+          const ws = XLSX.utils.aoa_to_sheet([
+            ['Nama Pegawai','Sektor','Tarikh','Destinasi','Tujuan','Nota','Masa','E-mel'],
+            ...rows.map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])
+          ]);
+          XLSX.utils.book_append_sheet(wb, ws, s.replace(/\//g,'-'));
+        });
+        const wsAll = XLSX.utils.aoa_to_sheet([
+          ['Nama Pegawai','Sektor','Tarikh','Destinasi','Tujuan','Nota','Masa','E-mel'],
+          ...records.map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])
+        ]);
+        XLSX.utils.book_append_sheet(wb, wsAll, 'Semua');
+      } else {
+        const ws = XLSX.utils.aoa_to_sheet([
+          ['Nama Pegawai','Tarikh','Destinasi','Tujuan','Nota','Masa','E-mel'],
+          ...records.map(r => [r.nama||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])
+        ]);
+        XLSX.utils.book_append_sheet(wb, ws, sektor.replace(/\//g,'-'));
+      }
+      xlsxDownload(wb, `Laporan_PPD_Dalat_${janaLabelForExport()}.xlsx`);
+    }
+
+    function _janaRangeFilter(records, sektor) {
+      const range = typeof janaGetDateRange === 'function' ? janaGetDateRange() : null;
+      return records.filter(r => {
+        if (sektor && r.sektor !== sektor) return false;
+        if (range && ((r.tarikh||'') < range.from || (r.tarikh||'') > range.to)) return false;
+        return true;
+      }).sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+    }
+
+    function _janaFileSuffix() {
+      const range = typeof janaGetDateRange === 'function' ? janaGetDateRange() : null;
+      return range ? `_${range.from}_${range.to}` : '';
+    }
+
     function adminJanaSektorPDF(sektor) {
-      const records = adminMovementData.filter(r => r.sektor === sektor)
-        .sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+      const records = _janaRangeFilter(adminMovementData, sektor);
+      if (!records.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
       const html = buildSektorReport(sektor, records);
       const w = window.open('', '_blank');
       w.document.write(html);
@@ -5111,20 +5329,20 @@
     }
 
     function adminJanaSektorExcel(sektor) {
-      const records = adminMovementData.filter(r => r.sektor === sektor)
-        .sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
-      const ws_data = [
+      const records = _janaRangeFilter(adminMovementData, sektor);
+      if (!records.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([
         ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
         ...records.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nota||'', r.masa||'', r.submittedBy||''])
-      ];
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      ]);
       XLSX.utils.book_append_sheet(wb, ws, sektor.replace(/\//g,'-'));
-      xlsxDownload(wb, `Laporan_${sektor.replace(/\//g,'-')}_PPD_Dalat.xlsx`);
+      xlsxDownload(wb, `Laporan_${sektor.replace(/\//g,'-')}_PPD_Dalat${_janaFileSuffix()}.xlsx`);
     }
 
     function adminJanaAllPDF() {
-      const records = [...adminMovementData].sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
+      const records = _janaRangeFilter(adminMovementData, null);
+      if (!records.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
       const html = buildSektorReport('SEMUA', records);
       const w = window.open('', '_blank');
       w.document.write(html);
@@ -5133,22 +5351,24 @@
     }
 
     function adminJanaAllExcel() {
+      const allRecords = _janaRangeFilter(adminMovementData, null);
+      if (!allRecords.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
       const wb = XLSX.utils.book_new();
       JANA_SEKTORS.forEach(s => {
-        const records = adminMovementData.filter(r => r.sektor === s)
-          .sort((a,b) => (b.tarikh||'').localeCompare(a.tarikh||''));
-        const ws_data = [
+        const rows = allRecords.filter(r => r.sektor === s);
+        if (!rows.length) return;
+        const ws = XLSX.utils.aoa_to_sheet([
           ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
-          ...records.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nama||'', r.masa||'', r.submittedBy||''])
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+          ...rows.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nota||'', r.masa||'', r.submittedBy||''])
+        ]);
         XLSX.utils.book_append_sheet(wb, ws, s.replace(/\//g,'-'));
       });
-      const allData = [['Nama Pegawai', 'Sektor', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
-        ...adminMovementData.sort((a,b)=>(b.tarikh||'').localeCompare(a.tarikh||'')).map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])];
-      const wsAll = XLSX.utils.aoa_to_sheet(allData);
+      const wsAll = XLSX.utils.aoa_to_sheet([
+        ['Nama Pegawai', 'Sektor', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
+        ...allRecords.map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])
+      ]);
       XLSX.utils.book_append_sheet(wb, wsAll, 'Semua');
-      xlsxDownload(wb, 'Laporan_Keseluruhan_PPD_Dalat.xlsx');
+      xlsxDownload(wb, `Laporan_Keseluruhan_PPD_Dalat${_janaFileSuffix()}.xlsx`);
     }
 
     // --- Admin Kalendar ---
