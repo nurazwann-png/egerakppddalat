@@ -5379,36 +5379,30 @@
       if (!section) return;
 
       const monthsMalay = t('cal.months').split(',');
-      const monthsShort = t('cal.monthsShort').split(',');
       const year = adminCalDate.getFullYear();
       const month = adminCalDate.getMonth();
       const firstDayIndex = new Date(year, month, 1).getDay();
       const lastDay = new Date(year, month + 1, 0).getDate();
       const prevLastDay = new Date(year, month, 0).getDate();
       const today = new Date();
-
-      const badgeColor = (tj) => {
-        if (!tj) return '#aaa';
-        if (tj.includes('Mesyuarat')) return '#4a9eff';
-        if (tj.includes('Bengkel')) return '#b47aff';
-        if (tj.includes('Kursus')) return '#ffc14a';
-        if (tj.includes('Pemantauan')) return '#00e5a0';
-        if (tj.includes('Cuti')) return '#ff7eb3';
-        if (tj.includes('Kebenaran Keluar')) return '#ff9f7a';
-        if (tj.includes('Pejabat')) return '#7adfff';
-        return '#aaa';
-      };
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
       section.innerHTML = `
-        <div style="max-width:760px;margin:0 auto;">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+        <div class="calendar-container" style="max-width:760px;margin:0 auto;">
+          <div class="calendar-header">
             <button onclick="adminAdjustMonth(-1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <h3 style="flex:1;text-align:center;font-size:1rem;font-weight:700;">${monthsMalay[month]} ${year}</h3>
+            <h3 id="admin-cal-month-year">${monthsMalay[month]} ${year}</h3>
             <button onclick="adminAdjustMonth(1)" class="calendar-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
           <div class="calendar-weekdays">${t('cal.days').split(',').map(d=>`<div>${d}</div>`).join('')}</div>
           <div class="calendar-days" id="admin-calendar-days-grid"></div>
+          <div class="day-events-container">
+            <div class="day-events-title" id="admin-selected-day-title">${t('cal.movDate')} ${todayStr.split('-').reverse().join('/')}</div>
+            <ul class="day-events-list" id="admin-selected-day-list"></ul>
+          </div>
         </div>`;
+
+      adminUpdateSelectedDay(todayStr);
 
       const grid = document.getElementById('admin-calendar-days-grid');
 
@@ -5426,7 +5420,7 @@
         const dayStr = String(i).padStart(2,'0');
         const ds = `${year}-${monthStr}-${dayStr}`;
         const dayMovs = adminMovementData.filter(r => r.tarikh === ds);
-        const isToday = today.getFullYear()===year && today.getMonth()===month && today.getDate()===i;
+        const isToday = ds === todayStr;
 
         const div = document.createElement('div');
         div.className = ['calendar-day', isToday?'today':'', dayMovs.length>0?'has-movement':''].filter(Boolean).join(' ');
@@ -5438,78 +5432,13 @@
           badge.style.cssText = 'position:absolute;bottom:3px;right:4px;font-size:0.6rem;background:var(--primary-blue);color:#fff;border-radius:99px;padding:0 4px;line-height:1.5;';
           badge.textContent = dayMovs.length;
           div.appendChild(badge);
-
-          const dateLabel = `${String(i).padStart(2,'0')} ${monthsShort[month]} ${year}`;
-          const popupItemsHtml = `
-            <div class="cal-popup-date"><i class="fa-solid fa-calendar-day" style="margin-right:5px;"></i>${dateLabel} · ${dayMovs.length} ${t('cal.movements')}</div>
-            ${dayMovs.map(r => `
-              <div class="cal-popup-item">
-                <span class="cal-popup-nama"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.6;"></i>${escapeHtml(r.nama)}${r.sektor?` <span style="font-size:0.65rem;background:#e0e7ff;color:#3730a3;border-radius:3px;padding:0 5px;margin-left:4px;">${escapeHtml(r.sektor)}</span>`:''}</span>
-                <span class="cal-popup-dest"><i class="fa-solid fa-location-dot" style="margin-right:4px;color:var(--accent-cyan);"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
-                <span class="cal-popup-badge" style="color:${badgeColor(r.tujuan)};background:${badgeColor(r.tujuan)}18;border-color:${badgeColor(r.tujuan)}33;">${escapeHtml(r.tujuan||'')}</span>
-              </div>`).join('')}
-          `;
-
-          // Touch/mobile — bottom sheet
-          div.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-            document.querySelectorAll('.cal-popup-overlay,.cal-popup-sheet').forEach(el => el.remove());
-            const overlay = document.createElement('div');
-            overlay.className = 'cal-popup-overlay';
-            const sheet = document.createElement('div');
-            sheet.className = 'cal-popup-sheet';
-            sheet.innerHTML = `<div class="cal-popup-sheet-handle"></div>${popupItemsHtml}`;
-            const close = () => { overlay.remove(); sheet.remove(); };
-            overlay.addEventListener('touchstart', close);
-            sheet.addEventListener('touchstart', (ev) => ev.stopPropagation());
-            document.body.appendChild(overlay);
-            document.body.appendChild(sheet);
-          }, { passive: true });
-
-          // Desktop — hover popup
-          div.addEventListener('mouseenter', () => {
-            if (window.matchMedia('(hover: none)').matches) return;
-            let popup = document.getElementById('cal-hover-popup');
-            if (!popup) {
-              popup = document.createElement('div');
-              popup.id = 'cal-hover-popup';
-              popup.className = 'cal-popup';
-              document.body.appendChild(popup);
-            }
-            popup.innerHTML = popupItemsHtml;
-            // Measure actual height by rendering off-screen first
-            popup.style.cssText = 'position:fixed;left:-9999px;top:-9999px;display:block;width:300px;max-height:none;overflow:visible;';
-            const rect = div.getBoundingClientRect();
-            const vw = document.documentElement.clientWidth;
-            const vh = window.innerHeight;
-            const pw = Math.min(300, vw - 20);
-            const ph = popup.scrollHeight || 200;
-            const spaceBelow = vh - rect.bottom - 12;
-            const spaceAbove = rect.top - 12;
-            let top, maxH;
-            if (ph <= spaceBelow) {
-              top = rect.bottom + 8;
-              maxH = spaceBelow;
-            } else if (ph <= spaceAbove) {
-              top = rect.top - ph - 8;
-              maxH = spaceAbove;
-            } else if (spaceBelow >= spaceAbove) {
-              top = rect.bottom + 8;
-              maxH = spaceBelow;
-            } else {
-              top = 12;
-              maxH = spaceAbove;
-            }
-            let left = rect.left + rect.width / 2 - pw / 2;
-            left = Math.max(8, Math.min(left, vw - pw - 8));
-            popup.style.cssText = `left:${left}px;top:${top}px;width:${pw}px;max-height:${Math.floor(maxH)}px;overflow-y:auto;display:block;position:fixed;`;
-          });
-
-          div.addEventListener('mouseleave', () => {
-            const popup = document.getElementById('cal-hover-popup');
-            if (popup) popup.style.display = 'none';
-          });
         }
+
+        div.addEventListener('click', () => {
+          document.querySelectorAll('#admin-calendar-days-grid .calendar-day').forEach(el => el.classList.remove('selected'));
+          div.classList.add('selected');
+          adminUpdateSelectedDay(ds);
+        });
 
         grid.appendChild(div);
       }
@@ -5522,6 +5451,35 @@
         d.textContent = j;
         grid.appendChild(d);
       }
+
+      // Highlight today by default
+      const todayCell = [...grid.querySelectorAll('.calendar-day.today')][0];
+      if (todayCell) todayCell.classList.add('selected');
+    }
+
+    function adminUpdateSelectedDay(dateString) {
+      const title = document.getElementById('admin-selected-day-title');
+      const list = document.getElementById('admin-selected-day-list');
+      if (!title || !list) return;
+      const parts = dateString.split('-');
+      title.textContent = `${t('cal.movDate')} ${parts[2]}/${parts[1]}/${parts[0]}`;
+      list.innerHTML = '';
+      const matched = adminMovementData.filter(r => r.tarikh === dateString);
+      if (matched.length === 0) {
+        list.innerHTML = `<li style="padding:10px 0;text-align:center;">${t('cal.noMov')}</li>`;
+        return;
+      }
+      matched.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'day-event-item';
+        li.innerHTML = `
+          <span class="day-event-name"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.5;"></i>${escapeHtml(r.nama)}${r.sektor ? ` <span style="font-size:0.65rem;background:#e0e7ff;color:#3730a3;border-radius:3px;padding:0 5px;margin-left:4px;">${escapeHtml(r.sektor)}</span>` : ''}</span>
+          <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
+          <span class="day-event-tujuan">${escapeHtml(r.tujuan||'')}</span>
+          ${r.masa ? `<span style="font-size:0.68rem;color:var(--text-muted);margin-top:1px;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${escapeHtml(r.masa)}</span>` : ''}
+        `;
+        list.appendChild(li);
+      });
     }
 
     function adminAdjustMonth(offset) {
