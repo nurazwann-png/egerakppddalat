@@ -6426,22 +6426,15 @@
               document.body.appendChild(popup);
             }
             popup.innerHTML = popupItemsHtml;
-            popup.style.cssText = 'position:fixed;left:-9999px;top:-9999px;display:block;width:280px;max-height:none;overflow:visible;';
             const rect = div.getBoundingClientRect();
             const vw = document.documentElement.clientWidth;
-            const vh = window.innerHeight;
-            const pw = Math.min(280, vw - 20);
-            const ph = popup.scrollHeight || 200;
-            const spaceBelow = vh - rect.bottom - 12;
-            const spaceAbove = rect.top - 12;
-            let top, maxH;
-            if (ph <= spaceBelow) { top = rect.bottom + 8; maxH = spaceBelow; }
-            else if (ph <= spaceAbove) { top = rect.top - ph - 8; maxH = spaceAbove; }
-            else if (spaceBelow >= spaceAbove) { top = rect.bottom + 8; maxH = spaceBelow; }
-            else { top = 12; maxH = spaceAbove; }
+            const pw = Math.min(280, vw - 16);
+            const ph = popup.offsetHeight || 160;
             let left = rect.left + rect.width / 2 - pw / 2;
+            let top = rect.bottom + 8;
+            if (top + ph > window.innerHeight - 12) top = rect.top - ph - 8;
             left = Math.max(8, Math.min(left, vw - pw - 8));
-            popup.style.cssText = `left:${left}px;top:${top}px;width:${pw}px;max-height:${Math.floor(maxH)}px;overflow-y:auto;display:block;position:fixed;`;
+            popup.style.cssText = `left:${left}px;top:${top}px;width:${pw}px;display:block;position:fixed;`;
           });
 
           div.addEventListener('mouseleave', () => {
