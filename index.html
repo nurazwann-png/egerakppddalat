@@ -3280,6 +3280,30 @@
         'admin.filter.SPS': 'SPS — Pengurusan Sekolah',
         'admin.filter.SPPSPsK': 'SPP/SPsK — Pentaksiran',
         'admin.filter.PTIS': 'PTIS — ICT Sekolah',
+        'jana.labelTahun': 'Tahun',
+        'jana.labelBulan': 'Bulan & Tahun',
+        'jana.labelMinggu': 'Minggu',
+        'jana.labelTarikh': 'Tarikh',
+        'jana.semua': 'semua tarikh',
+        'jana.hingga': 'hingga',
+        'jana.rekodDalam': '{n} rekod dalam tempoh: {p}.',
+        'otp.digitError': 'Sila masukkan kod 6-digit.',
+        'otp.failError': 'Pengesahan gagal. Sila cuba lagi.',
+        'otp.sending': 'Menghantar...',
+        'otp.resend': 'Hantar semula kod',
+        'demo.welcome': 'Mod Demo diaktifkan. Selamat datang, {name}!',
+        'form.titleDefault': 'Daftar Pergerakan Pegawai',
+        'stat.logTitle': 'Semua Log Pergerakan',
+        'stat.todayTitle': 'Pergerakan Hari Ini',
+        'stat.pegawaiTitle': 'Senarai Pegawai Terlibat',
+        'identify.sending': 'Menghantar...',
+        'activation.subtitle': 'Kod aktivasi 6-digit telah dihantar ke {email}. Sila semak peti masuk anda.',
+        'otp.expired': 'Tamat',
+        'toast.resendSuccess': 'Kod baharu telah dihantar ke e-mel anda.',
+        'toast.resendFail': 'Gagal menghantar semula. Sila cuba lagi.',
+        'namaBulan.1':'Jan','namaBulan.2':'Feb','namaBulan.3':'Mac','namaBulan.4':'Apr',
+        'namaBulan.5':'Mei','namaBulan.6':'Jun','namaBulan.7':'Jul','namaBulan.8':'Ogos',
+        'namaBulan.9':'Sep','namaBulan.10':'Okt','namaBulan.11':'Nov','namaBulan.12':'Dis',
       },
       en: {
         'app.title': 'e-Gerak PPD Dalat',
@@ -3566,6 +3590,30 @@
         'admin.filter.SPS': 'SPS — School Management',
         'admin.filter.SPPSPsK': 'SPP/SPsK — Assessment',
         'admin.filter.PTIS': 'PTIS — School ICT',
+        'jana.labelTahun': 'Year',
+        'jana.labelBulan': 'Month & Year',
+        'jana.labelMinggu': 'Week',
+        'jana.labelTarikh': 'Date',
+        'jana.semua': 'all dates',
+        'jana.hingga': 'to',
+        'jana.rekodDalam': '{n} records in period: {p}.',
+        'otp.digitError': 'Please enter a 6-digit code.',
+        'otp.failError': 'Verification failed. Please try again.',
+        'otp.sending': 'Sending...',
+        'otp.resend': 'Resend code',
+        'demo.welcome': 'Demo Mode activated. Welcome, {name}!',
+        'form.titleDefault': 'Register Officer Movement',
+        'stat.logTitle': 'All Movement Log',
+        'stat.todayTitle': "Today's Movements",
+        'stat.pegawaiTitle': 'Officers List',
+        'identify.sending': 'Sending...',
+        'activation.subtitle': 'A 6-digit activation code has been sent to {email}. Please check your inbox.',
+        'otp.expired': 'Expired',
+        'toast.resendSuccess': 'A new code has been sent to your email.',
+        'toast.resendFail': 'Failed to resend. Please try again.',
+        'namaBulan.1':'Jan','namaBulan.2':'Feb','namaBulan.3':'Mar','namaBulan.4':'Apr',
+        'namaBulan.5':'May','namaBulan.6':'Jun','namaBulan.7':'Jul','namaBulan.8':'Aug',
+        'namaBulan.9':'Sep','namaBulan.10':'Oct','namaBulan.11':'Nov','namaBulan.12':'Dec',
       }
     };
 
@@ -3985,7 +4033,7 @@
 
       const submitBtn = event.target.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menghantar...';
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('identify.sending');
 
       try {
         const res = await fetch(`${API_BASE}/staff/request-verification`, {
@@ -4012,7 +4060,7 @@
 
         // Pengguna baru — tunjuk paparan kod aktivasi
         document.getElementById('activation-subtitle').textContent =
-          `Kod aktivasi 6-digit telah dihantar ke ${email}. Sila semak peti masuk anda.`;
+          t('activation.subtitle').replace('{email}', email);
         document.getElementById('activation-code').value = '';
         document.getElementById('activation-error').style.display = 'none';
         showActivationView();
@@ -4039,14 +4087,14 @@
       const hiddenVal = document.getElementById('activation-code').value.trim();
       const code = (hiddenVal.length === 6 ? hiddenVal : codeFromBoxes).trim();
       if (!code || code.length !== 6) {
-        errorTxt.textContent = 'Sila masukkan kod 6-digit.';
+        errorTxt.textContent = t('otp.digitError');
         errorDiv.style.display = 'flex';
         return;
       }
 
       const submitBtn = document.getElementById('activation-submit-btn');
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengesahkan...';
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('loading');
 
       try {
         const res = await fetch(`${API_BASE}/staff/verify-code`, {
@@ -4057,7 +4105,7 @@
         const data = await res.json();
 
         if (!res.ok) {
-          errorTxt.textContent = data.error || 'Pengesahan gagal. Sila cuba lagi.';
+          errorTxt.textContent = data.error || t('otp.failError');
           errorDiv.style.display = 'flex';
           shakeOtpBoxes();
           return;
@@ -4084,18 +4132,18 @@
       if (!_pendingRegistration) return;
       const { name, email, position, sektor } = _pendingRegistration;
       const link = event.target;
-      link.textContent = 'Menghantar...';
+      link.textContent = t('otp.sending');
       try {
         await fetch(`${API_BASE}/staff/request-verification`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, nama: name, jawatan: position, sektor }),
         });
-        showToast('Kod baharu telah dihantar ke e-mel anda.', 'success');
+        showToast(t('toast.resendSuccess'), 'success');
       } catch (e) {
-        showToast('Gagal menghantar semula. Sila cuba lagi.', 'error');
+        showToast(t('toast.resendFail'), 'error');
       } finally {
-        link.textContent = 'Hantar semula kod';
+        link.textContent = t('otp.resend');
       }
     }
 
@@ -4223,7 +4271,7 @@
         wrap.classList.toggle('expiring', remaining <= 60);
         if (remaining <= 0) {
           clearInterval(_otpTimerInterval);
-          display.textContent = 'Tamat';
+          display.textContent = t('otp.expired');
           wrap.classList.add('expiring');
         }
         remaining--;
@@ -4268,7 +4316,7 @@
       DEMO_MODE = false;
       const banner = document.getElementById('demo-mode-banner');
       if (banner) { banner.remove(); document.body.style.paddingTop = ''; }
-      document.getElementById('app-title').textContent = 'e-Gerak PPD Dalat';
+      document.getElementById('app-title').textContent = t('app.title');
       resetSectorTheme();
       showToast(t('toast.loggedOut'), "success");
       evaluateSessionView();
@@ -5284,26 +5332,25 @@
       wrap.style.display = 'flex';
 
       if (tempoh === 'tahun') {
-        label.textContent = 'Tahun';
+        label.textContent = t('jana.labelTahun');
         const years = [...new Set(adminMovementData.map(r => (r.tarikh||'').slice(0,4)))].filter(Boolean).sort().reverse();
         selEl.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
         selEl.style.display = '';
       } else if (tempoh === 'bulan') {
-        label.textContent = 'Bulan & Tahun';
+        label.textContent = t('jana.labelBulan');
         const months = [...new Set(adminMovementData.map(r => (r.tarikh||'').slice(0,7)))].filter(Boolean).sort().reverse();
-        const namaBulan = ['','Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
         selEl.innerHTML = months.map(m => {
           const [y,mo] = m.split('-');
-          return `<option value="${m}">${namaBulan[parseInt(mo)||0]||mo} ${y}</option>`;
+          return `<option value="${m}">${t('namaBulan.'+parseInt(mo))||mo} ${y}</option>`;
         }).join('');
         selEl.style.display = '';
       } else if (tempoh === 'minggu') {
-        label.textContent = 'Minggu';
+        label.textContent = t('jana.labelMinggu');
         weekEl.style.display = '';
         const today = new Date(); const iso = today.toISOString().slice(0,10);
         weekEl.value = iso.slice(0,7) + '-W' + getISOWeekStr(today);
       } else if (tempoh === 'hari') {
-        label.textContent = 'Tarikh';
+        label.textContent = t('jana.labelTarikh');
         dateEl.style.display = '';
         dateEl.value = new Date().toISOString().slice(0,10);
       }
@@ -5370,8 +5417,8 @@
         return true;
       }).length;
       info.style.display = '';
-      const periodeStr = tempoh === 'semua' ? 'semua tarikh' : range ? `${range.from} hingga ${range.to}` : '';
-      txt.textContent = `${total} rekod dalam tempoh: ${periodeStr}.`;
+      const periodeStr = tempoh === 'semua' ? t('jana.semua') : range ? `${range.from} ${t('jana.hingga')} ${range.to}` : '';
+      txt.textContent = t('jana.rekodDalam').replace('{n}', total).replace('{p}', periodeStr);
       // Refresh sector cards with updated counts
       renderAdminJanaSectorGrid();
     }
@@ -5742,7 +5789,7 @@
       if (tabName !== 'borang' && borangSessionCount > 0) {
         borangSessionCount = 0;
         borangSessionDate = '';
-        document.getElementById('borang-title').textContent = 'Daftar Pergerakan Pegawai';
+        document.getElementById('borang-title').textContent = t('form.titleDefault');
         document.getElementById('post-submit-panel').style.display = 'none';
         document.getElementById('multiday-toggle').checked = false;
         toggleMultiday(false);
@@ -5852,13 +5899,13 @@
 
       const todayString = localDateStr();
       if (type === 'log') {
-        document.getElementById('stat-detail-title').textContent = 'Semua Log Pergerakan';
+        document.getElementById('stat-detail-title').textContent = t('stat.logTitle');
         renderMovementTable(movementRecords);
       } else if (type === 'today') {
-        document.getElementById('stat-detail-title').textContent = `Pergerakan Hari Ini (${todayString})`;
+        document.getElementById('stat-detail-title').textContent = `${t('stat.todayTitle')} (${todayString})`;
         renderMovementTable(movementRecords.filter(r => r.tarikh === todayString));
       } else if (type === 'pegawai') {
-        document.getElementById('stat-detail-title').textContent = 'Senarai Pegawai Terlibat';
+        document.getElementById('stat-detail-title').textContent = t('stat.pegawaiTitle');
         renderStaffList();
       }
       panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
