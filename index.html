@@ -4309,6 +4309,14 @@
     }
 
     // AUTH HANDLING: Log Keluar
+    function resetEjenChat() {
+      const box = document.getElementById('ejen-messages');
+      if (!box) return;
+      box.innerHTML = `<div class="ejen-msg agent"><div class="ejen-avatar-mini">🤖</div><div class="ejen-bubble">${t('ejen.welcome')}</div></div>`;
+      const sugg = document.getElementById('ejen-suggestions');
+      if (sugg) sugg.style.display = '';
+    }
+
     function handleLogout() {
       localStorage.removeItem('ppd_dalat_session');
       currentUserSession = null;
@@ -4318,6 +4326,7 @@
       if (banner) { banner.remove(); document.body.style.paddingTop = ''; }
       document.getElementById('app-title').textContent = t('app.title');
       resetSectorTheme();
+      resetEjenChat();
       showToast(t('toast.loggedOut'), "success");
       evaluateSessionView();
     }
