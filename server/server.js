@@ -626,6 +626,13 @@ const server = http.createServer(async (req, res) => {
         sendJSON(res, 403, { error: 'This e-mail is not on the staff roster' });
         return;
       }
+      // Remove any auto-filled 'system' records for this staff+date before inserting real record
+      await pool.query(
+        `DELETE FROM movements WHERE nama = $1 AND tarikh = $2 AND submittedby = 'system'`,
+        [nama, tarikh]
+      );
+
+      // Duplicate check: same person, same date, same destination & tujuan (by their own email)
       const { rows: existing } = await pool.query(
         'SELECT id FROM movements WHERE submittedby = $1 AND tarikh = $2 AND destinasi = $3 AND tujuan = $4',
         [submittedBy, tarikh, destinasi, tujuan]
