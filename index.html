@@ -2010,7 +2010,8 @@
     .sector-btn[data-sektor="SPbM"]:hover, .sector-btn[data-sektor="SPbM"].selected { background:#d97706; border-color:#d97706; color:#fff; }
     .sector-btn[data-sektor="SP"]:hover,   .sector-btn[data-sektor="SP"].selected   { background:#7c3aed; border-color:#7c3aed; color:#fff; }
     .sector-btn[data-sektor="SPS"]:hover,  .sector-btn[data-sektor="SPS"].selected  { background:#0891b2; border-color:#0891b2; color:#fff; }
-    .sector-btn[data-sektor="SPP/SPsK"]:hover, .sector-btn[data-sektor="SPP/SPsK"].selected { background:#db2777; border-color:#db2777; color:#fff; }
+    .sector-btn[data-sektor="SPP"]:hover, .sector-btn[data-sektor="SPP"].selected { background:#be185d; border-color:#be185d; color:#fff; }
+    .sector-btn[data-sektor="SPsK"]:hover, .sector-btn[data-sektor="SPsK"].selected { background:#7e22ce; border-color:#7e22ce; color:#fff; }
     .sector-btn[data-sektor="PTIS"]:hover, .sector-btn[data-sektor="PTIS"].selected { background:#dc2626; border-color:#dc2626; color:#fff; }
     .sector-btn-admin:hover { background:#1e293b; border-color:#1e293b; color:#fff; }
 
@@ -2132,10 +2133,15 @@
             <div class="sector-code">SPS</div>
             <div class="sector-name" data-i18n="sector.SPS">Sektor Pengurusan Sekolah</div>
           </button>
-          <button class="sector-btn" data-sektor="SPP/SPsK" onclick="selectSector('SPP/SPsK','Sektor Pentaksiran &amp; Psikologi Kaunseling',this)">
+          <button class="sector-btn" data-sektor="SPP" onclick="selectSector('SPP','Sektor Pentaksiran dan Peperiksaan',this)">
             <i class="fa-solid fa-clipboard-check"></i>
-            <div class="sector-code">SPP/SPsK</div>
-            <div class="sector-name" data-i18n="sector.SPPSPsK">Pentaksiran &amp; Psikologi Kaunseling</div>
+            <div class="sector-code">SPP</div>
+            <div class="sector-name" data-i18n="sector.SPP">Pentaksiran dan Peperiksaan</div>
+          </button>
+          <button class="sector-btn" data-sektor="SPsK" onclick="selectSector('SPsK','Sektor Psikologi dan Kaunseling',this)">
+            <i class="fa-solid fa-brain"></i>
+            <div class="sector-code">SPsK</div>
+            <div class="sector-name" data-i18n="sector.SPsK">Psikologi dan Kaunseling</div>
           </button>
           <button class="sector-btn" data-sektor="PTIS" onclick="selectSector('PTIS','Pasukan Teknikal ICT Sekolah',this)">
             <i class="fa-solid fa-computer"></i>
@@ -2433,7 +2439,8 @@
                 <option value="SPbM">SPbM — Pembangunan Murid</option>
                 <option value="SP">SP — Sektor Pengurusan</option>
                 <option value="SPS">SPS — Pengurusan Sekolah</option>
-                <option value="SPP/SPsK">SPP/SPsK — Pentaksiran</option>
+                <option value="SPP">SPP — Pentaksiran dan Peperiksaan</option>
+                <option value="SPsK">SPsK — Psikologi dan Kaunseling</option>
                 <option value="PTIS">PTIS — ICT Sekolah</option>
               </select>
               <div class="search-box" style="flex:1;min-width:180px;">
@@ -2492,7 +2499,8 @@
                   <option value="SPbM">SPbM</option>
                   <option value="SP">SP</option>
                   <option value="SPS">SPS</option>
-                  <option value="SPP/SPsK">SPP/SPsK</option>
+                  <option value="SPP">SPP</option>
+                  <option value="SPsK">SPsK</option>
                   <option value="PTIS">PTIS</option>
                 </select>
               </div>
@@ -3006,7 +3014,8 @@
         'sector.SPbM': 'Sektor Pembangunan Murid',
         'sector.SP': 'Sektor Pengurusan',
         'sector.SPS': 'Sektor Pengurusan Sekolah',
-        'sector.SPPSPsK': 'Pentaksiran & Psikologi Kaunseling',
+        'sector.SPP': 'Pentaksiran dan Peperiksaan',
+        'sector.SPsK': 'Psikologi dan Kaunseling',
         'sector.PTIS': 'Pasukan Teknikal ICT Sekolah',
         'auth.id.title': 'Kenal Pasti Pegawai',
         'auth.id.sub': 'Sila nyatakan maklumat ringkas anda untuk meneruskan',
@@ -3278,7 +3287,8 @@
         'admin.filter.SPbM': 'SPbM — Pembangunan Murid',
         'admin.filter.SP': 'SP — Sektor Pengurusan',
         'admin.filter.SPS': 'SPS — Pengurusan Sekolah',
-        'admin.filter.SPPSPsK': 'SPP/SPsK — Pentaksiran',
+        'admin.filter.SPP': 'SPP — Pentaksiran & Peperiksaan',
+        'admin.filter.SPsK': 'SPsK — Psikologi & Kaunseling',
         'admin.filter.PTIS': 'PTIS — ICT Sekolah',
         'jana.labelTahun': 'Tahun',
         'jana.labelBulan': 'Bulan & Tahun',
@@ -3316,7 +3326,8 @@
         'sector.SPbM': 'Student Development Sector',
         'sector.SP': 'Management Sector',
         'sector.SPS': 'School Management Sector',
-        'sector.SPPSPsK': 'Assessment & Psychology Counseling',
+        'sector.SPP': 'Assessment & Examination',
+        'sector.SPsK': 'Psychology & Counseling',
         'sector.PTIS': 'School ICT Technical Team',
         'auth.id.title': 'Officer Identification',
         'auth.id.sub': 'Please provide your basic information to continue',
@@ -3588,7 +3599,8 @@
         'admin.filter.SPbM': 'SPbM — Student Development',
         'admin.filter.SP': 'SP — Management Sector',
         'admin.filter.SPS': 'SPS — School Management',
-        'admin.filter.SPPSPsK': 'SPP/SPsK — Assessment',
+        'admin.filter.SPP': 'SPP — Assessment',
+        'admin.filter.SPsK': 'SPsK — Psychology & Counseling',
         'admin.filter.PTIS': 'PTIS — School ICT',
         'jana.labelTahun': 'Year',
         'jana.labelBulan': 'Month & Year',
@@ -3685,7 +3697,7 @@
           ['','admin.records.allSektor'],
           ['SPr','admin.filter.SPr'],['SPb','admin.filter.SPb'],['SPbM','admin.filter.SPbM'],
           ['SP','admin.filter.SP'],['SPS','admin.filter.SPS'],
-          ['SPP/SPsK','admin.filter.SPPSPsK'],['PTIS','admin.filter.PTIS'],
+          ['SPP','admin.filter.SPP'],['SPsK','admin.filter.SPsK'],['PTIS','admin.filter.PTIS'],
         ];
         const curSf = sf.value;
         sf.innerHTML = sektorOpts.map(([v,k]) => `<option value="${v}">${t(k)}</option>`).join('');
@@ -3769,6 +3781,8 @@
       'SPbM':     { primary: '#b45309', secondary: '#d97706', header: '#92400e', headerBtn: '#b45309', navActive: '#b45309', rgb: '180,83,9' },
       'SP':       { primary: '#6d28d9', secondary: '#7c3aed', header: '#4c1d95', headerBtn: '#6d28d9', navActive: '#6d28d9', rgb: '109,40,217' },
       'SPS':      { primary: '#0e7490', secondary: '#0891b2', header: '#164e63', headerBtn: '#0e7490', navActive: '#0e7490', rgb: '14,116,144' },
+      'SPP':      { primary: '#be185d', secondary: '#db2777', header: '#831843', headerBtn: '#be185d', navActive: '#be185d', rgb: '190,24,93' },
+      'SPsK':     { primary: '#7e22ce', secondary: '#9333ea', header: '#581c87', headerBtn: '#7e22ce', navActive: '#7e22ce', rgb: '126,34,206' },
       'SPP/SPsK': { primary: '#be185d', secondary: '#db2777', header: '#831843', headerBtn: '#be185d', navActive: '#be185d', rgb: '190,24,93' },
       'PTIS':     { primary: '#b91c1c', secondary: '#dc2626', header: '#7f1d1d', headerBtn: '#b91c1c', navActive: '#b91c1c', rgb: '185,28,28' },
     };
@@ -3802,6 +3816,7 @@
 
     // ===== DEMO MODE =====
     let DEMO_MODE = false;
+    let _cachedStaffForSector = null;
 
     const DEMO_ACCOUNTS = {
       'demo.spr@egerak.demo':  { nama: 'DEMO PERANCANGAN', jawatan: 'Pegawai Perancangan', sektor: 'SPr' },
@@ -3881,6 +3896,8 @@
       'SPbM':    { code: 'SPbM',     name: 'Sektor Pembangunan Murid' },
       'SP':      { code: 'SP',       name: 'Sektor Pengurusan' },
       'SPS':     { code: 'SPS',      name: 'Sektor Pengurusan Sekolah' },
+      'SPP':     { code: 'SPP',     name: 'Sektor Pentaksiran dan Peperiksaan' },
+      'SPsK':    { code: 'SPsK',    name: 'Sektor Psikologi dan Kaunseling' },
       'SPP/SPsK':{ code: 'SPP/SPsK', name: 'Pentaksiran & Psikologi Kaunseling' },
       'PTIS':    { code: 'PTIS',     name: 'Pasukan Teknikal ICT Sekolah' },
     };
@@ -4532,7 +4549,7 @@
     }
 
     const JAWATAN_ORDER = ['KPPD','Timbalan PPD','SIPartners+','SISC+','Kaunselor Pendidikan'];
-    const SEKTOR_ORDER = ['SPr','SPb','SPbM','SPS','SPP/SPsK','SP','PTIS'];
+    const SEKTOR_ORDER = ['SPr','SPb','SPbM','SPS','SPP','SPsK','SP','PTIS'];
 
     function staffSortKey(s) {
       const jawatan = (s.jawatan || '').trim();
@@ -4563,7 +4580,7 @@
         const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
         const staffList = sortStaffList(await res.json());
 
-        const SEKTORS = ['SPr','SPb','SPbM','SPS','SPP/SPsK','SP','PTIS'];
+        const SEKTORS = ['SPr','SPb','SPbM','SPS','SPP','SPsK','SP','PTIS'];
         tbody.innerHTML = staffList.map((s) => `
           <tr>
             <td style="font-weight:600; color:var(--text-main);">${escapeHtml(s.nama)}</td>
@@ -4956,7 +4973,7 @@
     function renderTujuanPerSektor() {
       const container = document.getElementById('admin-tujuan-per-sektor');
       if (!container) return;
-      const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
+      const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP','SPsK','PTIS'];
       const COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#dc2626'];
       const data = {};
       SEKTORS.forEach(s => { data[s] = {}; });
@@ -5079,7 +5096,7 @@
     function renderSectorAnalysis() {
       const container = document.getElementById('admin-sector-breakdown');
       if (!container) return;
-      const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
+      const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP','SPsK','PTIS'];
       const counts = {};
       SEKTORS.forEach(s => counts[s] = 0);
       adminMovementData.forEach(r => { if (r.sektor && counts[r.sektor] !== undefined) counts[r.sektor]++; });
@@ -5123,8 +5140,8 @@
     }
 
     // --- Admin Jana Fail ---
-    const JANA_SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP/SPsK','PTIS'];
-    const JANA_SEKTOR_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488'];
+    const JANA_SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP','SPsK','PTIS'];
+    const JANA_SEKTOR_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#be185d','#7e22ce','#0e9488'];
 
     function renderAdminJanaSectorGrid() {
       const grid = document.getElementById('admin-jana-sector-grid');
@@ -5230,12 +5247,20 @@
         sektorChartHtml = `<h2>Perbandingan Rekod Mengikut Sektor</h2>${_svgBar(sektorBarData, 380, 20)}`;
       }
 
-      const rows = records.map((r, i) => {
+      const sortedRecs = [...records].sort((a,b) => {
+        const na=(a.nama||'').toUpperCase(), nb=(b.nama||'').toUpperCase();
+        if(na!==nb) return na.localeCompare(nb);
+        return (a.tarikh||'').localeCompare(b.tarikh||'');
+      });
+      const rows = sortedRecs.map((r, i) => {
         let tarikh = r.tarikh || '-';
         try { const p=(r.tarikh||'').split('-'); if(p.length===3) tarikh=`${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
-        return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}">
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${i+1}</td>
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.nama||'-'}</td>
+        const prevNama = i > 0 ? (sortedRecs[i-1].nama||'').toUpperCase().trim() : null;
+        const curNama = (r.nama||'').toUpperCase().trim();
+        const isNewNama = prevNama !== curNama;
+        return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}${isNewNama && i>0?';border-top:2px solid #e2e8f0':''}">
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${isNewNama ? i+1 : ''}</td>
+          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:${isNewNama?'700':'400'};">${isNewNama ? (r.nama||'-') : '—'}</td>
           ${sektor==='SEMUA'?`<td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.sektor||'-'}</td>`:''}
           <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tarikh}</td>
           <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.destinasi||'-'}</td>
@@ -5510,10 +5535,11 @@
     function adminJanaSektorExcel(sektor) {
       const records = _janaRangeFilter(adminMovementData, sektor);
       if (!records.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
+      const sortedForExcel = [...records].sort((a,b)=>{const na=(a.nama||'').toUpperCase(),nb=(b.nama||'').toUpperCase();if(na!==nb)return na.localeCompare(nb);return (a.tarikh||'').localeCompare(b.tarikh||'');});
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet([
         ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
-        ...records.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nota||'', r.masa||'', r.submittedBy||''])
+        ...sortedForExcel.map(r => [r.nama||'', r.tarikh||'', r.destinasi||'', r.tujuan||'', r.nota||'', r.masa||'', r.submittedBy||''])
       ]);
       XLSX.utils.book_append_sheet(wb, ws, sektor.replace(/\//g,'-'));
       xlsxDownload(wb, `Laporan_${sektor.replace(/\//g,'-')}_PPD_Dalat${_janaFileSuffix()}.xlsx`);
@@ -5645,24 +5671,53 @@
       if (todayCell) todayCell.classList.add('selected');
     }
 
-    function adminUpdateSelectedDay(dateString) {
+    async function adminUpdateSelectedDay(dateString) {
       const title = document.getElementById('admin-selected-day-title');
       const list = document.getElementById('admin-selected-day-list');
       if (!title || !list) return;
       const parts = dateString.split('-');
       title.textContent = `${t('cal.movDate')} ${parts[2]}/${parts[1]}/${parts[0]}`;
-      list.innerHTML = '';
+      list.innerHTML = `<li style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i></li>`;
+
       const matched = adminMovementData.filter(r => r.tarikh === dateString);
-      if (matched.length === 0) {
+      const matchedNames = new Set(matched.map(r => (r.nama||'').toUpperCase().trim()));
+
+      // Fetch all registered staff to fill "Berada di Pejabat" for those without movement
+      let allStaff = [];
+      try {
+        const res = await fetch(`${API_BASE}/staff/list`);
+        const data = await res.json();
+        allStaff = data.staff || [];
+      } catch(e) {}
+
+      // Build pejabat entries for staff with no movement today
+      const pejabatEntries = allStaff
+        .filter(s => !matchedNames.has((s.nama||'').toUpperCase().trim()))
+        .map(s => ({ nama: s.nama, sektor: s.sektor, destinasi: 'PPD Dalat', tujuan: 'Berada di Pejabat', masa: null, _auto: true }));
+
+      // Sort: actual movements first (by nama), then pejabat entries (by nama)
+      const allEntries = [
+        ...matched.sort((a,b)=>(a.nama||'').localeCompare(b.nama||'')),
+        ...pejabatEntries.sort((a,b)=>(a.nama||'').localeCompare(b.nama||''))
+      ];
+
+      list.innerHTML = '';
+      if (allEntries.length === 0) {
         list.innerHTML = `<li style="padding:10px 0;text-align:center;">${t('cal.noMov')}</li>`;
         return;
       }
-      matched.forEach(r => {
+
+      allEntries.forEach(r => {
         const sc = r.sektor ? (SECTOR_COLORS[r.sektor] || SECTOR_COLORS['SPr']) : null;
         const sektorBadge = sc ? `<span style="font-size:0.65rem;background:${sc.primary}22;color:${sc.primary};border:1px solid ${sc.primary}44;border-radius:4px;padding:0 6px;margin-left:4px;font-weight:700;">${escapeHtml(r.sektor)}</span>` : '';
         const li = document.createElement('li');
         li.className = 'day-event-item';
-        if (sc) li.style.borderLeft = `3px solid ${sc.primary}`;
+        if (r._auto) {
+          li.style.opacity = '0.6';
+          li.style.borderLeft = '3px solid #16a34a';
+        } else if (sc) {
+          li.style.borderLeft = `3px solid ${sc.primary}`;
+        }
         li.innerHTML = `
           <span class="day-event-name"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.5;"></i>${escapeHtml(r.nama)}${sektorBadge}</span>
           <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
@@ -5928,17 +5983,34 @@
     function renderMovementTable(records) {
       const body = document.getElementById('stat-detail-body');
       if (!records || !records.length) { if (body) body.innerHTML = `<div class="detail-empty">${t('empty.record')}</div>`; return; }
-      body.innerHTML = `<table>
-        <thead><tr><th>#</th><th>${t('col.tarikh')}</th><th>${t('col.nama')}</th><th>${t('col.tujuan')}</th><th>${t('col.dest')}</th></tr></thead>
-        <tbody>${records.slice().reverse().map((r, i) => `
-          <tr>
-            <td>${records.length - i}</td>
+      // Group by nama, sorted alphabetically by nama, then by tarikh within each group
+      const byNama = {};
+      [...records].sort((a, b) => {
+        const na = (a.nama||'').toUpperCase(), nb = (b.nama||'').toUpperCase();
+        if (na !== nb) return na.localeCompare(nb);
+        return (a.tarikh||'').localeCompare(b.tarikh||'');
+      }).forEach(r => {
+        const key = (r.nama||'').toUpperCase().trim();
+        if (!byNama[key]) byNama[key] = [];
+        byNama[key].push(r);
+      });
+      let bil = 1;
+      let rows = '';
+      Object.entries(byNama).forEach(([, recs]) => {
+        const firstName = escapeHtml(recs[0].nama || '-');
+        recs.forEach((r, idx) => {
+          rows += `<tr>
+            <td>${idx === 0 ? bil++ : ''}</td>
+            <td>${idx === 0 ? firstName : '<span style="opacity:0.3">—</span>'}</td>
             <td>${r.tarikh || '-'}</td>
-            <td>${escapeHtml(r.nama || '-')}</td>
             <td>${escapeHtml(r.tujuan || '-')}</td>
             <td>${escapeHtml(r.destinasi || '-')}</td>
-          </tr>`).join('')}
-        </tbody></table>`;
+          </tr>`;
+        });
+      });
+      body.innerHTML = `<table>
+        <thead><tr><th>#</th><th>${t('col.nama')}</th><th>${t('col.tarikh')}</th><th>${t('col.tujuan')}</th><th>${t('col.dest')}</th></tr></thead>
+        <tbody>${rows}</tbody></table>`;
     }
 
     function renderStaffList() {
@@ -6571,7 +6643,7 @@
       renderCalendar();
     }
 
-    function updateSelectedDayEvents(dateString) {
+    async function updateSelectedDayEvents(dateString) {
       const title = document.getElementById('selected-day-title');
       const list = document.getElementById('selected-day-list');
       if (!title || !list) return;
@@ -6583,25 +6655,50 @@
       } catch(e) {}
 
       title.textContent = `${t('cal.movDate')} ${displayDate}`;
-      list.innerHTML = '';
+      list.innerHTML = `<li style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i></li>`;
 
       const matched = allMovementRecords.filter(r => r.tarikh === dateString);
+      const matchedNames = new Set(matched.map(r => (r.nama||'').toUpperCase().trim()));
 
-      if (matched.length === 0) {
+      // Fetch sector staff to fill "Berada di Pejabat" for those without movement
+      let allStaff = [];
+      try {
+        const sektor = selectedSector ? selectedSector.code : '';
+        const res = await fetch(`${API_BASE}/staff/list${sektor ? `?sektor=${encodeURIComponent(sektor)}` : ''}`);
+        const data = await res.json();
+        allStaff = data.staff || [];
+      } catch(e) {}
+
+      const pejabatEntries = allStaff
+        .filter(s => !matchedNames.has((s.nama||'').toUpperCase().trim()))
+        .map(s => ({ nama: s.nama, sektor: s.sektor, destinasi: 'PPD Dalat', tujuan: 'Berada di Pejabat', masa: null, _auto: true }));
+
+      const allEntries = [
+        ...matched.sort((a,b)=>(a.nama||'').localeCompare(b.nama||'')),
+        ...pejabatEntries.sort((a,b)=>(a.nama||'').localeCompare(b.nama||''))
+      ];
+
+      list.innerHTML = '';
+      if (allEntries.length === 0) {
         list.innerHTML = `<li style="padding: 10px 0; text-align:center;">${t('cal.noMov')}</li>`;
         return;
       }
 
-      matched.forEach(r => {
+      allEntries.forEach(r => {
         const sc = r.sektor ? (SECTOR_COLORS[r.sektor] || SECTOR_COLORS['SPr']) : null;
         const sektorBadge = sc ? `<span style="font-size:0.65rem;background:${sc.primary}22;color:${sc.primary};border:1px solid ${sc.primary}44;border-radius:4px;padding:0 6px;margin-left:4px;font-weight:700;">${escapeHtml(r.sektor)}</span>` : '';
         const li = document.createElement('li');
         li.className = 'day-event-item';
-        if (sc) li.style.borderLeft = `3px solid ${sc.primary}`;
+        if (r._auto) {
+          li.style.opacity = '0.6';
+          li.style.borderLeft = '3px solid #16a34a';
+        } else if (sc) {
+          li.style.borderLeft = `3px solid ${sc.primary}`;
+        }
         li.innerHTML = `
           <span class="day-event-name"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.5;"></i>${escapeHtml(r.nama)}${sektorBadge}</span>
-          <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi)}</span>
-          <span class="day-event-tujuan"><span class="tujuan-badge ${getTujuanBadgeClass(r.tujuan||'')}">${escapeHtml(r.tujuan)}</span></span>
+          <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
+          <span class="day-event-tujuan"><span class="tujuan-badge ${getTujuanBadgeClass(r.tujuan||'')}">${escapeHtml(r.tujuan||'')}</span></span>
           ${r.masa ? `<span style="font-size:0.68rem;color:var(--text-muted);margin-top:1px;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${escapeHtml(r.masa)}</span>` : ''}
         `;
         list.appendChild(li);
@@ -6630,13 +6727,10 @@
         const sektOrdA = siA === -1 ? SEKTOR_ORDER.length : siA;
         const sektOrdB = siB === -1 ? SEKTOR_ORDER.length : siB;
         if (sektOrdA !== sektOrdB) return sektOrdA - sektOrdB;
-        // Within same sector: sort by jawatan hierarchy
-        const ka = staffSortKey({ jawatan: sa.jawatan || '', sektor: sektorA, nama: a.nama });
-        const kb = staffSortKey({ jawatan: sb.jawatan || '', sektor: sektorB, nama: b.nama });
-        for (let i = 0; i < ka.length; i++) {
-          if (ka[i] < kb[i]) return -1;
-          if (ka[i] > kb[i]) return 1;
-        }
+        // Within same sector: sort by nama alphabetically, then by date
+        const namaA = (a.nama || '').toUpperCase().trim();
+        const namaB = (b.nama || '').toUpperCase().trim();
+        if (namaA !== namaB) return namaA.localeCompare(namaB);
         return (a.tarikh || '').localeCompare(b.tarikh || '');
       });
     }
