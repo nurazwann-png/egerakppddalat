@@ -346,6 +346,104 @@ function parseMasaToMinutes(masa) {
   return parseInt(m[1]) * 60 + parseInt(m[2]);
 }
 
+// ── Auto-fill "Berada di Pejabat" ───────────────────────────────────────────
+// Runs every Monday to back-fill the previous week (Mon–Fri).
+// For each registered staff member, inserts a "Berada di Pejabat" record for
+// every weekday they had NO movement record at all.
+// Only fills completed weeks; never fills future dates or the current week.
+async function autoFillPejabat() {
+  try {
+    // Today in Malaysia time
+    const nowUtc8 = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    const todayStr = nowUtc8.toISOString().slice(0, 10);
+
+    // Always fill up to (but not including) the current week's Monday
+    const dayOfWeek = nowUtc8.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
+    const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek; // days since last Monday
+    const thisMonday = new Date(nowUtc8);
+    thisMonday.setUTCDate(nowUtc8.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    const thisMondayStr = thisMonday.toISOString().slice(0, 10);
+
+    // Look back 4 weeks max (avoid processing ancient history every run)
+    const lookbackMs = 4 * 7 * 24 * 60 * 60 * 1000;
+    const cutoff = new Date(nowUtc8.getTime() - lookbackMs);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    // Build list of all weekdays (Mon–Fri) in [cutoffStr, thisMondayStr)
+    const weekdays = [];
+    const d = new Date(cutoffStr + 'T00:00:00Z');
+    while (true) {
+      const ds = d.toISOString().slice(0, 10);
+      if (ds >= thisMondayStr) break;
+      const dow = d.getUTCDay(); // 1=Mon ... 5=Fri
+      if (dow >= 1 && dow <= 5) weekdays.push(ds);
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    if (!weekdays.length) return;
+
+    // Fetch all registered staff
+    const { rows: staffList } = await pool.query('SELECT nama, sektor FROM staff');
+    if (!staffList.length) return;
+
+    // Fetch existing movement records in the date range (any tujuan) for these staff
+    const { rows: existing } = await pool.query(
+      `SELECT nama, tarikh FROM movements WHERE tarikh >= $1 AND tarikh < $2`,
+      [cutoffStr, thisMondayStr]
+    );
+    // Build a Set of "nama::tarikh" that already have records
+    const hasRecord = new Set(existing.map(r => `${(r.nama||'').toUpperCase().trim()}::${r.tarikh}`));
+
+    let inserted = 0;
+    for (const staff of staffList) {
+      const namaKey = (staff.nama || '').toUpperCase().trim();
+      for (const day of weekdays) {
+        if (hasRecord.has(`${namaKey}::${day}`)) continue; // already has a record for this day
+        const id = generateId();
+        await pool.query(
+          `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           ON CONFLICT DO NOTHING`,
+          [id, staff.nama, day, 'PPD Dalat', 'Berada di Pejabat', '', '', 'system', staff.sektor || 'SPr', new Date().toISOString()]
+        );
+        inserted++;
+      }
+    }
+    if (inserted > 0) console.log(`[auto-pejabat] Dimasukkan ${inserted} rekod "Berada di Pejabat" untuk minggu lalu.`);
+  } catch (err) {
+    console.error('[auto-pejabat] Ralat:', err.message);
+  }
+}
+
+// Schedule: run every Monday at ~00:05 MYT (16:05 UTC Sunday)
+function scheduleAutoFillPejabat() {
+  const nowUtc8 = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const dayOfWeek = nowUtc8.getUTCDay(); // 0=Sun,1=Mon
+  const hour = nowUtc8.getUTCHours();
+  const min = nowUtc8.getUTCMinutes();
+
+  // Next Monday 00:05 MYT = Sunday 16:05 UTC
+  let msUntilNext;
+  const targetHourUtc = 16, targetMinUtc = 5;
+  const targetDay = 0; // Sunday UTC = Monday 00:xx MYT
+
+  const daysUntilSunday = (7 + targetDay - dayOfWeek) % 7 || 7;
+  const nextRun = new Date(nowUtc8);
+  nextRun.setUTCDate(nowUtc8.getUTCDate() + daysUntilSunday);
+  nextRun.setUTCHours(targetHourUtc, targetMinUtc, 0, 0);
+  // If today is Sunday and we haven't passed the target time yet, use today
+  if (dayOfWeek === targetDay && (hour < targetHourUtc || (hour === targetHourUtc && min < targetMinUtc))) {
+    nextRun.setUTCDate(nowUtc8.getUTCDate());
+  }
+  msUntilNext = nextRun.getTime() - (Date.now() + 8 * 60 * 60 * 1000);
+  if (msUntilNext < 0) msUntilNext += 7 * 24 * 60 * 60 * 1000;
+
+  setTimeout(async () => {
+    await autoFillPejabat();
+    setInterval(autoFillPejabat, 7 * 24 * 60 * 60 * 1000); // then every 7 days
+  }, msUntilNext);
+  console.log(`[auto-pejabat] Dijadualkan untuk berjalan dalam ${Math.round(msUntilNext / 3600000)} jam.`);
+}
+
 async function checkScheduledPush() {
   try {
     const now = Date.now();
@@ -1212,6 +1310,9 @@ initDb()
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
+    // Auto-fill "Berada di Pejabat" for past weeks
+    autoFillPejabat();
+    scheduleAutoFillPejabat();
     // Scheduled push: semak setiap 5 minit
     checkScheduledPush();
     setInterval(checkScheduledPush, 5 * 60 * 1000);
