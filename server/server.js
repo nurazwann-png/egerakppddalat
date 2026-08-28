@@ -626,9 +626,9 @@ const server = http.createServer(async (req, res) => {
         sendJSON(res, 403, { error: 'This e-mail is not on the staff roster' });
         return;
       }
-      // Remove any auto-filled 'system' records for this staff+date before inserting real record
+      // Remove any 'Berada di Pejabat' records for this staff+date (auto or manual) before inserting real record
       await pool.query(
-        `DELETE FROM movements WHERE nama = $1 AND tarikh = $2 AND submittedby = 'system'`,
+        `DELETE FROM movements WHERE nama = $1 AND tarikh = $2 AND tujuan = 'Berada di Pejabat'`,
         [nama, tarikh]
       );
 
