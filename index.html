@@ -6190,7 +6190,11 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(record)
             });
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+            if (!res.ok) {
+              let errMsg = `Ralat ${res.status}`;
+              try { const j = await res.json(); errMsg = j.error || errMsg; } catch(e) {}
+              throw new Error(errMsg);
+            }
             movementRecords.push(record);
             allMovementRecords.push(record);
           }
@@ -6225,7 +6229,7 @@
         showToast(dates.length > 1 ? t('toast.recordSentMulti').replace('{n}', dates.length) : t('toast.recordSent'), 'success');
       } catch (err) {
         console.error(err);
-        showToast('Gagal menghantar pergerakan. Sila semak sambungan ke pelayan pangkalan data.', 'error');
+        showToast(`Gagal: ${err.message}`, 'error');
       }
     }
 
