@@ -5251,23 +5251,54 @@
         sektorChartHtml = `<h2>Perbandingan Rekod Mengikut Sektor</h2>${_svgBar(sektorBarData, 380, 20)}`;
       }
 
-      const sortedRecs = sortByJawatanNamaTarikh(records);
-      const rows = sortedRecs.map((r, i) => {
-        let tarikh = r.tarikh || '-';
-        try { const p=(r.tarikh||'').split('-'); if(p.length===3) tarikh=`${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
-        const prevNama = i > 0 ? (sortedRecs[i-1].nama||'').toUpperCase().trim() : null;
-        const curNama = (r.nama||'').toUpperCase().trim();
-        const isNewNama = prevNama !== curNama;
-        return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}${isNewNama && i>0?';border-top:2px solid #e2e8f0':''}">
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${isNewNama ? i+1 : ''}</td>
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:${isNewNama?'700':'400'};">${isNewNama ? (r.nama||'-') : '—'}</td>
-          ${sektor==='SEMUA'?`<td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.sektor||'-'}</td>`:''}
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tarikh}</td>
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.destinasi||'-'}</td>
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.tujuan||'-')}</td>
-          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.nota||'-')}</td>
-        </tr>`;
-      }).join('');
+      let rows = '';
+      if (sektor === 'SEMUA') {
+        // Group by sector (SEKTOR_ORDER), then jawatan→nama→tarikh within each sector
+        const bySek = {};
+        records.forEach(r => {
+          const s = r.sektor || 'Lain';
+          if (!bySek[s]) bySek[s] = [];
+          bySek[s].push(r);
+        });
+        const sekKeys = [...SEKTOR_ORDER.filter(s => bySek[s]), ...Object.keys(bySek).filter(s => !SEKTOR_ORDER.includes(s))];
+        const colTotal = 6; // bil,nama,tarikh,dest,tujuan,nota
+        sekKeys.forEach(sek => {
+          const sekRecs = sortByJawatanNamaTarikh(bySek[sek]);
+          rows += `<tr><td colspan="${colTotal}" style="background:#003580;color:#fff;font-weight:700;font-size:9px;padding:5px 10px;letter-spacing:0.05em;">SEKTOR: ${escapeHtml(sek)}</td></tr>`;
+          sekRecs.forEach((r, i) => {
+            let tarikh = r.tarikh || '-';
+            try { const p=(r.tarikh||'').split('-'); if(p.length===3) tarikh=`${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+            const prevNama = i > 0 ? (sekRecs[i-1].nama||'').toUpperCase().trim() : null;
+            const curNama = (r.nama||'').toUpperCase().trim();
+            const isNewNama = prevNama !== curNama;
+            rows += `<tr style="background:${i%2===0?'#f8fafc':'#fff'}${isNewNama && i>0?';border-top:1.5px solid #e2e8f0':''}">
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;text-align:center;">${isNewNama ? i+1 : ''}</td>
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:${isNewNama?'700':'400'};">${isNewNama ? escapeHtml(r.nama||'-') : '—'}</td>
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tarikh}</td>
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.destinasi||'-')}</td>
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.tujuan||'-')}</td>
+              <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.nota||'-')}</td>
+            </tr>`;
+          });
+        });
+      } else {
+        const sortedRecs = sortByJawatanNamaTarikh(records);
+        rows = sortedRecs.map((r, i) => {
+          let tarikh = r.tarikh || '-';
+          try { const p=(r.tarikh||'').split('-'); if(p.length===3) tarikh=`${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
+          const prevNama = i > 0 ? (sortedRecs[i-1].nama||'').toUpperCase().trim() : null;
+          const curNama = (r.nama||'').toUpperCase().trim();
+          const isNewNama = prevNama !== curNama;
+          return `<tr style="background:${i%2===0?'#f8fafc':'#fff'}${isNewNama && i>0?';border-top:2px solid #e2e8f0':''}">
+            <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${isNewNama ? i+1 : ''}</td>
+            <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:${isNewNama?'700':'400'};">${isNewNama ? (r.nama||'-') : '—'}</td>
+            <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tarikh}</td>
+            <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${r.destinasi||'-'}</td>
+            <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.tujuan||'-')}</td>
+            <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${escapeHtml(r.nota||'-')}</td>
+          </tr>`;
+        }).join('');
+      }
 
       const tujuanRows = topTujuan.map(([tj, cnt]) => `
         <tr><td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;">${tj}</td>
@@ -5338,7 +5369,6 @@
       <h2>Senarai Rekod Pergerakan</h2>
       <table><thead><tr>
         <th style="width:28px">#</th><th>Nama Pegawai</th>
-        ${sektor==='SEMUA'?'<th style="width:50px">Sektor</th>':''}
         <th style="width:65px">Tarikh</th><th>Destinasi</th><th style="width:100px">Tujuan</th><th>Nota</th>
       </tr></thead>
       <tbody>${rows || `<tr><td colspan="6" style="padding:8px;text-align:center;">${t('empty.record')}</td></tr>`}</tbody></table>
