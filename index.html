@@ -3817,6 +3817,7 @@
     // ===== DEMO MODE =====
     let DEMO_MODE = false;
     let _cachedStaffForSector = null;
+    let _cachedStaffMap = {};
 
     const DEMO_ACCOUNTS = {
       'demo.spr@egerak.demo':  { nama: 'DEMO PERANCANGAN', jawatan: 'Pegawai Perancangan', sektor: 'SPr' },
@@ -3943,6 +3944,8 @@
         if (!sectorRes.ok) throw new Error(`Server returned ${sectorRes.status}`);
         movementRecords = await sectorRes.json();
         allMovementRecords = allRes.ok ? await allRes.json() : movementRecords;
+        // Cache staff map for sorting in renderMovementTable
+        fetchStaffMap().catch(() => {});
         return true;
       } catch (err) {
         console.error('Failed to reach backend:', err);
@@ -5248,6 +5251,15 @@
       }
 
       const sortedRecs = [...records].sort((a,b) => {
+        const smap = _cachedStaffMap || {};
+        const sa = smap[(a.nama||'').toUpperCase().trim()] || {};
+        const sb = smap[(b.nama||'').toUpperCase().trim()] || {};
+        const ka = staffSortKey({ jawatan: sa.jawatan||'', sektor: a.sektor||sa.sektor||'', nama: a.nama });
+        const kb = staffSortKey({ jawatan: sb.jawatan||'', sektor: b.sektor||sb.sektor||'', nama: b.nama });
+        for (let i = 0; i < ka.length - 2; i++) {
+          if (ka[i] < kb[i]) return -1;
+          if (ka[i] > kb[i]) return 1;
+        }
         const na=(a.nama||'').toUpperCase(), nb=(b.nama||'').toUpperCase();
         if(na!==nb) return na.localeCompare(nb);
         return (a.tarikh||'').localeCompare(b.tarikh||'');
@@ -5535,7 +5547,17 @@
     function adminJanaSektorExcel(sektor) {
       const records = _janaRangeFilter(adminMovementData, sektor);
       if (!records.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
-      const sortedForExcel = [...records].sort((a,b)=>{const na=(a.nama||'').toUpperCase(),nb=(b.nama||'').toUpperCase();if(na!==nb)return na.localeCompare(nb);return (a.tarikh||'').localeCompare(b.tarikh||'');});
+      const sortedForExcel = [...records].sort((a,b)=>{
+        const smap=_cachedStaffMap||{};
+        const sa=smap[(a.nama||'').toUpperCase().trim()]||{};
+        const sb=smap[(b.nama||'').toUpperCase().trim()]||{};
+        const ka=staffSortKey({jawatan:sa.jawatan||'',sektor:a.sektor||sa.sektor||'',nama:a.nama});
+        const kb=staffSortKey({jawatan:sb.jawatan||'',sektor:b.sektor||sb.sektor||'',nama:b.nama});
+        for(let i=0;i<ka.length-2;i++){if(ka[i]<kb[i])return -1;if(ka[i]>kb[i])return 1;}
+        const na=(a.nama||'').toUpperCase(),nb=(b.nama||'').toUpperCase();
+        if(na!==nb)return na.localeCompare(nb);
+        return (a.tarikh||'').localeCompare(b.tarikh||'');
+      });
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet([
         ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
@@ -5983,9 +6005,18 @@
     function renderMovementTable(records) {
       const body = document.getElementById('stat-detail-body');
       if (!records || !records.length) { if (body) body.innerHTML = `<div class="detail-empty">${t('empty.record')}</div>`; return; }
-      // Group by nama, sorted alphabetically by nama, then by tarikh within each group
+      // Group by nama: jawatan hierarchy first, then nama alphabetically, then date
       const byNama = {};
       [...records].sort((a, b) => {
+        const smap = _cachedStaffMap || {};
+        const sa = smap[(a.nama||'').toUpperCase().trim()] || {};
+        const sb = smap[(b.nama||'').toUpperCase().trim()] || {};
+        const ka = staffSortKey({ jawatan: sa.jawatan||'', sektor: a.sektor||sa.sektor||'', nama: a.nama });
+        const kb = staffSortKey({ jawatan: sb.jawatan||'', sektor: b.sektor||sb.sektor||'', nama: b.nama });
+        for (let i = 0; i < ka.length - 2; i++) {
+          if (ka[i] < kb[i]) return -1;
+          if (ka[i] > kb[i]) return 1;
+        }
         const na = (a.nama||'').toUpperCase(), nb = (b.nama||'').toUpperCase();
         if (na !== nb) return na.localeCompare(nb);
         return (a.tarikh||'').localeCompare(b.tarikh||'');
@@ -6712,8 +6743,9 @@
         const data = await res.json();
         const map = {};
         (data.staff || []).forEach(s => { map[(s.nama || '').toUpperCase().trim()] = s; });
+        _cachedStaffMap = map;
         return map;
-      } catch(e) { return {}; }
+      } catch(e) { return _cachedStaffMap || {}; }
     }
 
     // Sort movement records by: sektor order → jawatan order → date → nama
@@ -6727,7 +6759,13 @@
         const sektOrdA = siA === -1 ? SEKTOR_ORDER.length : siA;
         const sektOrdB = siB === -1 ? SEKTOR_ORDER.length : siB;
         if (sektOrdA !== sektOrdB) return sektOrdA - sektOrdB;
-        // Within same sector: sort by nama alphabetically, then by date
+        // Within same sector: jawatan hierarchy first, then nama alphabetically, then date
+        const ka = staffSortKey({ jawatan: sa.jawatan || '', sektor: sektorA, nama: a.nama });
+        const kb = staffSortKey({ jawatan: sb.jawatan || '', sektor: sektorB, nama: b.nama });
+        for (let i = 0; i < ka.length - 2; i++) { // skip last 2 elements (jawatan string, nama) to use our own nama sort
+          if (ka[i] < kb[i]) return -1;
+          if (ka[i] > kb[i]) return 1;
+        }
         const namaA = (a.nama || '').toUpperCase().trim();
         const namaB = (b.nama || '').toUpperCase().trim();
         if (namaA !== namaB) return namaA.localeCompare(namaB);
