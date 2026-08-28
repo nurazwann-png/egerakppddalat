@@ -4496,6 +4496,7 @@
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       adminMovementData = await res.json();
+      fetchStaffMap().catch(() => {});
       return adminMovementData;
     }
 
@@ -5054,7 +5055,7 @@
         (r.destinasi||'').toLowerCase().includes(adminRecordSearch) ||
         (r.tujuan||'').toLowerCase().includes(adminRecordSearch)
       );
-      const sorted = [...records].sort((a, b) => b.tarikh.localeCompare(a.tarikh));
+      const sorted = sortByJawatanNamaTarikh(records);
 
       tbody.innerHTML = sorted.map((r) => {
         let displayDate = r.tarikh;
@@ -5250,20 +5251,7 @@
         sektorChartHtml = `<h2>Perbandingan Rekod Mengikut Sektor</h2>${_svgBar(sektorBarData, 380, 20)}`;
       }
 
-      const sortedRecs = [...records].sort((a,b) => {
-        const smap = _cachedStaffMap || {};
-        const sa = smap[(a.nama||'').toUpperCase().trim()] || {};
-        const sb = smap[(b.nama||'').toUpperCase().trim()] || {};
-        const ka = staffSortKey({ jawatan: sa.jawatan||'', sektor: a.sektor||sa.sektor||'', nama: a.nama });
-        const kb = staffSortKey({ jawatan: sb.jawatan||'', sektor: b.sektor||sb.sektor||'', nama: b.nama });
-        for (let i = 0; i < ka.length - 2; i++) {
-          if (ka[i] < kb[i]) return -1;
-          if (ka[i] > kb[i]) return 1;
-        }
-        const na=(a.nama||'').toUpperCase(), nb=(b.nama||'').toUpperCase();
-        if(na!==nb) return na.localeCompare(nb);
-        return (a.tarikh||'').localeCompare(b.tarikh||'');
-      });
+      const sortedRecs = sortByJawatanNamaTarikh(records);
       const rows = sortedRecs.map((r, i) => {
         let tarikh = r.tarikh || '-';
         try { const p=(r.tarikh||'').split('-'); if(p.length===3) tarikh=`${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
@@ -5547,17 +5535,7 @@
     function adminJanaSektorExcel(sektor) {
       const records = _janaRangeFilter(adminMovementData, sektor);
       if (!records.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
-      const sortedForExcel = [...records].sort((a,b)=>{
-        const smap=_cachedStaffMap||{};
-        const sa=smap[(a.nama||'').toUpperCase().trim()]||{};
-        const sb=smap[(b.nama||'').toUpperCase().trim()]||{};
-        const ka=staffSortKey({jawatan:sa.jawatan||'',sektor:a.sektor||sa.sektor||'',nama:a.nama});
-        const kb=staffSortKey({jawatan:sb.jawatan||'',sektor:b.sektor||sb.sektor||'',nama:b.nama});
-        for(let i=0;i<ka.length-2;i++){if(ka[i]<kb[i])return -1;if(ka[i]>kb[i])return 1;}
-        const na=(a.nama||'').toUpperCase(),nb=(b.nama||'').toUpperCase();
-        if(na!==nb)return na.localeCompare(nb);
-        return (a.tarikh||'').localeCompare(b.tarikh||'');
-      });
+      const sortedForExcel = sortByJawatanNamaTarikh(records);
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet([
         ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
@@ -5582,7 +5560,7 @@
       if (!allRecords.length) { alert('Tiada rekod untuk tempoh yang dipilih.'); return; }
       const wb = XLSX.utils.book_new();
       JANA_SEKTORS.forEach(s => {
-        const rows = allRecords.filter(r => r.sektor === s);
+        const rows = sortByJawatanNamaTarikh(allRecords.filter(r => r.sektor === s));
         if (!rows.length) return;
         const ws = XLSX.utils.aoa_to_sheet([
           ['Nama Pegawai', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
@@ -5590,9 +5568,10 @@
         ]);
         XLSX.utils.book_append_sheet(wb, ws, s.replace(/\//g,'-'));
       });
+      const sortedAll = sortByJawatanNamaTarikh(allRecords);
       const wsAll = XLSX.utils.aoa_to_sheet([
         ['Nama Pegawai', 'Sektor', 'Tarikh', 'Destinasi', 'Tujuan', 'Nota', 'Masa', 'E-mel'],
-        ...allRecords.map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])
+        ...sortedAll.map(r => [r.nama||'',r.sektor||'',r.tarikh||'',r.destinasi||'',r.tujuan||'',r.nota||'',r.masa||'',r.submittedBy||''])
       ]);
       XLSX.utils.book_append_sheet(wb, wsAll, 'Semua');
       xlsxDownload(wb, `Laporan_Keseluruhan_PPD_Dalat${_janaFileSuffix()}.xlsx`);
@@ -6007,20 +5986,7 @@
       if (!records || !records.length) { if (body) body.innerHTML = `<div class="detail-empty">${t('empty.record')}</div>`; return; }
       // Group by nama: jawatan hierarchy first, then nama alphabetically, then date
       const byNama = {};
-      [...records].sort((a, b) => {
-        const smap = _cachedStaffMap || {};
-        const sa = smap[(a.nama||'').toUpperCase().trim()] || {};
-        const sb = smap[(b.nama||'').toUpperCase().trim()] || {};
-        const ka = staffSortKey({ jawatan: sa.jawatan||'', sektor: a.sektor||sa.sektor||'', nama: a.nama });
-        const kb = staffSortKey({ jawatan: sb.jawatan||'', sektor: b.sektor||sb.sektor||'', nama: b.nama });
-        for (let i = 0; i < ka.length - 2; i++) {
-          if (ka[i] < kb[i]) return -1;
-          if (ka[i] > kb[i]) return 1;
-        }
-        const na = (a.nama||'').toUpperCase(), nb = (b.nama||'').toUpperCase();
-        if (na !== nb) return na.localeCompare(nb);
-        return (a.tarikh||'').localeCompare(b.tarikh||'');
-      }).forEach(r => {
+      sortByJawatanNamaTarikh(records).forEach(r => {
         const key = (r.nama||'').toUpperCase().trim();
         if (!byNama[key]) byNama[key] = [];
         byNama[key].push(r);
@@ -6749,6 +6715,23 @@
     }
 
     // Sort movement records by: sektor order → jawatan order → date → nama
+    function sortByJawatanNamaTarikh(records) {
+      const smap = _cachedStaffMap || {};
+      return [...records].sort((a, b) => {
+        const sa = smap[(a.nama||'').toUpperCase().trim()] || {};
+        const sb = smap[(b.nama||'').toUpperCase().trim()] || {};
+        const ka = staffSortKey({ jawatan: sa.jawatan||'', sektor: a.sektor||sa.sektor||'', nama: a.nama });
+        const kb = staffSortKey({ jawatan: sb.jawatan||'', sektor: b.sektor||sb.sektor||'', nama: b.nama });
+        for (let i = 0; i < ka.length - 2; i++) {
+          if (ka[i] < kb[i]) return -1;
+          if (ka[i] > kb[i]) return 1;
+        }
+        const na = (a.nama||'').toUpperCase(), nb = (b.nama||'').toUpperCase();
+        if (na !== nb) return na.localeCompare(nb);
+        return (a.tarikh||'').localeCompare(b.tarikh||'');
+      });
+    }
+
     function sortRecordsForReport(records, staffMap) {
       return [...records].sort((a, b) => {
         const sa = staffMap[(a.nama || '').toUpperCase().trim()] || {};
