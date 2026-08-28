@@ -5223,7 +5223,18 @@
       return `<div>${rows}</div>`;
     }
 
-    function buildSektorReport(sektor, records) {
+    function janaReportTitle(sektor) {
+      const el = document.getElementById('jana-tempoh');
+      const tempoh = el ? el.value : 'semua';
+      const sektorLabel = sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : 'Sektor ' + sektor;
+      const jenisMap = { hari: 'Harian', minggu: 'Mingguan', bulan: 'Bulanan', tahun: 'Tahunan', semua: '' };
+      const jenis = jenisMap[tempoh] || '';
+      if (jenis) return `Laporan ${jenis} Pergerakan Staf PPD Dalat — ${sektorLabel}`;
+      return `Laporan Pergerakan Staf PPD Dalat — ${sektorLabel}`;
+    }
+
+    function buildSektorReport(sektor, records, reportTitle) {
+      if (!reportTitle) reportTitle = janaReportTitle(sektor);
       const PIE_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488','#ea580c','#4f46e5','#0284c7'];
       const tujuanCounts = {};
       records.forEach(r => { tujuanCounts[r.tujuan] = (tujuanCounts[r.tujuan] || 0) + 1; });
@@ -5310,7 +5321,7 @@
          <td style="padding:5px 8px;border:1px solid #e2e8f0;font-size:10px;font-weight:600;">${cnt}</td></tr>`).join('');
 
       return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-      <title>Laporan ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : sektor}</title>
+      <title>${reportTitle}</title>
       <style>
         @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
         body { font-family: Arial, sans-serif; margin: 0; color: #1e293b; font-size: 11px; }
@@ -5332,7 +5343,7 @@
       <div class="header-row">
         <img src="images/logo-ppd.jpg" height="60" style="border-radius:6px;background:#fff;padding:2px;" onerror="this.style.display='none'">
         <div>
-          <h1>Laporan Pergerakan Pegawai — ${sektor === 'SEMUA' ? 'Keseluruhan PPD Dalat' : 'Sektor ' + sektor}</h1>
+          <h1>${reportTitle}</h1>
           <div class="meta">Pejabat Pendidikan Daerah Dalat &nbsp;|&nbsp; Dijana pada ${today}</div>
           <div class="meta">Jumlah rekod: <strong>${records.length}</strong> &nbsp;|&nbsp; Pegawai terlibat: <strong>${Object.keys(staffMap).length}</strong></div>
         </div>
@@ -6852,8 +6863,11 @@
         </tr>`;
       });
 
+      const fullReportTitle = periodSuffix && periodSuffix !== 'Semua'
+        ? `Laporan ${periodSuffix} Pergerakan Staf PPD Dalat — ${scopeLabel}`
+        : `Laporan Pergerakan Staf PPD Dalat — ${scopeLabel}`;
       const html = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8">
-<title>Laporan Pergerakan ${scopeLabel}</title>
+<title>${fullReportTitle}</title>
 <style>
   @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
   * { box-sizing: border-box; margin:0; padding:0; }
@@ -6873,8 +6887,8 @@
 <div class="doc-header">
   <div>
     <div class="doc-org">Kementerian Pendidikan Malaysia</div>
-    <div class="doc-title">Laporan Pergerakan Pegawai</div>
-    <div class="doc-meta">${scopeLabel} &nbsp;|&nbsp; Tempoh: ${periodSuffix} &nbsp;|&nbsp; Jumlah Rekod: ${periodRecords.length}</div>
+    <div class="doc-title">${fullReportTitle}</div>
+    <div class="doc-meta">Jumlah Rekod: ${periodRecords.length}</div>
     <div class="doc-meta">Pejabat Pendidikan Daerah Dalat, 96300 Dalat, Sarawak</div>
   </div>
 </div>
