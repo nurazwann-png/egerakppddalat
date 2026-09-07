@@ -5732,8 +5732,9 @@
         allStaff = data.staff || [];
       } catch(e) {}
 
-      // Build pejabat entries for staff with no movement today
-      const pejabatEntries = allStaff
+      // Build pejabat entries for staff with no movement today (skip weekends)
+      const _dow = new Date(dateString + 'T00:00:00Z').getUTCDay();
+      const pejabatEntries = (_dow === 0 || _dow === 6) ? [] : allStaff
         .filter(s => !matchedNames.has((s.nama||'').toUpperCase().trim()))
         .map(s => ({ nama: s.nama, sektor: s.sektor, destinasi: 'PPD Dalat', tujuan: 'Berada di Pejabat', masa: null, _auto: true }));
 
@@ -6711,7 +6712,8 @@
         allStaff = data.staff || [];
       } catch(e) {}
 
-      const pejabatEntries = allStaff
+      const _dowUser = new Date(dateString + 'T00:00:00Z').getUTCDay();
+      const pejabatEntries = (_dowUser === 0 || _dowUser === 6) ? [] : allStaff
         .filter(s => !matchedNames.has((s.nama||'').toUpperCase().trim()))
         .map(s => ({ nama: s.nama, sektor: s.sektor, destinasi: 'PPD Dalat', tujuan: 'Berada di Pejabat', masa: null, _auto: true }));
 
