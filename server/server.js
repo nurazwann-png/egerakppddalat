@@ -393,10 +393,19 @@ async function autoFillPejabat() {
     // Build a Set of "nama::tarikh" that already have records
     const hasRecord = new Set(existing.map(r => `${(r.nama||'').toUpperCase().trim()}::${r.tarikh}`));
 
+    // Padam rekod system pada Sabtu/Ahad (cleanup jika ada rekod salah sebelum ini)
+    await pool.query(
+      `DELETE FROM movements WHERE submittedby = 'system' AND tujuan = 'Berada di Pejabat'
+       AND EXTRACT(DOW FROM tarikh::date) IN (0, 6)`
+    );
+
     let inserted = 0;
     for (const staff of staffList) {
       const namaKey = (staff.nama || '').toUpperCase().trim();
       for (const day of weekdays) {
+        // Perlindungan ganda: pastikan bukan Sabtu (6) atau Ahad (0)
+        const dowCheck = new Date(day + 'T00:00:00Z').getUTCDay();
+        if (dowCheck === 0 || dowCheck === 6) continue;
         if (hasRecord.has(`${namaKey}::${day}`)) continue; // already has a record for this day
         const id = generateId();
         await pool.query(
