@@ -1,0 +1,58 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - img "Logo PPD Dalat" [ref=f1e4]
+      - heading "e-Gerak PPD Dalat" [level=1] [ref=f1e5]
+    - generic [ref=f1e6]:
+      - text:   
+      - button "EN" [ref=f1e7] [cursor=pointer]
+  - text:     
+  - main [ref=f1e8]:
+    - generic [ref=f1e10]:
+      - generic [ref=f1e11]:
+        - generic [ref=f1e12]:
+          - heading "Pilih Sektor" [level=2] [ref=f1e13]
+          - paragraph [ref=f1e14]: Sila pilih sektor anda di PPD Dalat
+        - generic [ref=f1e15]:
+          - button " SPr Sektor Perancangan" [ref=f1e16] [cursor=pointer]:
+            - generic [ref=f1e17]: 
+            - generic [ref=f1e18]: SPr
+            - generic [ref=f1e19]: Sektor Perancangan
+          - button " SPb Sektor Pembelajaran" [ref=f1e20] [cursor=pointer]:
+            - generic [ref=f1e21]: 
+            - generic [ref=f1e22]: SPb
+            - generic [ref=f1e23]: Sektor Pembelajaran
+          - button " SPbM Sektor Pembangunan Murid" [ref=f1e24] [cursor=pointer]:
+            - generic [ref=f1e25]: 
+            - generic [ref=f1e26]: SPbM
+            - generic [ref=f1e27]: Sektor Pembangunan Murid
+          - button " SP Sektor Pengurusan" [ref=f1e28] [cursor=pointer]:
+            - generic [ref=f1e29]: 
+            - generic [ref=f1e30]: SP
+            - generic [ref=f1e31]: Sektor Pengurusan
+          - button " SPS Sektor Pengurusan Sekolah" [ref=f1e32] [cursor=pointer]:
+            - generic [ref=f1e33]: 
+            - generic [ref=f1e34]: SPS
+            - generic [ref=f1e35]: Sektor Pengurusan Sekolah
+          - button " SPP/SPsK Pentaksiran & Psikologi Kaunseling" [ref=f1e36] [cursor=pointer]:
+            - generic [ref=f1e37]: 
+            - generic [ref=f1e38]: SPP/SPsK
+            - generic [ref=f1e39]: Pentaksiran & Psikologi Kaunseling
+          - button " PTIS Pasukan Teknikal ICT Sekolah" [ref=f1e40] [cursor=pointer]:
+            - generic [ref=f1e41]: 
+            - generic [ref=f1e42]: PTIS
+            - generic [ref=f1e43]: Pasukan Teknikal ICT Sekolah
+          - button " ADMIN Log Masuk Admin" [ref=f1e44] [cursor=pointer]:
+            - generic [ref=f1e45]: 
+            - generic [ref=f1e46]: ADMIN
+            - generic [ref=f1e47]: Log Masuk Admin
+        - button " Teruskan" [disabled] [ref=f1e48]:
+          - generic [ref=f1e49]: 
+          - text: Teruskan
+      - text:               
+    - text:                       +            +          +     +                    
+  - contentinfo [ref=f1e50]:
+    - paragraph [ref=f1e51]: e-Gerak PPD Dalat
+    - paragraph [ref=f1e52]: Sistem Pengurusan Rekod Pergerakan Pegawai
+    - paragraph [ref=f1e53]: Pejabat Pendidikan Daerah Dalat
+  - text:     
