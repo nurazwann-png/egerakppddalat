@@ -783,9 +783,10 @@ const server = http.createServer(async (req, res) => {
       }
 
       // Semak jika sudah berdaftar (admin-added staff bypass domain check)
-      const existing = await pool.query('SELECT 1 FROM staff WHERE email = $1', [email]);
+      const existing = await pool.query('SELECT nama, jawatan FROM staff WHERE email = $1', [email]);
       if (existing.rows.length > 0) {
-        sendJSON(res, 200, { ok: true, alreadyRegistered: true });
+        // Return nama & jawatan dari DB supaya frontend guna nama yang konsisten
+        sendJSON(res, 200, { ok: true, alreadyRegistered: true, nama: existing.rows[0].nama, jawatan: existing.rows[0].jawatan });
         return;
       }
 

@@ -4082,8 +4082,8 @@
         _pendingRegistration = { name, email, position, sektor };
 
         if (data.alreadyRegistered) {
-          // Staf sedia ada — terus log masuk tanpa kod
-          completeLogin(name, email, position);
+          // Staf sedia ada — guna nama dari DB supaya konsisten, bukan nama yang ditaip
+          completeLogin(data.nama || name, email, data.jawatan || position);
           return;
         }
 
