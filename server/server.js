@@ -1320,12 +1320,43 @@ CARA MENJAWAB:
   }
 });
 
+// ── One-time: gabung nama staf pendua (prefix "ENCIK"/"PUAN") ────────────────
+async function fixDuplicateStaffNames() {
+  try {
+    // Cari pasangan nama yang satu ada prefix dan satu tidak
+    const prefixes = ['ENCIK ', 'PUAN ', 'DR. ', 'DR '];
+    const { rows: allStaff } = await pool.query('SELECT nama, email FROM staff');
+    for (const prefix of prefixes) {
+      const withPrefix = allStaff.filter(s => s.nama.toUpperCase().startsWith(prefix));
+      for (const s of withPrefix) {
+        const baseName = s.nama.slice(prefix.length).trim();
+        const duplicate = allStaff.find(x => x.email !== s.email && x.nama.trim().toUpperCase() === baseName.toUpperCase());
+        if (!duplicate) continue;
+        // Tentukan nama canonical (tanpa prefix) dan nama yg akan dipadam
+        const canonical = duplicate; // tanpa prefix — kekal
+        const toRemove = s;          // ada prefix — gabung ke canonical
+        console.log(`[fix-names] Gabung [${toRemove.nama}] → [${canonical.nama}]`);
+        // Tukar semua movements dari nama lama ke nama canonical
+        await pool.query('UPDATE movements SET nama=$1, submittedby=CASE WHEN submittedby=$2 THEN $3 ELSE submittedby END WHERE nama=$4',
+          [canonical.nama, toRemove.email, canonical.email, toRemove.nama]);
+        // Padam staff pendua (ada prefix)
+        await pool.query('DELETE FROM staff WHERE email=$1', [toRemove.email]);
+        console.log(`[fix-names] Selesai — padam staff [${toRemove.email}]`);
+      }
+    }
+  } catch (err) {
+    console.error('[fix-names] Ralat:', err.message);
+  }
+}
+
 // Initialize DB schema then start listening
 initDb()
   .then(() => initVapid())
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
+    // One-time: betulkan nama staf pendua
+    fixDuplicateStaffNames();
     // Auto-fill "Berada di Pejabat" for past weeks
     autoFillPejabat();
     scheduleAutoFillPejabat();
