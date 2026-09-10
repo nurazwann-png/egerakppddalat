@@ -1324,25 +1324,49 @@ CARA MENJAWAB:
 // ── One-time: gabung nama staf pendua (prefix "ENCIK"/"PUAN") ────────────────
 async function fixDuplicateStaffNames() {
   try {
-    // Cari pasangan nama yang satu ada prefix dan satu tidak
     const prefixes = ['ENCIK ', 'PUAN ', 'DR. ', 'DR '];
     const { rows: allStaff } = await pool.query('SELECT nama, email FROM staff');
+
+    // Langkah 1: gabung duplikat dalam jadual staff
     for (const prefix of prefixes) {
       const withPrefix = allStaff.filter(s => s.nama.toUpperCase().startsWith(prefix));
       for (const s of withPrefix) {
         const baseName = s.nama.slice(prefix.length).trim();
         const duplicate = allStaff.find(x => x.email !== s.email && x.nama.trim().toUpperCase() === baseName.toUpperCase());
         if (!duplicate) continue;
-        // Tentukan nama canonical (tanpa prefix) dan nama yg akan dipadam
-        const canonical = duplicate; // tanpa prefix — kekal
-        const toRemove = s;          // ada prefix — gabung ke canonical
-        console.log(`[fix-names] Gabung [${toRemove.nama}] → [${canonical.nama}]`);
-        // Tukar semua movements dari nama lama ke nama canonical
+        const canonical = duplicate;
+        const toRemove = s;
+        console.log(`[fix-names] Gabung staff [${toRemove.nama}] → [${canonical.nama}]`);
         await pool.query('UPDATE movements SET nama=$1, submittedby=CASE WHEN submittedby=$2 THEN $3 ELSE submittedby END WHERE nama=$4',
           [canonical.nama, toRemove.email, canonical.email, toRemove.nama]);
-        // Padam staff pendua (ada prefix)
         await pool.query('DELETE FROM staff WHERE email=$1', [toRemove.email]);
         console.log(`[fix-names] Selesai — padam staff [${toRemove.email}]`);
+      }
+    }
+
+    // Langkah 2: normalisasi nama dalam movements yang ada prefix
+    // tapi nama tanpa prefix wujud dalam jadual staff
+    const { rows: staffNames } = await pool.query('SELECT nama FROM staff');
+    const staffNameMap = {};
+    staffNames.forEach(s => { staffNameMap[s.nama.trim().toUpperCase()] = s.nama.trim(); });
+
+    const { rows: movNames } = await pool.query('SELECT DISTINCT nama FROM movements');
+    for (const row of movNames) {
+      const movNama = (row.nama || '').trim();
+      const movUpper = movNama.toUpperCase();
+      // Jika nama dalam movements sudah ada dalam staff, langkau
+      if (staffNameMap[movUpper]) continue;
+      // Cuba buang prefix dan semak sama ada nama tanpa prefix wujud dalam staff
+      for (const prefix of prefixes) {
+        if (movUpper.startsWith(prefix)) {
+          const baseName = movNama.slice(prefix.length).trim();
+          const canonical = staffNameMap[baseName.toUpperCase()];
+          if (canonical) {
+            console.log(`[fix-names] Normalisasi movements [${movNama}] → [${canonical}]`);
+            await pool.query('UPDATE movements SET nama=$1 WHERE nama=$2', [canonical, movNama]);
+            break;
+          }
+        }
       }
     }
   } catch (err) {
