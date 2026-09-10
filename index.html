@@ -2508,6 +2508,15 @@
                 <i class="fa-solid fa-user-plus"></i> <span data-i18n="admin.staff.addBtn">Tambah</span>
               </button>
             </form>
+            <!-- Search bar -->
+            <div style="position:relative;margin-bottom:0.85rem;max-width:340px;">
+              <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;pointer-events:none;"></i>
+              <input id="staff-search-input" type="text" placeholder="Cari nama staf..."
+                style="width:100%;padding:9px 12px 9px 34px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-main);font-size:0.875rem;outline:none;"
+                oninput="staffSearchFilter(this.value)" autocomplete="off">
+              <div id="staff-search-suggestions"
+                style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:999;max-height:220px;overflow-y:auto;"></div>
+            </div>
             <div class="table-container">
               <table>
                 <thead><tr>
@@ -4578,41 +4587,88 @@
       });
     }
 
+    let _staffTableData = []; // cache for search
+
     async function renderStaffTable() {
       const tbody = document.getElementById('staff-table-body');
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
-        const staffList = sortStaffList(await res.json());
-
-        const SEKTORS = ['SPr','SPb','SPbM','SPS','SPP','SPsK','SP','PTIS'];
-        tbody.innerHTML = staffList.map((s) => `
-          <tr>
-            <td style="font-weight:600; color:var(--text-main);">${escapeHtml(s.nama)}</td>
-            <td>${escapeHtml(s.email)}</td>
-            <td>${escapeHtml(s.jawatan)}</td>
-            <td>
-              <select onchange="adminUpdateSektor('${s.email}','${escapeHtml(s.nama)}',this.value)"
-                style="font-size:0.75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:2px 7px;color:var(--text-main);font-weight:600;cursor:pointer;">
-                ${SEKTORS.map(sk => `<option value="${sk}" ${sk===s.sektor?'selected':''}>${sk}</option>`).join('')}
-              </select>
-            </td>
-            <td style="text-align:center;">
-              <div style="display:flex;gap:4px;justify-content:center;">
-                <button class="action-btn" onclick="resetStaffMember('${escapeHtml(s.email)}','${escapeHtml(s.nama)}')" title="Reset Pendaftaran" style="background:rgba(180,83,9,0.25);border-color:rgba(180,83,9,0.4);">
-                  <i class="fa-solid fa-rotate-left"></i>
-                </button>
-                <button class="action-btn" onclick="deleteStaffMember('${escapeHtml(s.email)}')" title="Padam Pengguna">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `).join('') || `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('admin.staff.empty')}</td></tr>`;
+        _staffTableData = sortStaffList(await res.json());
+        _renderStaffRows(_staffTableData);
       } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('toast.failLoad')}</td></tr>`;
       }
     }
+
+    function _renderStaffRows(list) {
+      const tbody = document.getElementById('staff-table-body');
+      const SEKTORS = ['SPr','SPb','SPbM','SPS','SPP','SPsK','SP','PTIS'];
+      tbody.innerHTML = list.map((s) => `
+        <tr>
+          <td style="font-weight:600; color:var(--text-main);">${escapeHtml(s.nama)}</td>
+          <td>${escapeHtml(s.email)}</td>
+          <td>${escapeHtml(s.jawatan)}</td>
+          <td>
+            <select onchange="adminUpdateSektor('${s.email}','${escapeHtml(s.nama)}',this.value)"
+              style="font-size:0.75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:2px 7px;color:var(--text-main);font-weight:600;cursor:pointer;">
+              ${SEKTORS.map(sk => `<option value="${sk}" ${sk===s.sektor?'selected':''}>${sk}</option>`).join('')}
+            </select>
+          </td>
+          <td style="text-align:center;">
+            <div style="display:flex;gap:4px;justify-content:center;">
+              <button class="action-btn" onclick="resetStaffMember('${escapeHtml(s.email)}','${escapeHtml(s.nama)}')" title="Reset Pendaftaran" style="background:rgba(180,83,9,0.25);border-color:rgba(180,83,9,0.4);">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <button class="action-btn" onclick="deleteStaffMember('${escapeHtml(s.email)}')" title="Padam Pengguna">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('') || `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('admin.staff.empty')}</td></tr>`;
+    }
+
+    function staffSearchFilter(query) {
+      const q = query.trim().toLowerCase();
+      const suggestions = document.getElementById('staff-search-suggestions');
+
+      // Filter table rows live
+      const filtered = q ? _staffTableData.filter(s => (s.nama||'').toLowerCase().includes(q)) : _staffTableData;
+      _renderStaffRows(filtered);
+
+      // Auto-suggest dropdown
+      if (!q || !_staffTableData.length) { suggestions.style.display = 'none'; return; }
+      const matches = _staffTableData.filter(s => (s.nama||'').toLowerCase().includes(q)).slice(0, 8);
+      if (!matches.length) { suggestions.style.display = 'none'; return; }
+
+      suggestions.innerHTML = matches.map(s => {
+        const highlighted = escapeHtml(s.nama).replace(new RegExp(`(${escapeHtml(q)})`, 'gi'), '<strong>$1</strong>');
+        return `<div onclick="staffSearchSelect('${escapeHtml(s.nama)}')"
+          style="padding:9px 14px;cursor:pointer;font-size:0.875rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"
+          onmouseover="this.style.background='var(--bg-hover,#f1f5f9)'" onmouseout="this.style.background=''">
+          <span>${highlighted}</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px;">${escapeHtml(s.sektor||'')}</span>
+        </div>`;
+      }).join('');
+      suggestions.style.display = 'block';
+    }
+
+    function staffSearchSelect(nama) {
+      const input = document.getElementById('staff-search-input');
+      const suggestions = document.getElementById('staff-search-suggestions');
+      input.value = nama;
+      suggestions.style.display = 'none';
+      staffSearchFilter(nama);
+    }
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#staff-search-input') && !e.target.closest('#staff-search-suggestions')) {
+        const s = document.getElementById('staff-search-suggestions');
+        if (s) s.style.display = 'none';
+      }
+    });
 
     async function handleAddStaff(event) {
       event.preventDefault();
