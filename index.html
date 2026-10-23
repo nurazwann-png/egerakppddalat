@@ -657,9 +657,8 @@
     .notice-badge-sektor { background:#eff6ff; color:#1d4ed8; border-radius:20px; padding:3px 11px; font-size:0.72rem; font-weight:800; letter-spacing:.04em; border:1px solid #bfdbfe; }
     .notice-card-date { font-size:0.73rem; color:#64748b; font-weight:500; }
     .notice-card-author { font-size:0.73rem; color:#1d4ed8; font-weight:700; display:flex; align-items:center; gap:4px; }
-    .notice-card-del { position:absolute; top:12px; right:12px; background:none; border:none; color:#94a3b8; cursor:pointer; opacity:0; font-size:0.8rem; padding:5px 8px; border-radius:7px; transition:all .2s; }
-    .notice-card:hover .notice-card-del { opacity:.6; }
-    .notice-card-del:hover { opacity:1 !important; color:#dc2626; background:rgba(239,68,68,.1); }
+    .notice-card-del { position:absolute; top:12px; right:12px; background:none; border:none; color:#94a3b8; cursor:pointer; opacity:.45; font-size:0.8rem; padding:5px 8px; border-radius:7px; transition:all .2s; }
+    .notice-card-del:hover { opacity:1; color:#dc2626; background:rgba(239,68,68,.1); }
     .notice-empty { font-size:0.84rem; color:var(--text-muted); text-align:center; padding:2rem; opacity:.55; display:flex; flex-direction:column; align-items:center; gap:8px; }
     .notice-empty i { font-size:1.6rem; opacity:.4; }
 
@@ -7486,6 +7485,7 @@
       const dateStr = d.toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
       const timeStr = d.toLocaleTimeString('ms-MY', { hour:'2-digit', minute:'2-digit' });
       const isOwner = currentUserSession && n.created_by === currentUserSession.email;
+      const canDelete = isOwner || !!adminToken;
       const displayName = (n.nama && n.nama !== 'undefined' && n.nama !== 'null') ? escHtml(n.nama) : escHtml(n.created_by.split('@')[0]);
       return `<div class="notice-card">
         <div class="notice-card-head">
@@ -7498,7 +7498,7 @@
           <span class="notice-card-author"><i class="fa-solid fa-circle-user" style="opacity:.6;margin-right:3px"></i>${displayName}</span>
           <span class="notice-card-date">· ${dateStr}, ${timeStr}</span>
         </div>
-        ${isOwner ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam"><i class="fa-solid fa-trash"></i></button>` : ''}
+        ${canDelete ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam pemakluman"><i class="fa-solid fa-trash"></i></button>` : ''}
       </div>`;
     }
 
