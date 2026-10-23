@@ -1317,10 +1317,12 @@
       background: rgba(15, 23, 42, 0.4);
     }
 
-    #movement-table td {
+    #movement-table td,
+    #admin-records-table td {
       overflow: hidden;
     }
-    #movement-table .badge {
+    #movement-table .badge,
+    #admin-records-table .badge {
       white-space: normal;
       word-break: break-word;
     }
@@ -2475,12 +2477,12 @@
               <button onclick="clearAdminDateFilter()" style="font-size:0.78rem;padding:6px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-muted);cursor:pointer;"><i class="fa-solid fa-xmark"></i> <span data-i18n="admin.records.clearDate">Kosongkan Tarikh</span></button>
             </div>
             <div class="table-container">
-              <table>
+              <table id="admin-records-table" style="table-layout:fixed;width:100%;">
                 <thead><tr>
                   <th style="width:40px;text-align:center;">#</th>
-                  <th data-i18n="col.nama">Nama Pegawai</th><th data-i18n="col.sektor">Sektor</th><th data-i18n="col.tarikh">Tarikh</th>
-                  <th data-i18n="col.dest">Destinasi</th><th data-i18n="col.tujuan">Tujuan</th>
-                  <th style="width:60px;text-align:center;" data-i18n="col.tindakan">Tindakan</th>
+                  <th style="width:150px;" data-i18n="col.nama">Nama Pegawai</th><th style="width:65px;" data-i18n="col.sektor">Sektor</th><th style="width:90px;" data-i18n="col.tarikh">Tarikh</th>
+                  <th style="width:160px;" data-i18n="col.dest">Destinasi</th><th style="width:150px;" data-i18n="col.tujuan">Tujuan</th>
+                  <th style="width:60px;text-align:center;position:sticky;right:0;z-index:2;background:var(--bg-table-header,var(--bg-card));" data-i18n="col.tindakan">Tindakan</th>
                 </tr></thead>
                 <tbody id="admin-records-table-body"></tbody>
               </table>
@@ -5238,7 +5240,7 @@
           <td>${displayDate}</td>
           <td>${escapeHtml(r.destinasi)}</td>
           <td><span class="badge ${badgeClass}">${escapeHtml(r.tujuan)}</span></td>
-          <td style="text-align:center;">
+          <td style="text-align:center;position:sticky;right:0;z-index:1;background:var(--bg-card);">
             <button class="action-btn" onclick="adminDeleteRecord('${r.id}')" title="Padam Rekod"><i class="fa-solid fa-trash-can"></i></button>
           </td>
         </tr>`;
