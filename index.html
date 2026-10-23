@@ -2462,6 +2462,7 @@
             <div class="table-container">
               <table>
                 <thead><tr>
+                  <th style="width:40px;text-align:center;">#</th>
                   <th data-i18n="col.nama">Nama Pegawai</th><th data-i18n="col.sektor">Sektor</th><th data-i18n="col.tarikh">Tarikh</th>
                   <th data-i18n="col.dest">Destinasi</th><th data-i18n="col.tujuan">Tujuan</th>
                   <th style="width:60px;text-align:center;" data-i18n="col.tindakan">Tindakan</th>
@@ -2894,12 +2895,13 @@
           <table id="movement-table">
             <thead>
               <tr>
+                <th style="width:36px;text-align:center;">#</th>
                 <th data-i18n="analisis.col.nama">Nama Pegawai</th>
-                <th data-i18n="analisis.col.tarikh">Tarikh</th>
-                <th data-i18n="analisis.col.dest">Destinasi / Lokasi</th>
-                <th data-i18n="analisis.col.tujuan">Tujuan</th>
-                <th data-i18n="analisis.col.nota">Nota</th>
-                <th style="width: 80px; text-align: center;" data-i18n="analisis.col.tindakan">Tindakan</th>
+                <th style="width:100px;" data-i18n="analisis.col.tarikh">Tarikh</th>
+                <th style="width:140px;" data-i18n="analisis.col.dest">Destinasi / Lokasi</th>
+                <th style="width:160px;" data-i18n="analisis.col.tujuan">Tujuan</th>
+                <th style="width:160px;" data-i18n="analisis.col.nota">Nota</th>
+                <th style="width:80px;text-align:center;position:sticky;right:0;z-index:2;background:var(--bg-table-header,var(--bg-card));" data-i18n="analisis.col.tindakan">Tindakan</th>
               </tr>
             </thead>
             <tbody id="table-body">
@@ -5127,11 +5129,12 @@
       );
       const sorted = sortByJawatanNamaTarikh(records);
 
-      tbody.innerHTML = sorted.map((r) => {
+      tbody.innerHTML = sorted.map((r, i) => {
         let displayDate = r.tarikh;
         try { const p = r.tarikh.split('-'); if (p.length===3) displayDate = `${p[2]}/${p[1]}/${p[0]}`; } catch(e){}
         const badgeClass = getTujuanBadgeClass(r.tujuan);
         return `<tr>
+          <td style="text-align:center;color:var(--text-muted);font-size:0.78rem;">${i + 1}</td>
           <td style="font-weight:600;color:var(--text-main);">${escapeHtml(r.nama)}</td>
           <td><span style="font-size:0.75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:2px 7px;color:var(--text-muted);font-weight:600;">${escapeHtml(r.sektor||'-')}</span></td>
           <td>${displayDate}</td>
@@ -5141,7 +5144,7 @@
             <button class="action-btn" onclick="adminDeleteRecord('${r.id}')" title="Padam Rekod"><i class="fa-solid fa-trash-can"></i></button>
           </td>
         </tr>`;
-      }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">${t('admin.records.empty')}</td></tr>`;
+      }).join('') || `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">${t('admin.records.empty')}</td></tr>`;
     }
 
     async function adminDeleteRecord(id) {
@@ -6053,7 +6056,8 @@
 
       const colors = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#dc2626','#0e9488','#ea580c'];
       const total = sorted.reduce((s, [, c]) => s + c, 0);
-      container.innerHTML = sorted.map(([tujuan, count], i) => {
+      const TOP_N = 5;
+      const mkCard = ([tujuan, count], i) => {
         const pct = total > 0 ? Math.round(count / total * 100) : 0;
         const barW = Math.round(count / max * 100);
         const color = colors[i % colors.length];
@@ -6064,7 +6068,14 @@
           <div class="tj-num">${count}</div>
           <div class="tj-pct">${pct}%</div>
         </div>`;
-      }).join('');
+      };
+      const topCards = sorted.slice(0, TOP_N).map(mkCard).join('');
+      const restCards = sorted.slice(TOP_N).map((e, i) => mkCard(e, TOP_N + i)).join('');
+      const hasMore = sorted.length > TOP_N;
+      container.innerHTML = topCards
+        + (hasMore ? `<div class="tj-rest" style="display:none;">${restCards}</div>
+          <button onclick="(function(btn){var r=btn.previousElementSibling;var open=r.style.display!=='none';r.style.display=open?'none':'flex';r.style.flexDirection='column';r.style.gap='5px';btn.textContent=open?'Lihat semua (${sorted.length - TOP_N} lagi) ▾':'Sembunyikan ▴';})(this)"
+            style="margin-top:6px;background:none;border:none;color:#1d4ed8;font-size:0.78rem;font-weight:600;cursor:pointer;padding:0;text-align:left;">Lihat semua (${sorted.length - TOP_N} lagi) ▾</button>` : '');
     }
 
     let activeStatDetail = null;
@@ -6489,7 +6500,7 @@
 
       const groups = groupConsecutiveRecords(periodRecords);
 
-      groups.forEach((group) => {
+      groups.forEach((group, rowIdx) => {
         const record = group[0];
         const tr = document.createElement('tr');
 
@@ -6524,12 +6535,13 @@
           : `<i class="fa-solid fa-lock" style="color: rgba(255,255,255,0.15);" title="Hanya penghantar asal boleh memadam rekod ini"></i>`;
 
         tr.innerHTML = `
+          <td style="text-align:center;color:var(--text-muted);font-size:0.78rem;">${rowIdx + 1}</td>
           <td style="font-weight:600; color: var(--text-main);">${escapeHtml(record.nama)}</td>
           <td>${displayDate}</td>
           <td><i class="fa-solid fa-location-dot" style="color:var(--accent-cyan); margin-right:6px;"></i> ${escapeHtml(record.destinasi)}</td>
           <td><span class="badge ${badgeClass}">${escapeHtml(record.tujuan)}</span></td>
           <td style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml(record.nota || '-')}</td>
-          <td style="text-align: center;">
+          <td style="text-align:center;position:sticky;right:0;z-index:1;background:var(--bg-card);">
             ${deleteCell}
           </td>
         `;
@@ -6646,27 +6658,46 @@
         return;
       }
 
-      active.forEach(t => {
-        const count = counts[t];
+      const TOP_N_INS = 5;
+      const mkInsBar = (label, idx) => {
+        const count = counts[label];
         const barPct = Math.round((count / maxCount) * 100);
         const totalPct = Math.round((count / totalCount) * 100);
-        const color = COLORS[t] || '#475569';
-        const id = `insight-bar-${t.replace(/\s/g,'-')}`;
-
+        const color = COLORS[label] || '#475569';
         const group = document.createElement('div');
         group.className = 'tj-card';
         group.style.cssText = `--fill:0%;--clr:${color};--clr-bg:${color}1a;`;
         group.innerHTML = `
           <div class="tj-fill"></div>
           <div class="tj-dot"></div>
-          <div class="tj-name" title="${escapeHtml(t)}">${escapeHtml(t)}</div>
-          <div class="tj-num" id="${id}">${count}</div>
+          <div class="tj-name" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
+          <div class="tj-num">${count}</div>
           <div class="tj-pct">${totalPct}%</div>
         `;
-        container.appendChild(group);
-
         setTimeout(() => { group.style.setProperty('--fill', `${barPct}%`); }, 80);
-      });
+        return group;
+      };
+
+      active.slice(0, TOP_N_INS).forEach((label, i) => container.appendChild(mkInsBar(label, i)));
+
+      if (active.length > TOP_N_INS) {
+        const restWrap = document.createElement('div');
+        restWrap.style.cssText = 'display:none;flex-direction:column;gap:5px;';
+        active.slice(TOP_N_INS).forEach((label, i) => restWrap.appendChild(mkInsBar(label, TOP_N_INS + i)));
+        container.appendChild(restWrap);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = `Lihat semua (${active.length - TOP_N_INS} lagi) ▾`;
+        toggleBtn.style.cssText = 'margin-top:6px;background:none;border:none;color:#1d4ed8;font-size:0.78rem;font-weight:600;cursor:pointer;padding:0;text-align:left;';
+        toggleBtn.onclick = function() {
+          const open = restWrap.style.display !== 'none';
+          restWrap.style.display = open ? 'none' : 'flex';
+          restWrap.style.flexDirection = 'column';
+          restWrap.style.gap = '5px';
+          toggleBtn.textContent = open ? `Lihat semua (${active.length - TOP_N_INS} lagi) ▾` : 'Sembunyikan ▴';
+        };
+        container.appendChild(toggleBtn);
+      }
     }
 
     // Calendar Visual Widget
