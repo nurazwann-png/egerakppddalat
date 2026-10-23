@@ -357,24 +357,17 @@ async function autoFillPejabat() {
     const nowUtc8 = new Date(Date.now() + 8 * 60 * 60 * 1000);
     const todayStr = nowUtc8.toISOString().slice(0, 10);
 
-    // Always fill up to (but not including) the current week's Monday
-    const dayOfWeek = nowUtc8.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
-    const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek; // days since last Monday
-    const thisMonday = new Date(nowUtc8);
-    thisMonday.setUTCDate(nowUtc8.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-    const thisMondayStr = thisMonday.toISOString().slice(0, 10);
-
-    // Look back 4 weeks max (avoid processing ancient history every run)
+    // Fill weekdays from 4 weeks ago up to and including today
     const lookbackMs = 4 * 7 * 24 * 60 * 60 * 1000;
     const cutoff = new Date(nowUtc8.getTime() - lookbackMs);
     const cutoffStr = cutoff.toISOString().slice(0, 10);
 
-    // Build list of all weekdays (Mon–Fri) in [cutoffStr, thisMondayStr)
+    // Build list of all weekdays (Mon–Fri) in [cutoffStr, todayStr]
     const weekdays = [];
     const d = new Date(cutoffStr + 'T00:00:00Z');
     while (true) {
       const ds = d.toISOString().slice(0, 10);
-      if (ds >= thisMondayStr) break;
+      if (ds > todayStr) break;
       const dow = d.getUTCDay(); // 1=Mon ... 5=Fri
       if (dow >= 1 && dow <= 5) weekdays.push(ds);
       d.setUTCDate(d.getUTCDate() + 1);
@@ -387,8 +380,8 @@ async function autoFillPejabat() {
 
     // Fetch existing movement records in the date range (any tujuan) for these staff
     const { rows: existing } = await pool.query(
-      `SELECT nama, tarikh FROM movements WHERE tarikh >= $1 AND tarikh < $2`,
-      [cutoffStr, thisMondayStr]
+      `SELECT nama, tarikh FROM movements WHERE tarikh >= $1 AND tarikh <= $2`,
+      [cutoffStr, todayStr]
     );
     // Build a Set of "nama::tarikh" that already have records
     const hasRecord = new Set(existing.map(r => `${(r.nama||'').toUpperCase().trim()}::${r.tarikh}`));
@@ -424,31 +417,18 @@ async function autoFillPejabat() {
 }
 
 // Schedule: run every Monday at ~00:05 MYT (16:05 UTC Sunday)
+// Schedule: run daily at ~00:05 MYT (16:05 UTC previous day)
 function scheduleAutoFillPejabat() {
-  const nowUtc8 = new Date(Date.now() + 8 * 60 * 60 * 1000);
-  const dayOfWeek = nowUtc8.getUTCDay(); // 0=Sun,1=Mon
-  const hour = nowUtc8.getUTCHours();
-  const min = nowUtc8.getUTCMinutes();
-
-  // Next Monday 00:05 MYT = Sunday 16:05 UTC
-  let msUntilNext;
+  const nowUtc = Date.now();
   const targetHourUtc = 16, targetMinUtc = 5;
-  const targetDay = 0; // Sunday UTC = Monday 00:xx MYT
-
-  const daysUntilSunday = (7 + targetDay - dayOfWeek) % 7 || 7;
-  const nextRun = new Date(nowUtc8);
-  nextRun.setUTCDate(nowUtc8.getUTCDate() + daysUntilSunday);
+  const nextRun = new Date(nowUtc);
   nextRun.setUTCHours(targetHourUtc, targetMinUtc, 0, 0);
-  // If today is Sunday and we haven't passed the target time yet, use today
-  if (dayOfWeek === targetDay && (hour < targetHourUtc || (hour === targetHourUtc && min < targetMinUtc))) {
-    nextRun.setUTCDate(nowUtc8.getUTCDate());
-  }
-  msUntilNext = nextRun.getTime() - (Date.now() + 8 * 60 * 60 * 1000);
-  if (msUntilNext < 0) msUntilNext += 7 * 24 * 60 * 60 * 1000;
+  if (nextRun.getTime() <= nowUtc) nextRun.setUTCDate(nextRun.getUTCDate() + 1);
+  const msUntilNext = nextRun.getTime() - nowUtc;
 
   setTimeout(async () => {
     await autoFillPejabat();
-    setInterval(autoFillPejabat, 7 * 24 * 60 * 60 * 1000); // then every 7 days
+    setInterval(autoFillPejabat, 24 * 60 * 60 * 1000);
   }, msUntilNext);
   console.log(`[auto-pejabat] Dijadualkan untuk berjalan dalam ${Math.round(msUntilNext / 3600000)} jam.`);
 }
