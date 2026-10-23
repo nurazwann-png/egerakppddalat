@@ -641,22 +641,22 @@
     .notice-list { display:flex; flex-direction:column; gap:1rem; }
     .notice-card {
       background:#ffffff;
-      border:1px solid #dbeafe;
+      border:1px solid rgba(var(--sector-rgb,0,53,128),0.2);
       border-left:5px solid var(--primary-blue);
       border-radius:14px; padding:1.1rem 1.2rem 1rem; position:relative;
       transition:box-shadow .25s, transform .25s;
-      box-shadow:0 2px 12px rgba(0,53,128,0.08);
+      box-shadow:0 2px 12px rgba(var(--sector-rgb,0,53,128),0.08);
     }
-    .notice-card:hover { box-shadow:0 6px 24px rgba(0,53,128,0.14); transform:translateY(-2px); }
+    .notice-card:hover { box-shadow:0 6px 24px rgba(var(--sector-rgb,0,53,128),0.16); transform:translateY(-2px); }
     .notice-card-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; padding-right:30px; }
-    .notice-card-icon { width:40px; height:40px; border-radius:11px; background:linear-gradient(135deg,#003580,#1d4ed8); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 10px rgba(0,53,128,0.35); }
+    .notice-card-icon { width:40px; height:40px; border-radius:11px; background:var(--primary-blue); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 3px 10px rgba(var(--sector-rgb,0,53,128),0.35); }
     .notice-card-icon i { font-size:0.95rem; color:#ffffff; }
     .notice-card-tajuk { font-weight:800; font-size:1rem; color:#0f172a; line-height:1.35; letter-spacing:-0.01em; }
     .notice-card-isi { font-size:0.875rem; color:#334155; line-height:1.7; white-space:pre-wrap; margin-left:52px; }
     .notice-card-footer { display:flex; align-items:center; gap:8px; margin-top:12px; margin-left:52px; flex-wrap:wrap; }
-    .notice-badge-sektor { background:#eff6ff; color:#1d4ed8; border-radius:20px; padding:3px 11px; font-size:0.72rem; font-weight:800; letter-spacing:.04em; border:1px solid #bfdbfe; }
+    .notice-badge-sektor { background:rgba(var(--sector-rgb,0,53,128),0.1); color:var(--primary-blue); border-radius:20px; padding:3px 11px; font-size:0.72rem; font-weight:800; letter-spacing:.04em; border:1px solid rgba(var(--sector-rgb,0,53,128),0.25); }
     .notice-card-date { font-size:0.73rem; color:#64748b; font-weight:500; }
-    .notice-card-author { font-size:0.73rem; color:#1d4ed8; font-weight:700; display:flex; align-items:center; gap:4px; }
+    .notice-card-author { font-size:0.73rem; color:var(--primary-blue); font-weight:700; display:flex; align-items:center; gap:4px; }
     .notice-card-del { position:absolute; top:12px; right:12px; background:none; border:none; color:#94a3b8; cursor:pointer; opacity:.45; font-size:0.8rem; padding:5px 8px; border-radius:7px; transition:all .2s; }
     .notice-card-del:hover { opacity:1; color:#dc2626; background:rgba(239,68,68,.1); }
     .notice-empty { font-size:0.84rem; color:var(--text-muted); text-align:center; padding:2rem; opacity:.55; display:flex; flex-direction:column; align-items:center; gap:8px; }
@@ -7487,18 +7487,15 @@
       const isOwner = currentUserSession && n.created_by === currentUserSession.email;
       const canDelete = isOwner || !!adminToken;
       const displayName = (n.nama && n.nama !== 'undefined' && n.nama !== 'null') ? escHtml(n.nama) : escHtml(n.created_by.split('@')[0]);
-      const SEKTOR_COLOR = { SPr:'#003580', SPb:'#16a34a', SPbM:'#d97706', SP:'#7c3aed', SPS:'#0891b2', SPP:'#be185d', SPsK:'#7e22ce', PTIS:'#dc2626' };
-      const sc = (n.sektor && SEKTOR_COLOR[n.sektor]) ? SEKTOR_COLOR[n.sektor] : '#003580';
-      const scAlpha = sc + '22';
-      return `<div class="notice-card" style="border-left-color:${sc};border-color:${sc}33;">
+      return `<div class="notice-card">
         <div class="notice-card-head">
-          <div class="notice-card-icon" style="background:${sc};"><i class="fa-solid fa-bullhorn"></i></div>
+          <div class="notice-card-icon"><i class="fa-solid fa-bullhorn"></i></div>
           <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
         </div>
         <div class="notice-card-isi">${escHtml(n.isi)}</div>
         <div class="notice-card-footer">
-          ${n.sektor ? `<span class="notice-badge-sektor" style="background:${scAlpha};color:${sc};border-color:${sc}55;">${escHtml(n.sektor)}</span>` : ''}
-          <span class="notice-card-author" style="color:${sc};"><i class="fa-solid fa-circle-user" style="opacity:.7;margin-right:3px"></i>${displayName}</span>
+          ${n.sektor ? `<span class="notice-badge-sektor">${escHtml(n.sektor)}</span>` : ''}
+          <span class="notice-card-author"><i class="fa-solid fa-circle-user" style="opacity:.7;margin-right:3px"></i>${displayName}</span>
           <span class="notice-card-date">· ${dateStr}, ${timeStr}</span>
         </div>
         ${canDelete ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam pemakluman"><i class="fa-solid fa-trash"></i></button>` : ''}
