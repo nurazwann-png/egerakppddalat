@@ -2425,7 +2425,7 @@
             <div class="table-container">
               <table>
                 <thead><tr>
-                  <th data-i18n="col.nama">Nama Pegawai</th><th data-i18n="col.email">E-mel</th><th data-i18n="col.sektor">Sektor</th>
+                  <th style="width:36px;text-align:center;">#</th><th data-i18n="col.nama">Nama Pegawai</th><th data-i18n="col.email">E-mel</th><th data-i18n="col.sektor">Sektor</th>
                   <th data-i18n="col.jumlah">Jumlah Rekod</th><th data-i18n="col.topTujuan">Tujuan Paling Kerap</th>
                 </tr></thead>
                 <tbody id="user-stats-table-body"></tbody>
@@ -2528,7 +2528,7 @@
             <div class="table-container">
               <table>
                 <thead><tr>
-                  <th data-i18n="admin.staff.namaLabel">Nama</th><th data-i18n="admin.staff.emailLabel">E-mel</th><th data-i18n="admin.staff.jawatanLabel">Jawatan</th><th data-i18n="admin.staff.sektorHeader">Sektor</th>
+                  <th style="width:36px;text-align:center;">#</th><th data-i18n="admin.staff.namaLabel">Nama</th><th data-i18n="admin.staff.emailLabel">E-mel</th><th data-i18n="admin.staff.jawatanLabel">Jawatan</th><th data-i18n="admin.staff.sektorHeader">Sektor</th>
                   <th style="width:60px;text-align:center;" data-i18n="admin.staff.tindakanHeader">Tindakan</th>
                 </tr></thead>
                 <tbody id="staff-table-body"></tbody>
@@ -4619,15 +4619,16 @@
         _renderStaffRows(_staffTableData);
       } catch (err) {
         console.error(err);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('toast.failLoad')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">${t('toast.failLoad')}</td></tr>`;
       }
     }
 
     function _renderStaffRows(list) {
       const tbody = document.getElementById('staff-table-body');
       const SEKTORS = ['SPr','SPb','SPbM','SPS','SPP','SPsK','SP','PTIS'];
-      tbody.innerHTML = list.map((s) => `
+      tbody.innerHTML = list.map((s, i) => `
         <tr>
+          <td style="text-align:center;color:var(--text-muted);font-size:0.78rem;">${i + 1}</td>
           <td style="font-weight:600; color:var(--text-main);">${escapeHtml(s.nama)}</td>
           <td>${escapeHtml(s.email)}</td>
           <td>${escapeHtml(s.jawatan)}</td>
@@ -4838,10 +4839,11 @@
 
       const rows = Object.values(byUser).sort((a, b) => b.count - a.count);
 
-      tbody.innerHTML = rows.map((u) => {
+      tbody.innerHTML = rows.map((u, i) => {
         const topTujuan = Object.entries(u.tujuanCounts).sort((a, b) => b[1] - a[1])[0];
         return `
           <tr>
+            <td style="text-align:center;color:var(--text-muted);font-size:0.78rem;">${i + 1}</td>
             <td style="font-weight:600; color:var(--text-main);">${escapeHtml(u.nama)}</td>
             <td>${escapeHtml(u.email)}</td>
             <td><span style="font-size:0.75rem;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;padding:2px 7px;color:var(--text-muted);font-weight:600;">${escapeHtml(u.sektor)}</span></td>
