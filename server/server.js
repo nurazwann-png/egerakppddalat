@@ -1301,6 +1301,23 @@ CARA MENJAWAB:
   }
 });
 
+// ── One-time: uppercase semua nama staf dan pergerakan dalam DB ───────────────
+async function fixStaffNamesUppercase() {
+  try {
+    // Uppercase nama dalam jadual staff
+    const { rowCount: sc } = await pool.query(
+      `UPDATE staff SET nama = UPPER(nama) WHERE nama != UPPER(nama)`
+    );
+    // Uppercase nama dalam jadual movements
+    const { rowCount: mc } = await pool.query(
+      `UPDATE movements SET nama = UPPER(nama) WHERE nama != UPPER(nama)`
+    );
+    if (sc > 0 || mc > 0) console.log(`[fix-uppercase] Kemaskini ${sc} staf, ${mc} rekod pergerakan ke huruf besar.`);
+  } catch (err) {
+    console.error('[fix-uppercase] Ralat:', err.message);
+  }
+}
+
 // ── One-time: gabung nama staf pendua (prefix "ENCIK"/"PUAN") ────────────────
 async function fixDuplicateStaffNames() {
   try {
@@ -1360,6 +1377,8 @@ initDb()
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
+    // One-time: uppercase semua nama sedia ada dalam DB
+    fixStaffNamesUppercase();
     // One-time: betulkan nama staf pendua
     fixDuplicateStaffNames();
     // Auto-fill "Berada di Pejabat" for past weeks
