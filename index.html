@@ -7487,15 +7487,18 @@
       const isOwner = currentUserSession && n.created_by === currentUserSession.email;
       const canDelete = isOwner || !!adminToken;
       const displayName = (n.nama && n.nama !== 'undefined' && n.nama !== 'null') ? escHtml(n.nama) : escHtml(n.created_by.split('@')[0]);
-      return `<div class="notice-card">
+      const SEKTOR_COLOR = { SPr:'#003580', SPb:'#16a34a', SPbM:'#d97706', SP:'#7c3aed', SPS:'#0891b2', SPP:'#be185d', SPsK:'#7e22ce', PTIS:'#dc2626' };
+      const sc = (n.sektor && SEKTOR_COLOR[n.sektor]) ? SEKTOR_COLOR[n.sektor] : '#003580';
+      const scAlpha = sc + '22';
+      return `<div class="notice-card" style="border-left-color:${sc};border-color:${sc}33;">
         <div class="notice-card-head">
-          <div class="notice-card-icon"><i class="fa-solid fa-bullhorn"></i></div>
+          <div class="notice-card-icon" style="background:${sc};"><i class="fa-solid fa-bullhorn"></i></div>
           <div class="notice-card-tajuk">${escHtml(n.tajuk)}</div>
         </div>
         <div class="notice-card-isi">${escHtml(n.isi)}</div>
         <div class="notice-card-footer">
-          ${n.sektor ? `<span class="notice-badge-sektor">${escHtml(n.sektor)}</span>` : ''}
-          <span class="notice-card-author"><i class="fa-solid fa-circle-user" style="opacity:.6;margin-right:3px"></i>${displayName}</span>
+          ${n.sektor ? `<span class="notice-badge-sektor" style="background:${scAlpha};color:${sc};border-color:${sc}55;">${escHtml(n.sektor)}</span>` : ''}
+          <span class="notice-card-author" style="color:${sc};"><i class="fa-solid fa-circle-user" style="opacity:.7;margin-right:3px"></i>${displayName}</span>
           <span class="notice-card-date">· ${dateStr}, ${timeStr}</span>
         </div>
         ${canDelete ? `<button class="notice-card-del" onclick="deleteNotice('${n.id}')" title="Padam pemakluman"><i class="fa-solid fa-trash"></i></button>` : ''}
