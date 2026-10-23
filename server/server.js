@@ -637,8 +637,8 @@ const server = http.createServer(async (req, res) => {
       }
       // Remove any 'Berada di Pejabat' records for this staff+date (auto or manual) before inserting real record
       await pool.query(
-        `DELETE FROM movements WHERE nama = $1 AND tarikh = $2 AND tujuan = 'Berada di Pejabat'`,
-        [nama, tarikh]
+        `DELETE FROM movements WHERE submittedby = $1 AND tarikh = $2 AND tujuan = 'Berada di Pejabat'`,
+        [submittedBy, tarikh]
       );
 
       // Duplicate check: same person, same date, same destination & tujuan (by their own email)

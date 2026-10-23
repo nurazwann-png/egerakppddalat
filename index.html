@@ -5041,26 +5041,40 @@
         if (!r.sektor || !r.tujuan || !data[r.sektor]) return;
         data[r.sektor][r.tujuan] = (data[r.sektor][r.tujuan] || 0) + 1;
       });
+      const TOP_N = 5;
       container.innerHTML = SEKTORS.map((s, si) => {
         const entries = Object.entries(data[s]).sort((a, b) => b[1] - a[1]);
         if (!entries.length) return '';
         const sMax = entries[0][1];
         const color = COLORS[si % COLORS.length];
-        const bars = entries.map(([tujuan, count]) => {
+        const uid = 'tjs-' + s;
+        const mkBar = ([tujuan, count]) => {
           const pct = Math.round(count / sMax * 100);
           return `<div class="tj-card" style="--fill:${pct}%;--clr:${color};--clr-bg:${color}1a;padding:7px 12px;">
             <div class="tj-fill"></div><div class="tj-dot" style="width:7px;height:7px;"></div>
             <div class="tj-name" style="font-size:0.75rem;" title="${escapeHtml(tujuan)}">${escapeHtml(tujuan)}</div>
             <div class="tj-num" style="font-size:0.8rem;">${count}</div>
           </div>`;
-        }).join('');
-        return `<div style="border:1px solid var(--border-color);border-radius:10px;overflow:hidden;">
+        };
+        const topBars = entries.slice(0, TOP_N).map(mkBar).join('');
+        const restBars = entries.slice(TOP_N).map(mkBar).join('');
+        const hasMore = entries.length > TOP_N;
+        const toggleBtn = hasMore ? `
+          <button onclick="(function(btn){
+            var rest=btn.closest('.tjs-wrap').querySelector('.tjs-rest');
+            var expanded=rest.style.display!=='none';
+            rest.style.display=expanded?'none':'flex';
+            btn.textContent=expanded?'Lihat semua (${entries.length - TOP_N} lagi) ▾':'Sembunyikan ▴';
+          })(this)" style="margin:6px 12px 10px;background:none;border:none;color:${color};font-size:0.75rem;font-weight:600;cursor:pointer;text-align:left;padding:0;">Lihat semua (${entries.length - TOP_N} lagi) ▾</button>` : '';
+        return `<div style="border:1px solid var(--border-color);border-radius:10px;overflow:hidden;" class="tjs-wrap">
           <div style="padding:10px 14px;background:${color}0f;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:8px;">
             <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;"></span>
             <span style="font-size:0.82rem;font-weight:700;color:var(--text-main);">${s}</span>
             <span style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;">${entries.reduce((a,[,c])=>a+c,0)} rekod</span>
           </div>
-          <div style="padding:10px;display:flex;flex-direction:column;gap:4px;">${bars}</div>
+          <div style="padding:10px;display:flex;flex-direction:column;gap:4px;">${topBars}</div>
+          <div class="tjs-rest" style="padding:0 10px;display:none;flex-direction:column;gap:4px;">${restBars}</div>
+          ${toggleBtn}
         </div>`;
       }).filter(Boolean).join('') || `<div class="detail-empty">${t('empty.data')}</div>`;
     }
