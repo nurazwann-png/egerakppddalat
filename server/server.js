@@ -1194,7 +1194,7 @@ const server = http.createServer(async (req, res) => {
       if (!userMessage) { sendJSON(res, 400, { error: 'Mesej kosong.' }); return; }
 
       const { rows: allRecords } = await pool.query('SELECT * FROM movements ORDER BY tarikh DESC LIMIT 500');
-      const todayStr = new Date().toLocaleDateString('en-CA');
+      const todayStr = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
       const contextLines = allRecords.map(r =>
         `- ${r.nama} | ${r.sektor || '-'} | ${r.tarikh} | Tujuan: ${r.tujuan} | Destinasi: ${r.destinasi} | Balik: ${r.masa_balik || 'tidak dinyatakan'}`
       ).join('\n');
