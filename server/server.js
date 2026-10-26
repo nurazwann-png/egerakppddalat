@@ -1207,7 +1207,7 @@ STRICT RULES:
 - Write in plain natural sentences
 - Keep it SHORT: 2-4 sentences maximum, or a brief conversational list using numbers (1. 2. 3.) if listing multiple people
 - Be warm and direct, like a chat message between colleagues
-- Today's date: ${todayStr}
+- IMPORTANT: Today's exact date is ${todayStr}. Do NOT use your training data to determine the date. Use ONLY this date.
 - User sector: ${sektor || 'unknown'}
 
 MOVEMENT RECORDS:
@@ -1225,7 +1225,7 @@ PERATURAN KETAT:
 - Tulis dalam ayat biasa yang natural
 - PENDEK: maksimum 2-4 ayat, atau senarai ringkas menggunakan nombor (1. 2. 3.) jika ada banyak nama
 - Nada mesra dan terus, seperti mesej WhatsApp antara rakan sekerja
-- Tarikh hari ini: ${todayStr}
+- PENTING: Tarikh tepat hari ini ialah ${todayStr}. Jangan gunakan pengetahuan latihan anda untuk menentukan tarikh. Gunakan HANYA tarikh yang diberikan ini.
 - Sektor pengguna: ${sektor || 'tidak diketahui'}
 
 REKOD PERGERAKAN:
