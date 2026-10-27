@@ -1317,14 +1317,6 @@ async function fixStaffNamesUppercase() {
       `UPDATE movements SET nama = UPPER(nama) WHERE nama != UPPER(nama)`
     );
     if (sc > 0 || mc > 0) console.log(`[fix-uppercase] Kemaskini ${sc} staf, ${mc} rekod pergerakan ke huruf besar.`);
-
-    // Padam rekod pergerakan yang namanya tiada dalam jadual staff (rekod yatim)
-    const { rowCount: orphaned } = await pool.query(`
-      DELETE FROM movements
-      WHERE submittedby = 'system'
-        AND nama NOT IN (SELECT nama FROM staff)
-    `);
-    if (orphaned > 0) console.log(`[fix-uppercase] Padam ${orphaned} rekod auto-fill yatim (nama tiada dalam staff).`);
   } catch (err) {
     console.error('[fix-uppercase] Ralat:', err.message);
   }
