@@ -400,11 +400,12 @@ async function autoFillPejabat() {
         const dowCheck = new Date(day + 'T00:00:00Z').getUTCDay();
         if (dowCheck === 0 || dowCheck === 6) continue;
         if (hasRecord.has(`${namaKey}::${day}`)) continue; // already has a record for this day
-        const id = generateId();
+        // ID deterministik supaya ON CONFLICT betul-betul elak pendua
+        const id = `auto-${namaKey.replace(/[^A-Z0-9]/g, '_')}-${day}`;
         await pool.query(
           `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-           ON CONFLICT DO NOTHING`,
+           ON CONFLICT (id) DO NOTHING`,
           [id, staff.nama, day, 'PPD Dalat', 'Berada di Pejabat', '', '', 'system', staff.sektor || 'SPr', new Date().toISOString()]
         );
         inserted++;
@@ -1305,6 +1306,27 @@ CARA MENJAWAB:
   }
 });
 
+// ── One-time: betulkan nama staf yang ada typo "1" di hujung ─────────────────
+async function fixSpecificNameTypos() {
+  const typos = [
+    { wrong: 'MOHAMAD SAHRIN BIN SULAIMAN1', correct: 'MOHAMAD SAHRIN BIN SULAIMAN' },
+  ];
+  try {
+    for (const { wrong, correct } of typos) {
+      const { rowCount: s } = await pool.query(
+        `UPDATE staff SET nama = $1 WHERE nama = $2`, [correct, wrong]
+      );
+      const { rowCount: m } = await pool.query(
+        `UPDATE movements SET nama = $1 WHERE nama = $2`, [correct, wrong]
+      );
+      if (s > 0 || m > 0)
+        console.log(`[fix-typo] "${wrong}" → "${correct}": ${s} staf, ${m} rekod pergerakan.`);
+    }
+  } catch (err) {
+    console.error('[fix-typo] Ralat:', err.message);
+  }
+}
+
 // ── One-time: uppercase semua nama staf dan pergerakan dalam DB ───────────────
 async function fixStaffNamesUppercase() {
   try {
@@ -1381,6 +1403,8 @@ initDb()
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
+    // One-time: betulkan typo nama staf tertentu
+    fixSpecificNameTypos();
     // One-time: uppercase semua nama sedia ada dalam DB
     fixStaffNamesUppercase();
     // One-time: betulkan nama staf pendua
