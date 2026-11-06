@@ -346,6 +346,21 @@ function parseMasaToMinutes(masa) {
   return parseInt(m[1]) * 60 + parseInt(m[2]);
 }
 
+// "08:00 - 17:00" → [480, 1020]; satu masa sahaja = dari masa itu hingga hujung hari
+function parseMasaRange(masa) {
+  const times = [...(masa || '').matchAll(/(\d{1,2})[:.](\d{2})/g)].map(m => parseInt(m[1]) * 60 + parseInt(m[2]));
+  if (!times.length) return null;
+  const start = times[0];
+  const end = times.length > 1 && times[1] > start ? times[1] : 24 * 60;
+  return [start, end];
+}
+
+function masaOverlaps(a, b) {
+  const ra = parseMasaRange(a), rb = parseMasaRange(b);
+  if (!ra || !rb) return false;
+  return ra[0] < rb[1] && rb[0] < ra[1];
+}
+
 // ── Auto-fill "Berada di Pejabat" ───────────────────────────────────────────
 // Setiap minggu, semua staf diisi "Berada di Pejabat" untuk Isnin–Jumaat minggu
 // semasa. Rekod auto (submittedby = 'system') diganti apabila staf merekod
@@ -677,21 +692,40 @@ const server = http.createServer(async (req, res) => {
         sendJSON(res, 403, { error: 'This e-mail is not on the staff roster' });
         return;
       }
-      // Remove any 'Berada di Pejabat' records for this staff+date (auto or manual) before inserting real record
-      await pool.query(
-        `DELETE FROM movements WHERE submittedby = $1 AND tarikh = $2 AND tujuan = 'Berada di Pejabat'`,
-        [submittedBy, tarikh]
-      );
 
-      // Duplicate check: same person, same date, same destination & tujuan (by their own email)
+      // Rekod sendiri pada hari sama dengan masa bertindih: minta pengesahan, ganti jika replace=true
+      const { rows: sameDay } = await pool.query(
+        `SELECT id, tarikh, destinasi, tujuan, masa FROM movements WHERE submittedby = $1 AND tarikh = $2 AND id <> $3`,
+        [submittedBy, tarikh, id]
+      );
+      const clashes = sameDay.filter(r => masaOverlaps(r.masa, masa));
+      if (clashes.length && body.replace !== true) {
+        sendJSON(res, 409, { conflict: true, error: 'Rekod dengan masa bertindih sudah wujud', existing: clashes });
+        return;
+      }
+      const clashIds = clashes.map(r => r.id);
+
+      // Semak pendua sebelum sebarang padam, supaya rekod lama tidak hilang jika rekod baharu ditolak.
+      // Rekod yang akan diganti (bertindih / Berada di Pejabat sendiri) tidak dikira.
       const { rows: existing } = await pool.query(
-        'SELECT id FROM movements WHERE submittedby = $1 AND tarikh = $2 AND destinasi = $3 AND tujuan = $4',
-        [submittedBy, tarikh, destinasi, tujuan]
+        `SELECT id FROM movements WHERE submittedby = $1 AND tarikh = $2 AND destinasi = $3 AND tujuan = $4
+         AND tujuan <> 'Berada di Pejabat' AND NOT (id = ANY($5::text[]))`,
+        [submittedBy, tarikh, destinasi, tujuan, clashIds]
       );
       if (existing.length > 0) {
         sendJSON(res, 409, { error: 'Rekod yang sama sudah wujud untuk tarikh dan destinasi ini' });
         return;
       }
+
+      if (clashIds.length) {
+        await pool.query('DELETE FROM movements WHERE submittedby = $1 AND id = ANY($2::text[])',
+          [submittedBy, clashIds]);
+      }
+      // Remove any 'Berada di Pejabat' records for this staff+date (auto or manual) before inserting real record
+      await pool.query(
+        `DELETE FROM movements WHERE submittedby = $1 AND tarikh = $2 AND tujuan = 'Berada di Pejabat'`,
+        [submittedBy, tarikh]
+      );
 
       const createdAt = new Date().toISOString();
       await pool.query(
@@ -700,7 +734,7 @@ const server = http.createServer(async (req, res) => {
         [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr', createdAt]
       );
       await removeAutoPejabat(submittedBy, nama, tarikh);
-      sendJSON(res, 201, { ok: true });
+      sendJSON(res, 201, { ok: true, replaced: clashIds });
       return;
     }
 

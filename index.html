@@ -1617,6 +1617,23 @@
       font-size: 1.1rem;
     }
 
+    .toast.toast-confirm {
+      flex-direction: column;
+      align-items: stretch;
+      border-color: #f59e0b;
+      max-width: 380px;
+    }
+    .toast-confirm .toast-confirm-head { display: flex; gap: 10px; align-items: flex-start; }
+    .toast-confirm .toast-confirm-head i { color: #f59e0b; margin-top: 2px; }
+    .toast-confirm .toast-confirm-old { display: block; margin-top: 6px; font-size: 0.8rem; opacity: 0.85; }
+    .toast-confirm .toast-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .toast-confirm button {
+      border: none; border-radius: 6px; padding: 7px 14px;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .toast-confirm .toast-btn-yes { background: #f59e0b; color: #1f2937; }
+    .toast-confirm .toast-btn-no { background: transparent; color: inherit; border: 1px solid currentColor; opacity: 0.8; }
+
     /* Cosmic Footer */
     footer {
       padding: 2rem;
@@ -6363,35 +6380,58 @@
           sektor: selectedSector ? selectedSector.code : 'SPr'
         }));
 
+        const postRecord = payload => fetch(`${API_BASE}/movements`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const savedDates = [];
+        const skippedDates = [];
+
         for (const record of records) {
           if (DEMO_MODE) {
             movementRecords.push(record);
             allMovementRecords.push(record);
-          } else {
-            const res = await fetch(`${API_BASE}/movements`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(record)
-            });
-            if (!res.ok) {
-              let errMsg = `Ralat ${res.status}`;
-              try { const j = await res.json(); errMsg = j.error || errMsg; } catch(e) {}
-              throw new Error(errMsg);
-            }
-            const namaKey = nama.toUpperCase().trim();
-            const isReplacedAuto = r => r.submittedBy === 'system' && r.tarikh === record.tarikh
-              && (r.nama || '').toUpperCase().trim() === namaKey;
-            movementRecords = movementRecords.filter(r => !isReplacedAuto(r));
-            allMovementRecords = allMovementRecords.filter(r => !isReplacedAuto(r));
-            movementRecords.push(record);
-            allMovementRecords.push(record);
+            savedDates.push(record.tarikh);
+            continue;
           }
+          let res = await postRecord(record);
+          let data = {};
+          try { data = await res.json(); } catch(e) {}
+
+          if (res.status === 409 && data.conflict) {
+            const replace = await confirmReplaceToast(record.tarikh, data.existing || []);
+            if (!replace) { skippedDates.push(record.tarikh); continue; }
+            res = await postRecord({ ...record, replace: true });
+            data = {};
+            try { data = await res.json(); } catch(e) {}
+          }
+          if (!res.ok) throw new Error(data.error || `Ralat ${res.status}`);
+
+          const namaKey = nama.toUpperCase().trim();
+          const replacedIds = new Set(data.replaced || []);
+          const isGone = r => replacedIds.has(r.id) || (r.submittedBy === 'system' && r.tarikh === record.tarikh
+            && (r.nama || '').toUpperCase().trim() === namaKey);
+          movementRecords = movementRecords.filter(r => !isGone(r));
+          allMovementRecords = allMovementRecords.filter(r => !isGone(r));
+          movementRecords.push(record);
+          allMovementRecords.push(record);
+          savedDates.push(record.tarikh);
         }
 
         updateDashboardStats();
 
+        if (!savedDates.length) {
+          showToast('Rekod tidak disimpan. Rekod sedia ada dikekalkan.', 'error');
+          return;
+        }
+        if (skippedDates.length) {
+          const fmt = ds => { const [y, m, d] = ds.split('-'); return `${d}/${m}`; };
+          showToast(`Tidak disimpan untuk ${skippedDates.map(fmt).join(', ')} — rekod sedia ada dikekalkan.`, 'error');
+        }
+
         // Track session count
-        borangSessionCount += dates.length;
+        borangSessionCount += savedDates.length;
         borangSessionDate = tarikhMula;
 
         // Clear movement-specific fields, keep nama & tarikh for next entry
@@ -6408,13 +6448,13 @@
 
         // Show post-submit panel
         const panel = document.getElementById('post-submit-panel');
-        const daysLabel = dates.length > 1 ? `${dates.length} hari` : '1 hari';
+        const daysLabel = savedDates.length > 1 ? `${savedDates.length} hari` : '1 hari';
         document.getElementById('post-submit-msg').textContent =
           `"${destinasi}" (${tujuan}) — ${daysLabel} berjaya disimpan. Tambah lagi atau selesai?`;
         panel.style.display = 'block';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        showToast(dates.length > 1 ? t('toast.recordSentMulti').replace('{n}', dates.length) : t('toast.recordSent'), 'success');
+        showToast(savedDates.length > 1 ? t('toast.recordSentMulti').replace('{n}', savedDates.length) : t('toast.recordSent'), 'success');
       } catch (err) {
         console.error(err);
         showToast(`Gagal: ${err.message}`, 'error');
@@ -6464,6 +6504,51 @@
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 500);
       }, 4000);
+    }
+
+    // Toast pengesahan untuk rekod bertindih; kekal sehingga pengguna memilih
+    function confirmReplaceToast(tarikh, existing) {
+      return new Promise(resolve => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-confirm';
+        toast.setAttribute('role', 'alertdialog');
+
+        const head = document.createElement('div');
+        head.className = 'toast-confirm-head';
+        head.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+        const text = document.createElement('div');
+        const [y, m, d] = tarikh.split('-');
+        text.append(`Anda sudah ada rekod pada ${d}/${m}/${y} dengan masa yang bertindih. Gantikan dengan rekod baharu?`);
+        for (const r of existing) {
+          const old = document.createElement('span');
+          old.className = 'toast-confirm-old';
+          old.textContent = `• ${r.masa} — ${r.tujuan} di ${r.destinasi}`;
+          text.appendChild(old);
+        }
+        head.appendChild(text);
+
+        const actions = document.createElement('div');
+        actions.className = 'toast-confirm-actions';
+        const no = document.createElement('button');
+        no.type = 'button'; no.className = 'toast-btn-no'; no.textContent = 'Batal';
+        const yes = document.createElement('button');
+        yes.type = 'button'; yes.className = 'toast-btn-yes'; yes.textContent = 'Ya, gantikan';
+        actions.append(no, yes);
+
+        toast.append(head, actions);
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 50);
+        yes.focus();
+
+        const close = answer => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 500);
+          resolve(answer);
+        };
+        yes.addEventListener('click', () => close(true));
+        no.addEventListener('click', () => close(false));
+      });
     }
 
     // Analysis period filtering (Hari / Minggu / Bulan / Tahun / Semua)
