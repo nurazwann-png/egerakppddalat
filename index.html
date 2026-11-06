@@ -2403,6 +2403,7 @@
 
         <!-- ===== TAB: RINGKASAN ===== -->
         <div class="admin-tab-content" id="admin-tab-ringkasan">
+          <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.75rem;"><i class="fa-solid fa-circle-info" style="margin-right:6px;"></i><span data-i18n="admin.stats.note">Statistik hanya mengira rekod yang diisi staf sendiri. Rekod auto "Berada di Pejabat" tidak dikira.</span></p>
           <div id="admin-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.5rem;"></div>
 
           <div class="insights-panel">
@@ -2432,6 +2433,7 @@
 
         <!-- ===== TAB: ANALISIS ===== -->
         <div class="admin-tab-content" id="admin-tab-analisis" style="display:none;">
+          <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.75rem;"><i class="fa-solid fa-circle-info" style="margin-right:6px;"></i><span data-i18n="admin.stats.note">Statistik hanya mengira rekod yang diisi staf sendiri. Rekod auto "Berada di Pejabat" tidak dikira.</span></p>
           <div class="insights-panel">
             <div class="insights-title"><i class="fa-solid fa-chart-bar"></i> <span data-i18n="admin.sector.title">Analisis Pergerakan Mengikut Sektor</span></div>
             <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;" data-i18n="admin.sector.hint">Klik sektor untuk tapis rekod dalam tab Rekod.</p>
@@ -3182,8 +3184,10 @@
         'admin.trend.title': 'Trend Pergerakan — 6 Bulan Lepas',
         'admin.tujuan.chart': 'Jenis Pergerakan',
         'admin.top5.title': 'Top 5 Destinasi',
-        'admin.inactive.title': 'Pegawai Tiada Rekod',
-        'admin.inactive.allActive': 'Semua staf berdaftar mempunyai rekod pergerakan.',
+        'admin.inactive.title': 'Belum Isi Minggu Ini',
+        'admin.inactive.allActive': 'Semua staf telah mengisi rekod pergerakan minggu ini.',
+        'admin.inactive.summary': '{n} daripada {total} staf belum mengisi rekod sendiri ({range}).',
+        'admin.stats.note': 'Statistik hanya mengira rekod yang diisi staf sendiri. Rekod auto "Berada di Pejabat" tidak dikira.',
         'admin.sector.title': 'Analisis Pergerakan Mengikut Sektor',
         'admin.sector.hint': 'Klik sektor untuk tapis rekod dalam tab Rekod.',
         'admin.dow.title': 'Analisis Mengikut Hari Seminggu',
@@ -3495,8 +3499,10 @@
         'admin.trend.title': 'Movement Trend — Last 6 Months',
         'admin.tujuan.chart': 'Movement Types',
         'admin.top5.title': 'Top 5 Destinations',
-        'admin.inactive.title': 'Officers with No Records',
-        'admin.inactive.allActive': 'All registered staff have movement records.',
+        'admin.inactive.title': 'Not Filled This Week',
+        'admin.inactive.allActive': 'All staff have filled in their movements this week.',
+        'admin.inactive.summary': '{n} of {total} staff have not entered any records themselves ({range}).',
+        'admin.stats.note': 'Statistics count only records entered by staff. Auto-filled "Berada di Pejabat" records are excluded.',
         'admin.sector.title': 'Movement Analysis by Sector',
         'admin.sector.hint': 'Click a sector to filter records in the Records tab.',
         'admin.dow.title': 'Analysis by Day of the Week',
@@ -3874,6 +3880,10 @@
     let movementRecords = [];
     let allMovementRecords = []; // all sectors — used by calendar only
     let adminMovementData = []; // all records loaded with admin token
+    // Statistik admin hanya kira rekod yang diisi staf sendiri, bukan auto "Berada di Pejabat"
+    const adminStatRecords = () => adminMovementData.filter(r => r.submittedBy !== 'system');
+    // Tarikh hari ini mengikut waktu Malaysia (UTC+8), tanpa bergantung pada zon waktu peranti
+    const mytTodayStr = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
 
     // ===== DEMO MODE =====
     let DEMO_MODE = false;
@@ -4856,8 +4866,7 @@
     // --- Statistik setiap pengguna (dikira daripada data pergerakan sedia ada) ---
     async function renderUserStats() {
       const tbody = document.getElementById('user-stats-table-body');
-      // use adminMovementData (fetched with admin token) instead of movementRecords
-      const data = adminMovementData;
+      const data = adminStatRecords();
 
       const byUser = {};
       data.forEach((r) => {
@@ -4888,13 +4897,14 @@
     function renderAdminSummaryCards() {
       const container = document.getElementById('admin-summary-cards');
       if (!container) return;
-      const today = new Date().toISOString().slice(0, 10);
-      const todayCount = adminMovementData.filter(r => r.tarikh === today).length;
-      const totalRecords = adminMovementData.length;
+      const today = mytTodayStr();
+      const stats = adminStatRecords();
+      const todayCount = stats.filter(r => r.tarikh === today).length;
+      const totalRecords = stats.length;
 
       // sektor paling aktif
       const sektorCounts = {};
-      adminMovementData.forEach(r => { sektorCounts[r.sektor] = (sektorCounts[r.sektor] || 0) + 1; });
+      stats.forEach(r => { sektorCounts[r.sektor] = (sektorCounts[r.sektor] || 0) + 1; });
       const topSektor = Object.entries(sektorCounts).sort((a, b) => b[1] - a[1])[0];
 
       const cards = [
@@ -5012,7 +5022,7 @@
         const label = d.toLocaleDateString('ms-MY', { month: 'short', year: '2-digit' });
         months.push({ key, label, count: 0 });
       }
-      adminMovementData.forEach(r => {
+      adminStatRecords().forEach(r => {
         const m = r.tarikh ? r.tarikh.slice(0, 7) : '';
         const found = months.find(x => x.key === m);
         if (found) found.count++;
@@ -5038,7 +5048,7 @@
       if (!container) return;
       const PIE_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488','#ea580c','#4f46e5','#0284c7'];
       const counts = {};
-      adminMovementData.forEach(r => { if (r.tujuan) counts[r.tujuan] = (counts[r.tujuan]||0)+1; });
+      adminStatRecords().forEach(r => { if (r.tujuan) counts[r.tujuan] = (counts[r.tujuan]||0)+1; });
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
       const total = sorted.reduce((s,[,v])=>s+v,0);
       if (!sorted.length) { container.innerHTML=`<div class="detail-empty">${t('empty.data')}</div>`; return; }
@@ -5077,7 +5087,7 @@
       const container = document.getElementById('admin-top-destinations');
       if (!container) return;
       const counts = {};
-      adminMovementData.forEach(r => { if (r.destinasi) counts[r.destinasi] = (counts[r.destinasi] || 0) + 1; });
+      adminStatRecords().forEach(r => { if (r.destinasi) counts[r.destinasi] = (counts[r.destinasi] || 0) + 1; });
       const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
       if (!top.length) { container.innerHTML = `<div class="detail-empty">${t('empty.data')}</div>`; return; }
       const max = top[0][1];
@@ -5102,13 +5112,28 @@
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
         const staffList = await res.json();
-        const activeEmails = new Set(adminMovementData.map(r => r.submittedBy));
-        const inactive = staffList.filter(s => !activeEmails.has(s.email));
+
+        // Minggu semasa Isnin–Jumaat (waktu Malaysia); hujung minggu = minggu yang baru tamat
+        const shift = (ds, n) => { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+        const today = mytTodayStr();
+        const monday = shift(today, -((new Date(today + 'T00:00:00Z').getUTCDay() + 6) % 7));
+        const friday = shift(monday, 4);
+        const fmt = ds => `${ds.slice(8, 10)}/${ds.slice(5, 7)}`;
+
+        const filledEmails = new Set(adminStatRecords()
+          .filter(r => r.tarikh >= monday && r.tarikh <= friday)
+          .map(r => (r.submittedBy || '').toLowerCase()));
+        const inactive = staffList
+          .filter(s => !filledEmails.has((s.email || '').toLowerCase()))
+          .sort((a, b) => (a.sektor || '').localeCompare(b.sektor || '') || (a.nama || '').localeCompare(b.nama || ''));
         if (!inactive.length) {
           container.innerHTML = `<div style="font-size:0.82rem;color:#16a34a;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-check"></i> ${t('admin.inactive.allActive')}</div>`;
           return;
         }
-        container.innerHTML = inactive.map(s => `
+        const summary = t('admin.inactive.summary')
+          .replace('{n}', inactive.length).replace('{total}', staffList.length)
+          .replace('{range}', `${fmt(monday)} – ${fmt(friday)}`);
+        container.innerHTML = `<div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px;">${escapeHtml(summary)}</div>` + inactive.map(s => `
           <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-color);">
             <div style="width:28px;height:28px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               <i class="fa-solid fa-user" style="font-size:0.75rem;color:#dc2626;"></i>
@@ -5127,7 +5152,7 @@
       if (!container) return;
       const days = ['Ahad', t('dow.1'), t('dow.2'), t('dow.3'), t('dow.4'), t('dow.5'), 'Sabtu'];
       const counts = [0,0,0,0,0,0,0];
-      adminMovementData.forEach(r => {
+      adminStatRecords().forEach(r => {
         if (!r.tarikh) return;
         const parts = r.tarikh.split('-');
         if (parts.length !== 3) return;
@@ -5159,7 +5184,7 @@
       const COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#dc2626'];
       const data = {};
       SEKTORS.forEach(s => { data[s] = {}; });
-      adminMovementData.forEach(r => {
+      adminStatRecords().forEach(r => {
         if (!r.sektor || !r.tujuan || !data[r.sektor]) return;
         data[r.sektor][r.tujuan] = (data[r.sektor][r.tujuan] || 0) + 1;
       });
@@ -5296,7 +5321,7 @@
       const SEKTORS = ['SPr','SPb','SPbM','SP','SPS','SPP','SPsK','PTIS'];
       const counts = {};
       SEKTORS.forEach(s => counts[s] = 0);
-      adminMovementData.forEach(r => { if (r.sektor && counts[r.sektor] !== undefined) counts[r.sektor]++; });
+      adminStatRecords().forEach(r => { if (r.sektor && counts[r.sektor] !== undefined) counts[r.sektor]++; });
       const max = Math.max(...Object.values(counts), 1);
       const total = Object.values(counts).reduce((a,b) => a+b, 0);
       const COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#0e9488'];
