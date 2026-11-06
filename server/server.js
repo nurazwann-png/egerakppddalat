@@ -347,91 +347,152 @@ function parseMasaToMinutes(masa) {
 }
 
 // ── Auto-fill "Berada di Pejabat" ───────────────────────────────────────────
-// Runs every Monday to back-fill the previous week (Mon–Fri).
-// For each registered staff member, inserts a "Berada di Pejabat" record for
-// every weekday they had NO movement record at all.
-// Only fills completed weeks; never fills future dates or the current week.
+// Setiap minggu, semua staf diisi "Berada di Pejabat" untuk Isnin–Jumaat minggu
+// semasa. Rekod auto (submittedby = 'system') diganti apabila staf merekod
+// pergerakan sebenar, dan diisi semula jika rekod sebenar dipadam/dialih.
+const PEJABAT = 'Berada di Pejabat';
+const AUTO_LOOKBACK_DAYS = 28;
+
+function normNama(n) { return (n || '').toUpperCase().trim(); }
+
+function isWeekdayStr(ds) {
+  const dow = new Date(ds + 'T00:00:00Z').getUTCDay();
+  return dow >= 1 && dow <= 5;
+}
+
+function addDaysStr(ds, n) {
+  const d = new Date(ds + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+// Julat isian: 4 minggu lepas hingga Jumaat minggu semasa (waktu Malaysia)
+function pejabatFillWindow() {
+  const today = getMalaysiaDateStr();
+  const dow = new Date(today + 'T00:00:00Z').getUTCDay();
+  const monday = addDaysStr(today, -((dow + 6) % 7));
+  return { from: addDaysStr(today, -AUTO_LOOKBACK_DAYS), to: addDaysStr(monday, 4) };
+}
+
+// NOT EXISTS dalam INSERT supaya rekod auto tidak masuk jika staf sudah ada rekod hari itu
+async function insertAutoPejabatIfEmpty(staff, day) {
+  const { rowCount } = await pool.query(
+    `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
+     SELECT $1, $2, $3, 'PPD Dalat', $4, '', '', 'system', $5, $6
+     WHERE NOT EXISTS (
+       SELECT 1 FROM movements
+       WHERE tarikh = $3 AND (submittedby = $7 OR UPPER(TRIM(nama)) = $8)
+     )
+     ON CONFLICT (id) DO NOTHING`,
+    [`auto-${normNama(staff.nama).replace(/[^A-Z0-9]/g, '_')}-${day}`, staff.nama, day, PEJABAT,
+     staff.sektor || 'SPr', new Date().toISOString(), staff.email, normNama(staff.nama)]
+  );
+  return rowCount;
+}
+
+// Padam rekod auto staf untuk tarikh itu (dipanggil selepas rekod sebenar disimpan)
+async function removeAutoPejabat(email, nama, tarikh) {
+  const { rows } = await pool.query('SELECT nama FROM staff WHERE email = $1', [email]);
+  const names = [...new Set([nama, rows[0] && rows[0].nama].filter(Boolean).map(normNama))];
+  if (!names.length) return;
+  await pool.query(
+    `DELETE FROM movements
+     WHERE tarikh = $1 AND submittedby = 'system' AND tujuan = $2 AND UPPER(TRIM(nama)) = ANY($3::text[])`,
+    [tarikh, PEJABAT, names]
+  );
+}
+
+// Isi semula hari yang kosong selepas rekod sebenar dipadam atau tarikhnya diubah
+async function refillAutoPejabat(email, tarikh) {
+  if (!email || email === 'system' || !isWeekdayStr(tarikh)) return;
+  const { from, to } = pejabatFillWindow();
+  if (tarikh < from || tarikh > to) return;
+  const { rows } = await pool.query('SELECT email, nama, sektor FROM staff WHERE email = $1', [email]);
+  if (!rows[0]) return;
+  await insertAutoPejabatIfEmpty(rows[0], tarikh);
+}
+
+// Buang rekod auto yang wujud bersama rekod sebenar, dan rekod auto berganda.
+// Hanya menyentuh rekod submittedby = 'system'.
+async function cleanupAutoPejabat() {
+  const { rowCount: weekend } = await pool.query(
+    `DELETE FROM movements WHERE submittedby = 'system' AND tujuan = $1
+     AND EXTRACT(DOW FROM tarikh::date) IN (0, 6)`, [PEJABAT]
+  );
+  const { rowCount: replaced } = await pool.query(
+    `DELETE FROM movements a
+     WHERE a.submittedby = 'system' AND a.tujuan = $1
+       AND EXISTS (
+         SELECT 1 FROM movements b
+         LEFT JOIN staff s ON s.email = b.submittedby
+         WHERE b.tarikh = a.tarikh AND b.submittedby <> 'system'
+           AND (UPPER(TRIM(b.nama)) = UPPER(TRIM(a.nama)) OR UPPER(TRIM(s.nama)) = UPPER(TRIM(a.nama)))
+       )`, [PEJABAT]
+  );
+  const { rowCount: dupes } = await pool.query(
+    `DELETE FROM movements a USING movements b
+     WHERE a.submittedby = 'system' AND b.submittedby = 'system'
+       AND a.tujuan = $1 AND b.tujuan = $1
+       AND a.tarikh = b.tarikh AND UPPER(TRIM(a.nama)) = UPPER(TRIM(b.nama))
+       AND a.id > b.id`, [PEJABAT]
+  );
+  if (weekend || replaced || dupes)
+    console.log(`[auto-pejabat] Bersihkan rekod auto: ${replaced} bertindih dengan rekod sebenar, ${dupes} berganda, ${weekend} hujung minggu.`);
+}
+
 async function autoFillPejabat() {
   try {
-    // Today in Malaysia time
-    const nowUtc8 = new Date(Date.now() + 8 * 60 * 60 * 1000);
-    const todayStr = nowUtc8.toISOString().slice(0, 10);
+    await cleanupAutoPejabat();
 
-    // Fill weekdays from 4 weeks ago up to and including today
-    const lookbackMs = 4 * 7 * 24 * 60 * 60 * 1000;
-    const cutoff = new Date(nowUtc8.getTime() - lookbackMs);
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
-
-    // Build list of all weekdays (Mon–Fri) in [cutoffStr, todayStr]
+    const { from, to } = pejabatFillWindow();
     const weekdays = [];
-    const d = new Date(cutoffStr + 'T00:00:00Z');
-    while (true) {
-      const ds = d.toISOString().slice(0, 10);
-      if (ds > todayStr) break;
-      const dow = d.getUTCDay(); // 1=Mon ... 5=Fri
-      if (dow >= 1 && dow <= 5) weekdays.push(ds);
-      d.setUTCDate(d.getUTCDate() + 1);
+    for (let ds = from; ds <= to; ds = addDaysStr(ds, 1)) {
+      if (isWeekdayStr(ds)) weekdays.push(ds);
     }
     if (!weekdays.length) return;
 
-    // Fetch all registered staff
-    const { rows: staffList } = await pool.query('SELECT nama, sektor FROM staff');
+    const { rows: staffList } = await pool.query('SELECT email, nama, sektor FROM staff');
     if (!staffList.length) return;
 
-    // Fetch existing movement records in the date range (any tujuan) for these staff
     const { rows: existing } = await pool.query(
-      `SELECT nama, tarikh FROM movements WHERE tarikh >= $1 AND tarikh <= $2`,
-      [cutoffStr, todayStr]
+      `SELECT nama, submittedby, tarikh FROM movements WHERE tarikh >= $1 AND tarikh <= $2`,
+      [from, to]
     );
-    // Build a Set of "nama::tarikh" that already have records
-    const hasRecord = new Set(existing.map(r => `${(r.nama||'').toUpperCase().trim()}::${r.tarikh}`));
-
-    // Padam rekod system pada Sabtu/Ahad (cleanup jika ada rekod salah sebelum ini)
-    await pool.query(
-      `DELETE FROM movements WHERE submittedby = 'system' AND tujuan = 'Berada di Pejabat'
-       AND EXTRACT(DOW FROM tarikh::date) IN (0, 6)`
-    );
+    const hasRecord = new Set();
+    for (const r of existing) {
+      hasRecord.add(`N:${normNama(r.nama)}::${r.tarikh}`);
+      hasRecord.add(`E:${r.submittedby}::${r.tarikh}`);
+    }
 
     let inserted = 0;
     for (const staff of staffList) {
-      const namaKey = (staff.nama || '').toUpperCase().trim();
+      const namaKey = normNama(staff.nama);
       for (const day of weekdays) {
-        // Perlindungan ganda: pastikan bukan Sabtu (6) atau Ahad (0)
-        const dowCheck = new Date(day + 'T00:00:00Z').getUTCDay();
-        if (dowCheck === 0 || dowCheck === 6) continue;
-        if (hasRecord.has(`${namaKey}::${day}`)) continue; // already has a record for this day
-        // ID deterministik supaya ON CONFLICT betul-betul elak pendua
-        const id = `auto-${namaKey.replace(/[^A-Z0-9]/g, '_')}-${day}`;
-        await pool.query(
-          `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-           ON CONFLICT (id) DO NOTHING`,
-          [id, staff.nama, day, 'PPD Dalat', 'Berada di Pejabat', '', '', 'system', staff.sektor || 'SPr', new Date().toISOString()]
-        );
-        inserted++;
+        if (hasRecord.has(`N:${namaKey}::${day}`) || hasRecord.has(`E:${staff.email}::${day}`)) continue;
+        inserted += await insertAutoPejabatIfEmpty(staff, day);
       }
     }
-    if (inserted > 0) console.log(`[auto-pejabat] Dimasukkan ${inserted} rekod "Berada di Pejabat" untuk minggu lalu.`);
+    if (inserted > 0) console.log(`[auto-pejabat] Dimasukkan ${inserted} rekod "${PEJABAT}" (${from} hingga ${to}).`);
   } catch (err) {
     console.error('[auto-pejabat] Ralat:', err.message);
   }
 }
 
-// Schedule: run every Monday at ~00:05 MYT (16:05 UTC Sunday)
-// Schedule: run daily at ~00:05 MYT (16:05 UTC previous day)
+// Jadual: setiap Isnin ~00:05 MYT (Ahad 16:05 UTC), isi seluruh minggu baharu
 function scheduleAutoFillPejabat() {
   const nowUtc = Date.now();
-  const targetHourUtc = 16, targetMinUtc = 5;
   const nextRun = new Date(nowUtc);
-  nextRun.setUTCHours(targetHourUtc, targetMinUtc, 0, 0);
-  if (nextRun.getTime() <= nowUtc) nextRun.setUTCDate(nextRun.getUTCDate() + 1);
+  nextRun.setUTCHours(16, 5, 0, 0);
+  const daysUntilSunday = (7 - nextRun.getUTCDay()) % 7;
+  nextRun.setUTCDate(nextRun.getUTCDate() + daysUntilSunday);
+  if (nextRun.getTime() <= nowUtc) nextRun.setUTCDate(nextRun.getUTCDate() + 7);
   const msUntilNext = nextRun.getTime() - nowUtc;
 
   setTimeout(async () => {
     await autoFillPejabat();
-    setInterval(autoFillPejabat, 24 * 60 * 60 * 1000);
+    setInterval(autoFillPejabat, 7 * 24 * 60 * 60 * 1000);
   }, msUntilNext);
-  console.log(`[auto-pejabat] Dijadualkan untuk berjalan dalam ${Math.round(msUntilNext / 3600000)} jam.`);
+  console.log(`[auto-pejabat] Isian mingguan seterusnya dalam ${Math.round(msUntilNext / 3600000)} jam.`);
 }
 
 async function checkScheduledPush() {
@@ -638,6 +699,7 @@ const server = http.createServer(async (req, res) => {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr', createdAt]
       );
+      await removeAutoPejabat(submittedBy, nama, tarikh);
       sendJSON(res, 201, { ok: true });
       return;
     }
@@ -682,6 +744,7 @@ const server = http.createServer(async (req, res) => {
       if (isAdmin && !isOwner) {
         await logAudit('delete_record', `Admin memadam rekod pergerakan ${record.nama} (${record.tarikh}, ${record.destinasi}) yang dikemukakan oleh ${record.submittedby}`);
       }
+      await refillAutoPejabat(record.submittedby, record.tarikh);
       sendJSON(res, 200, { ok: true });
       return;
     }
@@ -716,6 +779,10 @@ const server = http.createServer(async (req, res) => {
         'UPDATE movements SET destinasi=$1, tujuan=$2, nota=$3, masa=$4, tarikh=$5 WHERE id=$6',
         [destinasi, tujuan, nota || '', masa || '', tarikh, id]
       );
+      if (tarikh !== record.tarikh) {
+        await removeAutoPejabat(record.submittedby, record.nama, tarikh);
+        await refillAutoPejabat(record.submittedby, record.tarikh);
+      }
       sendJSON(res, 200, { ok: true });
       return;
     }
@@ -828,6 +895,7 @@ const server = http.createServer(async (req, res) => {
       );
       if (result.rowCount > 0) {
         await logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) mendaftar sebagai pengguna baharu (disahkan melalui e-mel)`);
+        autoFillPejabat();
       }
       sendJSON(res, 201, { ok: true });
       return;
@@ -856,6 +924,7 @@ const server = http.createServer(async (req, res) => {
       );
       if (result.rowCount > 0) {
         await logAudit('self_register', `${nama} (${email}, ${jawatan}, ${sektor}) mendaftar sebagai pengguna baharu`);
+        autoFillPejabat();
       }
       sendJSON(res, 201, { ok: true });
       return;
@@ -908,12 +977,22 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         const normalizedEmail = email.trim().toLowerCase();
+        const newNama = nama.trim().toUpperCase();
+        const { rows: before } = await pool.query('SELECT nama FROM staff WHERE email = $1', [normalizedEmail]);
         await pool.query(
           `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5)
            ON CONFLICT (email) DO UPDATE SET nama=EXCLUDED.nama, jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor`,
-          [normalizedEmail, nama.trim().toUpperCase(), jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
+          [normalizedEmail, newNama, jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
         );
+        // Nama ditukar: ikut sama rekod auto supaya tidak berganda di bawah nama lama dan baharu
+        if (before[0] && normNama(before[0].nama) !== newNama) {
+          await pool.query(
+            `UPDATE movements SET nama = $1 WHERE submittedby = 'system' AND UPPER(TRIM(nama)) = $2`,
+            [newNama, normNama(before[0].nama)]
+          );
+        }
         await logAudit('add_staff', `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
+        autoFillPejabat();
         sendJSON(res, 201, { ok: true });
         return;
       }
@@ -1403,14 +1482,13 @@ initDb()
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
-    // One-time: betulkan typo nama staf tertentu
-    fixSpecificNameTypos();
-    // One-time: uppercase semua nama sedia ada dalam DB
-    fixStaffNamesUppercase();
-    // One-time: betulkan nama staf pendua
-    fixDuplicateStaffNames();
-    // Auto-fill "Berada di Pejabat" for past weeks
-    autoFillPejabat();
+    // Berturutan: nama mesti dibetulkan dahulu sebelum auto-fill memadankan nama
+    (async () => {
+      await fixSpecificNameTypos();
+      await fixStaffNamesUppercase();
+      await fixDuplicateStaffNames();
+      await autoFillPejabat();
+    })();
     scheduleAutoFillPejabat();
     // Scheduled push: semak setiap 5 minit
     checkScheduledPush();

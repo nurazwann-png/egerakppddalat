@@ -6378,6 +6378,11 @@
               try { const j = await res.json(); errMsg = j.error || errMsg; } catch(e) {}
               throw new Error(errMsg);
             }
+            const namaKey = nama.toUpperCase().trim();
+            const isReplacedAuto = r => r.submittedBy === 'system' && r.tarikh === record.tarikh
+              && (r.nama || '').toUpperCase().trim() === namaKey;
+            movementRecords = movementRecords.filter(r => !isReplacedAuto(r));
+            allMovementRecords = allMovementRecords.filter(r => !isReplacedAuto(r));
             movementRecords.push(record);
             allMovementRecords.push(record);
           }
