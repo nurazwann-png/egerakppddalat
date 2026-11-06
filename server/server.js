@@ -516,6 +516,43 @@ async function autoFillPejabat() {
   }
 }
 
+// Rekod untuk Ejen: hanya yang berkaitan, supaya data lokasi staf yang dihantar ke DeepSeek minimum.
+// Rekod sebenar -7..+14 hari; rekod auto hari ini sahaja; staf yang disebut dalam soalan -60..+60 hari.
+const CHAT_NAME_STOPWORDS = new Set(['ENCIK', 'PUAN', 'CIK', 'BIN', 'BINTI', 'ANAK', 'HAJI', 'HAJAH', 'DR', 'IBNI']);
+async function buildChatRecords(message, today) {
+  const cols = 'nama, sektor, tarikh, tujuan, destinasi, masa';
+  const { rows: base } = await pool.query(
+    `SELECT ${cols} FROM movements
+     WHERE (submittedby <> 'system' AND tarikh BETWEEN $1 AND $2) OR (submittedby = 'system' AND tarikh = $3)
+     ORDER BY tarikh, nama`,
+    [addDaysStr(today, -7), addDaysStr(today, 14), today]
+  );
+
+  const words = new Set((message.toUpperCase().match(/[A-Z]{4,}/g) || []).filter(w => !CHAT_NAME_STOPWORDS.has(w)));
+  let named = [];
+  if (words.size) {
+    const { rows: staff } = await pool.query('SELECT nama FROM staff WHERE nyahaktif_at IS NULL');
+    const names = staff.map(s => s.nama).filter(n =>
+      normNama(n).split(/\s+/).some(part => part.length >= 4 && !CHAT_NAME_STOPWORDS.has(part) && words.has(part)));
+    if (names.length && names.length <= 5) {
+      ({ rows: named } = await pool.query(
+        `SELECT ${cols} FROM movements
+         WHERE submittedby <> 'system' AND UPPER(TRIM(nama)) = ANY($1::text[]) AND tarikh BETWEEN $2 AND $3
+         ORDER BY tarikh`,
+        [names.map(normNama), addDaysStr(today, -60), addDaysStr(today, 60)]
+      ));
+    }
+  }
+
+  const seen = new Set();
+  return [...named, ...base].filter(r => {
+    const k = `${r.nama}|${r.tarikh}|${r.tujuan}|${r.destinasi}|${r.masa}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).slice(0, 400);
+}
+
 // Jadual: setiap Isnin ~00:05 MYT (Ahad 16:05 UTC), isi seluruh minggu baharu
 function scheduleAutoFillPejabat() {
   const nowUtc = Date.now();
@@ -762,7 +799,8 @@ const server = http.createServer(async (req, res) => {
 
     // POST /api/movements/group-update — edit satu urusan (satu atau berbilang hari) sekaligus
     if (url.pathname === '/api/movements/group-update' && req.method === 'POST') {
-      const email = (url.searchParams.get('email') || '').trim().toLowerCase();
+      const asAdmin = await isValidAdminSession(req.headers['x-admin-token']);
+      let email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const body = await readJsonBody(req);
       const ids = Array.isArray(body.ids) ? body.ids.filter(x => typeof x === 'string') : [];
       const { tarikhMula, tarikhAkhir } = body;
@@ -772,7 +810,7 @@ const server = http.createServer(async (req, res) => {
       const masa = (body.masa || '').trim();
       const dateRe = /^\d{4}-\d{2}-\d{2}$/;
 
-      if (!email || !ids.length || ids.length > 62 || !destinasi || !tujuan) {
+      if ((!email && !asAdmin) || !ids.length || ids.length > 62 || !destinasi || !tujuan) {
         sendJSON(res, 400, { error: 'Maklumat tidak lengkap' }); return;
       }
       if (!dateRe.test(tarikhMula || '') || !dateRe.test(tarikhAkhir || '') || isNaN(Date.parse(tarikhMula)) || isNaN(Date.parse(tarikhAkhir))) {
@@ -792,6 +830,14 @@ const server = http.createServer(async (req, res) => {
 
       const { rows: groupRows } = await pool.query('SELECT * FROM movements WHERE id = ANY($1::text[]) ORDER BY tarikh', [ids]);
       if (groupRows.length !== new Set(ids).size) { sendJSON(res, 404, { error: 'Rekod tidak dijumpai' }); return; }
+      // Admin boleh edit urusan mana-mana staf (bukan rekod auto); semakan bertindih ikut pemilik rekod
+      if (asAdmin) {
+        const owners = new Set(groupRows.map(r => r.submittedby));
+        if (owners.size !== 1 || owners.has('system')) {
+          sendJSON(res, 400, { error: 'Rekod ini tidak boleh diedit' }); return;
+        }
+        email = groupRows[0].submittedby;
+      }
       if (groupRows.some(r => r.submittedby !== email)) {
         sendJSON(res, 403, { error: 'Anda hanya boleh mengedit rekod sendiri' }); return;
       }
@@ -859,6 +905,9 @@ const server = http.createServer(async (req, res) => {
 
       for (const d of newDates) await removeAutoPejabat(email, base.nama, d);
       for (const r of toRemove) await refillAutoPejabat(email, r.tarikh);
+      if (asAdmin) {
+        await logAudit('edit_record', `Admin mengemaskini rekod ${base.nama} (${tarikhMula}${tarikhAkhir !== tarikhMula ? ' hingga ' + tarikhAkhir : ''}, ${destinasi}, ${tujuan})`);
+      }
       sendJSON(res, 200, { ok: true, replaced: clashIds });
       return;
     }
@@ -1159,8 +1208,9 @@ const server = http.createServer(async (req, res) => {
         // Nama ditukar: ikut sama rekod auto supaya tidak berganda di bawah nama lama dan baharu
         if (before[0] && normNama(before[0].nama) !== newNama) {
           await pool.query(
-            `UPDATE movements SET nama = $1 WHERE submittedby = 'system' AND UPPER(TRIM(nama)) = $2`,
-            [newNama, normNama(before[0].nama)]
+            `UPDATE movements SET nama = $1
+             WHERE (submittedby = 'system' AND UPPER(TRIM(nama)) = $2) OR submittedby = $3`,
+            [newNama, normNama(before[0].nama), normalizedEmail]
           );
         }
         await logAudit('add_staff', before[0] && before[0].nyahaktif_at
@@ -1464,11 +1514,13 @@ const server = http.createServer(async (req, res) => {
       const lang = (body.lang || 'bm').trim();
       if (!userMessage) { sendJSON(res, 400, { error: 'Mesej kosong.' }); return; }
 
-      const { rows: allRecords } = await pool.query('SELECT * FROM movements ORDER BY tarikh DESC LIMIT 500');
-      const todayStr = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const todayStr = getMalaysiaDateStr();
+      const allRecords = await buildChatRecords(userMessage, todayStr);
       const contextLines = allRecords.map(r =>
-        `- ${r.nama} | ${r.sektor || '-'} | ${r.tarikh} | Tujuan: ${r.tujuan} | Destinasi: ${r.destinasi} | Balik: ${r.masa_balik || 'tidak dinyatakan'}`
+        `- ${r.nama} | ${r.sektor || '-'} | ${r.tarikh} | Tujuan: ${r.tujuan} | Destinasi: ${r.destinasi} | Masa: ${r.masa || 'tidak dinyatakan'}`
       ).join('\n');
+      const pejabatRuleEn = `Officers with no record on a weekday are at the office (PPD Dalat).`;
+      const pejabatRuleBm = `Pegawai yang tiada rekod pada hari bekerja dianggap berada di pejabat (PPD Dalat).`;
 
       const systemPrompt = lang === 'en'
         ? `You are a friendly assistant for e-Gerak PPD Dalat. Your job is to help staff check officer movement records in a warm, conversational tone — like a helpful colleague, not a system report.
@@ -1486,6 +1538,7 @@ ${contextLines || 'No records found.'}
 
 HOW TO ANSWER:
 - For today's movements, only use records dated ${todayStr}
+- ${pejabatRuleEn}
 - If listing people: use "1. Name is at Destination (Purpose)" format
 - If no records match: say it naturally, e.g. "Looks like no one is out today!"
 - Never invent or assume data not in the records`
@@ -1504,6 +1557,7 @@ ${contextLines || 'Tiada rekod dijumpai.'}
 
 CARA MENJAWAB:
 - Untuk pergerakan hari ini, gunakan hanya rekod bertarikh ${todayStr}
+- ${pejabatRuleBm}
 - Jika senarai orang: guna format "1. Nama berada di Destinasi (Tujuan)"
 - Jika tiada rekod berpadanan: jawab dengan natural, contoh "Nampaknya tiada pegawai yang keluar hari ini!"
 - Jangan reka atau andaikan data yang tiada dalam rekod`;
@@ -1572,6 +1626,18 @@ CARA MENJAWAB:
   }
 });
 
+async function runOnce(key, fn) {
+  try {
+    const { rows } = await pool.query('SELECT 1 FROM config WHERE key = $1', [key]);
+    if (rows.length) return;
+    await fn();
+    await pool.query('INSERT INTO config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [key, new Date().toISOString()]);
+    console.log(`[run-once] ${key} selesai.`);
+  } catch (err) {
+    console.error(`[run-once] ${key} gagal, akan dicuba semula semasa server mula:`, err.message);
+  }
+}
+
 // ── One-time: betulkan nama staf yang ada typo "1" di hujung ─────────────────
 async function fixSpecificNameTypos() {
   const typos = [
@@ -1590,6 +1656,7 @@ async function fixSpecificNameTypos() {
     }
   } catch (err) {
     console.error('[fix-typo] Ralat:', err.message);
+    throw err;
   }
 }
 
@@ -1607,6 +1674,7 @@ async function fixStaffNamesUppercase() {
     if (sc > 0 || mc > 0) console.log(`[fix-uppercase] Kemaskini ${sc} staf, ${mc} rekod pergerakan ke huruf besar.`);
   } catch (err) {
     console.error('[fix-uppercase] Ralat:', err.message);
+    throw err;
   }
 }
 
@@ -1660,6 +1728,7 @@ async function fixDuplicateStaffNames() {
     }
   } catch (err) {
     console.error('[fix-names] Ralat:', err.message);
+    throw err;
   }
 }
 
@@ -1669,11 +1738,12 @@ initDb()
   .then(() => {
     purgeOldAuditLog();
     setInterval(purgeOldAuditLog, 24 * 60 * 60 * 1000);
-    // Berturutan: nama mesti dibetulkan dahulu sebelum auto-fill memadankan nama
+    // Berturutan: nama mesti dibetulkan dahulu sebelum auto-fill memadankan nama.
+    // Pembetulan sekali sahaja; ditanda dalam jadual config selepas berjaya.
     (async () => {
-      await fixSpecificNameTypos();
-      await fixStaffNamesUppercase();
-      await fixDuplicateStaffNames();
+      await runOnce('once_fix_name_typos_v1', fixSpecificNameTypos);
+      await runOnce('once_uppercase_names_v1', fixStaffNamesUppercase);
+      await runOnce('once_merge_prefix_names_v1', fixDuplicateStaffNames);
       await autoFillPejabat();
     })();
     scheduleAutoFillPejabat();
