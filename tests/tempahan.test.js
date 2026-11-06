@@ -38,6 +38,12 @@ const as = who => ({
 });
 
 let H, van, hilux, bilik;
+let open = false;
+// Ujian tempahan staf hanya berjalan apabila pelayan dimulakan dengan TEMPAHAN_DIBUKA=1
+const openTest = (name, fn) => test(name, async t => {
+  if (!open) { t.skip('e-Tempahan ditutup (TEMPAHAN_DIBUKA tidak ditetapkan)'); return; }
+  await fn(t);
+});
 async function cleanup() {
   await pool.query(`DELETE FROM tempahan WHERE email = ANY($1) OR aset_id IN (SELECT id FROM aset WHERE nama LIKE 'UJIAN-TP %')`, [[A.email, B.email]]);
   await pool.query(`DELETE FROM aset WHERE nama LIKE 'UJIAN-TP %'`);
@@ -61,6 +67,16 @@ before(async () => {
   ]) assert.equal((await call('POST', '/admin/aset', { body: a, headers: H })).status, 201);
   const list = (await call('GET', '/admin/aset', { headers: H })).data;
   [van, hilux, bilik] = ['UJIAN-TP Van', 'UJIAN-TP Hilux', 'UJIAN-TP Bilik'].map(n => list.find(a => a.nama === n));
+  open = (await call('GET', `/tempahan/status?email=${encodeURIComponent(A.email)}`)).data.dibuka === true;
+});
+
+test('when closed, staff see "coming soon" and cannot book; admin can still set up assets', async t => {
+  if (open) { t.skip('e-Tempahan dibuka'); return; }
+  const r = await as(A).book({ aset_id: van.id, mula: `${D1}T08:00`, tamat: `${D1}T09:00`, tujuan: 'X' });
+  assert.equal(r.status, 403);
+  assert.equal(r.data.ditutup, true);
+  assert.equal((await call('GET', `/aset?email=${encodeURIComponent(A.email)}`)).status, 403);
+  assert.equal((await call('GET', '/admin/aset', { headers: H })).status, 200);
 });
 
 after(async () => {
@@ -69,13 +85,13 @@ after(async () => {
   await pool.end();
 });
 
-test('booking a free slot is confirmed immediately', async () => {
+openTest('booking a free slot is confirmed immediately', async () => {
   const r = await as(A).book({ aset_id: van.id, mula: `${D1}T08:00`, tamat: `${D1}T17:00`, tujuan: 'Lawatan sekolah', destinasi: 'Mukah', penumpang: 4 });
   assert.equal(r.status, 201);
   assert.ok(r.data.id);
 });
 
-test('overlapping booking is refused with alternatives', async () => {
+openTest('overlapping booking is refused with alternatives', async () => {
   const r = await as(B).book({ aset_id: van.id, mula: `${D1}T10:00`, tamat: `${D1}T12:00`, tujuan: 'Mesyuarat' });
   assert.equal(r.status, 409);
   assert.equal(r.data.conflict, true);
@@ -84,12 +100,12 @@ test('overlapping booking is refused with alternatives', async () => {
   assert.deepEqual(r.data.cadangan.slot_seterusnya, { mula: `${D1}T17:00`, tamat: `${D1}T19:00` });
 });
 
-test('back-to-back bookings are allowed', async () => {
+openTest('back-to-back bookings are allowed', async () => {
   const r = await as(B).book({ aset_id: van.id, mula: `${D1}T17:00`, tamat: `${D1}T19:00`, tujuan: 'Program malam' });
   assert.equal(r.status, 201);
 });
 
-test('check-only endpoint reports availability without saving', async () => {
+openTest('check-only endpoint reports availability without saving', async () => {
   const busy = await as(B).semak({ aset_id: van.id, mula: `${D1}T09:00`, tamat: `${D1}T10:00`, tujuan: 'X' });
   assert.equal(busy.data.tersedia, false);
   const free = await as(B).semak({ aset_id: hilux.id, mula: `${D1}T09:00`, tamat: `${D1}T10:00`, tujuan: 'X' });
@@ -97,7 +113,7 @@ test('check-only endpoint reports availability without saving', async () => {
   assert.equal((await as(B).mine()).data.filter(t => t.aset_id === hilux.id).length, 0);
 });
 
-test('rules: end after start, not in the past, within 60 days, within capacity', async () => {
+openTest('rules: end after start, not in the past, within 60 days, within capacity', async () => {
   const base = { aset_id: hilux.id, tujuan: 'X' };
   assert.equal((await as(A).book({ ...base, mula: `${D1}T10:00`, tamat: `${D1}T09:00` })).status, 400);
   assert.equal((await as(A).book({ ...base, mula: `${shift(today, -2)}T10:00`, tamat: `${shift(today, -2)}T11:00` })).status, 400);
@@ -106,7 +122,7 @@ test('rules: end after start, not in the past, within 60 days, within capacity',
   assert.equal((await as(A).book({ ...base, mula: `${D2}T10:00`, tamat: `${D2}T11:00`, tujuan: '' })).status, 400);
 });
 
-test('calendar shows name and sector but never e-mails, and marks own bookings', async () => {
+openTest('calendar shows name and sector but never e-mails, and marks own bookings', async () => {
   const r = await as(B).week();
   assert.equal(r.status, 200);
   const vanRows = r.data.filter(t => t.aset_id === van.id);
@@ -115,7 +131,7 @@ test('calendar shows name and sector but never e-mails, and marks own bookings',
   assert.deepEqual(vanRows.map(t => t.milik_saya).sort(), [false, true]);
 });
 
-test('only the owner can change or cancel; changes re-check clashes', async () => {
+openTest('only the owner can change or cancel; changes re-check clashes', async () => {
   const own = (await as(A).mine()).data.find(t => t.aset_id === van.id);
   assert.equal((await as(B).batal(own.id)).status, 404);
   assert.equal((await as(B).patch(own.id, { aset_id: van.id, mula: `${D2}T08:00`, tamat: `${D2}T09:00`, tujuan: 'X' })).status, 404);
@@ -131,7 +147,7 @@ test('only the owner can change or cancel; changes re-check clashes', async () =
   assert.equal((await as(B).book({ aset_id: van.id, mula: `${D2}T09:00`, tamat: `${D2}T10:00`, tujuan: 'Slot dibatalkan' })).status, 201);
 });
 
-test('asset under maintenance cannot be booked; owners are counted for notice', async () => {
+openTest('asset under maintenance cannot be booked; owners are counted for notice', async () => {
   assert.equal((await as(A).book({ aset_id: bilik.id, mula: `${D2}T14:00`, tamat: `${D2}T16:00`, tujuan: 'Mesyuarat' })).status, 201);
   const r = await call('PATCH', `/admin/aset/${bilik.id}/status`, { body: { status: 'penyelenggaraan' }, headers: H });
   assert.equal(r.status, 200);
@@ -148,7 +164,7 @@ test('asset under maintenance cannot be booked; owners are counted for notice', 
 test('booking endpoints need a staff account', async () => {
   assert.equal((await call('GET', '/aset')).status, 401);
   assert.equal((await call('POST', '/tempahan', { body: { email: 'orang.luar@contoh.com', aset_id: van.id } })).status, 401);
-  assert.equal((await call('POST', '/tempahan/parse', { body: { email: A.email, message: '' } })).status, 400);
+  assert.equal((await call('POST', '/tempahan/parse', { body: { email: A.email, message: '' } })).status, open ? 400 : 403);
 });
 
 test('server only serves the app\'s own files', async () => {

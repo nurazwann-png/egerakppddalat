@@ -405,6 +405,9 @@ async function sendPushToAll(payload) {
 }
 
 // ── e-Tempahan ───────────────────────────────────────────────────────────────
+// Ditutup kepada staf sehingga TEMPAHAN_DIBUKA=1 ditetapkan (admin tetap boleh sediakan aset)
+const TEMPAHAN_DIBUKA = process.env.TEMPAHAN_DIBUKA === '1';
+const TEMPAHAN_DITUTUP_MSG = 'e-Tempahan akan dibuka pada 2027.';
 const TEMPAHAN_JENIS = ['bot', 'kenderaan', 'bilik'];
 const ASET_STATUS = ['aktif', 'penyelenggaraan', 'tidak_aktif'];
 const TEMPAHAN_MAX_HARI_KEHADAPAN = 60;
@@ -606,6 +609,7 @@ Peraturan:
 
 // Peringatan sehari sebelum (selepas 5 petang waktu Malaysia)
 async function sendTempahanReminders() {
+  if (!TEMPAHAN_DIBUKA) return;
   try {
     const now = mytNowDt();
     if (now.slice(11, 13) < '17') return;
@@ -1190,6 +1194,15 @@ const server = http.createServer(async (req, res) => {
       const email = String(url.searchParams.get('email') || body.email || '').trim().toLowerCase();
       const isStaff = email && await isStaffEmail(email);
       if (!isStaff && !isAdminReq) { sendJSON(res, 401, { error: 'Akses tidak dibenarkan. Sila log masuk.' }); return; }
+
+      if (url.pathname === '/api/tempahan/status' && req.method === 'GET') {
+        sendJSON(res, 200, { dibuka: TEMPAHAN_DIBUKA, mesej: TEMPAHAN_DIBUKA ? '' : TEMPAHAN_DITUTUP_MSG });
+        return;
+      }
+      if (!TEMPAHAN_DIBUKA && !isAdminReq) {
+        sendJSON(res, 403, { error: TEMPAHAN_DITUTUP_MSG, ditutup: true });
+        return;
+      }
 
       // GET /api/aset — aset yang boleh dilihat dalam kalendar (aktif + penyelenggaraan)
       if (url.pathname === '/api/aset' && req.method === 'GET') {

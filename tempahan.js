@@ -94,9 +94,23 @@ function tpWeekLabel(week) {
   return `${tpDate(week)} – ${tpDate(tpAddDays(week, 6))}`;
 }
 
+// Status buka/tutup ditentukan oleh pelayan (TEMPAHAN_DIBUKA)
+let tpDibuka = null;
+async function tpCheckOpen() {
+  if (tpDibuka === null) {
+    const r = await tpApi('/tempahan/status');
+    tpDibuka = !!(r.ok && r.data.dibuka);
+  }
+  return tpDibuka;
+}
+
 // ── Staf: muat & papar ─────────────────────────────────────────────────────
 async function tpLoad() {
   if (!currentUserSession) return;
+  const open = await tpCheckOpen();
+  document.getElementById('tp-coming-soon').style.display = open ? 'none' : '';
+  document.getElementById('tp-content').style.display = open ? '' : 'none';
+  if (!open) return;
   if (!tp.week) tp.week = tpMonday(mytTodayStr());
   const [aset, mine] = await Promise.all([tpApi('/aset'), tpApi('/tempahan/saya')]);
   tp.aset = aset.ok ? aset.data : [];
@@ -405,6 +419,7 @@ function tpIsBookingRequest(message) {
   return !!currentUserSession && /\b(tempah|booking|book)\b/i.test(message);
 }
 async function tpHandleEjenBooking(message) {
+  if (!(await tpCheckOpen())) return 'e-Tempahan akan dibuka pada tahun 2027 (coming soon). Buat masa ini, sila buat tempahan melalui kaedah sedia ada.';
   if (!tp.aset.length) { const a = await tpApi('/aset'); tp.aset = a.ok ? a.data : []; }
   const r = await tpParse(message);
   if (!r.ok) return r.data.error || 'Maaf, saya tidak dapat memproses tempahan itu. Sila guna borang dalam tab e-Tempahan.';

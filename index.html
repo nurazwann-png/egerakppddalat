@@ -1618,6 +1618,12 @@
     }
 
     /* ===== e-Tempahan ===== */
+    .tp-coming-soon { text-align:center; padding:3.5rem 1.25rem; }
+    .tp-coming-soon h2 { font-family:'Outfit',sans-serif; font-size:1.6rem; color:var(--text-main); margin:0.75rem 0 0.5rem; }
+    .tp-coming-soon p { color:var(--text-muted); font-size:0.92rem; max-width:440px; margin:0 auto 0.5rem; line-height:1.55; }
+    .tp-coming-soon .tp-cs-sub { font-size:0.8rem; }
+    .tp-cs-icon { width:72px; height:72px; margin:0 auto; border-radius:20px; display:flex; align-items:center; justify-content:center; background:rgba(37,99,235,0.1); color:var(--primary-blue); font-size:2rem; }
+    .tp-cs-badge { display:inline-block; margin-top:1rem; padding:5px 14px; border-radius:99px; background:#fef3c7; color:#92400e; font-weight:700; font-size:0.8rem; letter-spacing:0.03em; }
     .tp-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
     .tp-head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:1rem; }
     .tp-head-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -3246,6 +3252,14 @@
 
       <!-- SECTION: E-TEMPAHAN (bot, kenderaan, bilik) -->
       <div class="glass-card" id="tab-tempahan">
+        <div id="tp-coming-soon" class="tp-coming-soon" style="display:none;">
+          <div class="tp-cs-icon"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="tp-cs-badge">Coming soon 2027</div>
+          <h2>e-Tempahan</h2>
+          <p>Tempahan bot, kenderaan dan bilik secara dalam talian akan dibuka pada tahun 2027.</p>
+          <p class="tp-cs-sub">Buat masa ini, sila teruskan tempahan melalui kaedah sedia ada.</p>
+        </div>
+        <div id="tp-content" style="display:none;">
         <div class="tp-head-row">
           <div>
             <h2 class="analysis-title" style="margin:0;"><i class="fa-solid fa-calendar-check"></i> e-Tempahan</h2>
@@ -3277,6 +3291,7 @@
 
         <h3 class="tp-section-title"><i class="fa-solid fa-list-check"></i> Tempahan Saya</h3>
         <div id="tp-mine"></div>
+        </div>
       </div>
 
     </div>
