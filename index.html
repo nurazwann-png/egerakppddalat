@@ -3327,7 +3327,8 @@
         'footer.desc': 'Sistem Pengurusan Rekod Pergerakan Pegawai',
         'footer.org': 'Pejabat Pendidikan Daerah Dalat',
         'modal.edit.title': 'Edit Rekod Pergerakan',
-        'modal.edit.tarikh': 'Tarikh',
+        'modal.edit.tarikhMula': 'Tarikh Mula',
+        'modal.edit.tarikhAkhir': 'Tarikh Akhir',
         'modal.edit.masaLabel': 'Masa Balik (pilihan)',
         'modal.edit.masaPlaceholder': 'cth: 5:00 PTG',
         'modal.edit.notaLabel': 'Nota (pilihan)',
@@ -3639,7 +3640,8 @@
         'footer.desc': 'Officer Movement Record Management System',
         'footer.org': 'Dalat District Education Office',
         'modal.edit.title': 'Edit Movement Record',
-        'modal.edit.tarikh': 'Date',
+        'modal.edit.tarikhMula': 'Start Date',
+        'modal.edit.tarikhAkhir': 'End Date',
         'modal.edit.masaLabel': 'Return Time (optional)',
         'modal.edit.masaPlaceholder': 'e.g. 5:00 PM',
         'modal.edit.notaLabel': 'Notes (optional)',
@@ -6507,7 +6509,7 @@
     }
 
     // Toast pengesahan untuk rekod bertindih; kekal sehingga pengguna memilih
-    function confirmReplaceToast(tarikh, existing) {
+    function confirmReplaceToast(tarikhs, existing) {
       return new Promise(resolve => {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
@@ -6518,12 +6520,14 @@
         head.className = 'toast-confirm-head';
         head.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
         const text = document.createElement('div');
-        const [y, m, d] = tarikh.split('-');
-        text.append(`Anda sudah ada rekod pada ${d}/${m}/${y} dengan masa yang bertindih. Gantikan dengan rekod baharu?`);
+        const dateList = Array.isArray(tarikhs) ? tarikhs : [tarikhs];
+        const fmt = ds => { const [y, m, d] = ds.split('-'); return `${d}/${m}/${y}`; };
+        const multi = dateList.length > 1;
+        text.append(`Anda sudah ada rekod pada ${dateList.map(fmt).join(', ')} dengan masa yang bertindih. Gantikan dengan rekod baharu?`);
         for (const r of existing) {
           const old = document.createElement('span');
           old.className = 'toast-confirm-old';
-          old.textContent = `• ${r.masa} — ${r.tujuan} di ${r.destinasi}`;
+          old.textContent = `• ${multi ? fmt(r.tarikh) + ' ' : ''}${r.masa} — ${r.tujuan} di ${r.destinasi}`;
           text.appendChild(old);
         }
         head.appendChild(text);
@@ -6626,7 +6630,7 @@
       // 1. Bucket by identity
       const buckets = {};
       for (const rec of records) {
-        const key = [rec.nama, rec.destinasi, rec.tujuan, rec.nota, rec.submittedBy].join('\x00');
+        const key = [rec.nama, rec.destinasi, rec.tujuan, rec.nota, rec.masa || '', rec.submittedBy].join('\x00');
         if (!buckets[key]) buckets[key] = [];
         buckets[key].push(rec);
       }
@@ -6716,7 +6720,7 @@
         const ids = JSON.stringify(group.map(r => r.id));
         const deleteCell = isOwnRecord
           ? `<div style="display:flex;gap:4px;justify-content:center;">
-              <button class="action-btn" onclick="openEditModal('${record.id}')" title="Edit Rekod" style="background:rgba(14,116,144,0.25);border-color:rgba(14,116,144,0.4);">
+              <button class="action-btn" onclick="openEditModal(${ids.replace(/"/g, "'")})" title="Edit Rekod" style="background:rgba(14,116,144,0.25);border-color:rgba(14,116,144,0.4);">
                 <i class="fa-solid fa-pen"></i>
               </button>
               <button class="action-btn" onclick="deleteRecordGroup(${ids.replace(/"/g, "'")})" title="Padam Rekod">
@@ -7535,10 +7539,15 @@
         <button onclick="closeEditModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1.2rem;">&times;</button>
       </div>
       <form id="edit-modal-form" onsubmit="submitEditModal(event)">
-        <input type="hidden" id="edit-record-id">
-        <div style="margin-bottom:12px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.tarikh">Tarikh</label>
-          <input type="date" id="edit-tarikh" class="form-input" required style="width:100%;box-sizing:border-box;">
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <div style="flex:1 1 160px;">
+            <label for="edit-tarikh" style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.tarikhMula">Tarikh Mula</label>
+            <input type="date" id="edit-tarikh" class="form-input" required style="width:100%;box-sizing:border-box;">
+          </div>
+          <div style="flex:1 1 160px;">
+            <label for="edit-tarikh-akhir" style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.tarikhAkhir">Tarikh Akhir</label>
+            <input type="date" id="edit-tarikh-akhir" class="form-input" required style="width:100%;box-sizing:border-box;">
+          </div>
         </div>
         <div style="margin-bottom:12px;">
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="form.destLabel">Destinasi / Lokasi</label>
@@ -7860,11 +7869,15 @@
     });
 
     // ===== Edit Rekod Modal =====
-    function openEditModal(recordId) {
-      const record = movementRecords.find(r => r.id === recordId);
-      if (!record) return;
-      document.getElementById('edit-record-id').value = record.id;
+    let editGroupIds = [];
+    function openEditModal(recordIds) {
+      const idList = Array.isArray(recordIds) ? recordIds : [recordIds];
+      const group = movementRecords.filter(r => idList.includes(r.id)).sort((a, b) => a.tarikh.localeCompare(b.tarikh));
+      if (!group.length) return;
+      const record = group[0];
+      editGroupIds = group.map(r => r.id);
       document.getElementById('edit-tarikh').value = record.tarikh || '';
+      document.getElementById('edit-tarikh-akhir').value = group[group.length - 1].tarikh || '';
       document.getElementById('edit-destinasi').value = record.destinasi || '';
       document.getElementById('edit-nota').value = record.nota || '';
       document.getElementById('edit-masa').value = record.masa || '';
@@ -7884,22 +7897,40 @@
     }
     async function submitEditModal(event) {
       event.preventDefault();
-      const id = document.getElementById('edit-record-id').value;
       const body = {
-        tarikh: document.getElementById('edit-tarikh').value,
+        ids: editGroupIds,
+        tarikhMula: document.getElementById('edit-tarikh').value,
+        tarikhAkhir: document.getElementById('edit-tarikh-akhir').value,
         destinasi: document.getElementById('edit-destinasi').value.trim(),
         tujuan: document.getElementById('edit-tujuan').value,
         nota: document.getElementById('edit-nota').value.trim(),
         masa: document.getElementById('edit-masa').value.trim(),
       };
+      if (body.tarikhAkhir < body.tarikhMula) {
+        showToast('Tarikh akhir tidak boleh lebih awal dari tarikh mula.', 'error');
+        return;
+      }
       try {
         const email = currentUserSession ? currentUserSession.email : '';
-        const res = await fetch(`${API_BASE}/movements/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`, {
-          method: 'PATCH',
+        const send = payload => fetch(`${API_BASE}/movements/group-update?email=${encodeURIComponent(email)}`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify(payload)
         });
-        if (!res.ok) { const d = await res.json(); throw new Error(d.error || res.status); }
+        let res = await send(body);
+        let data = {};
+        try { data = await res.json(); } catch(e) {}
+        if (res.status === 409 && data.conflict) {
+          const clashDates = [...new Set((data.existing || []).map(r => r.tarikh))];
+          if (!(await confirmReplaceToast(clashDates, data.existing || []))) {
+            showToast('Perubahan tidak disimpan. Rekod sedia ada dikekalkan.', 'error');
+            return;
+          }
+          res = await send({ ...body, replace: true });
+          data = {};
+          try { data = await res.json(); } catch(e) {}
+        }
+        if (!res.ok) throw new Error(data.error || res.status);
         closeEditModal();
         showToast('Rekod berjaya dikemaskini.', 'success');
         await loadMovementsFromServer(true);

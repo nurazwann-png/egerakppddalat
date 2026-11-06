@@ -738,6 +738,109 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // POST /api/movements/group-update — edit satu urusan (satu atau berbilang hari) sekaligus
+    if (url.pathname === '/api/movements/group-update' && req.method === 'POST') {
+      const email = (url.searchParams.get('email') || '').trim().toLowerCase();
+      const body = await readJsonBody(req);
+      const ids = Array.isArray(body.ids) ? body.ids.filter(x => typeof x === 'string') : [];
+      const { tarikhMula, tarikhAkhir } = body;
+      const destinasi = (body.destinasi || '').trim();
+      const tujuan = (body.tujuan || '').trim();
+      const nota = (body.nota || '').trim();
+      const masa = (body.masa || '').trim();
+      const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+
+      if (!email || !ids.length || ids.length > 62 || !destinasi || !tujuan) {
+        sendJSON(res, 400, { error: 'Maklumat tidak lengkap' }); return;
+      }
+      if (!dateRe.test(tarikhMula || '') || !dateRe.test(tarikhAkhir || '') || isNaN(Date.parse(tarikhMula)) || isNaN(Date.parse(tarikhAkhir))) {
+        sendJSON(res, 400, { error: 'Format tarikh tidak sah' }); return;
+      }
+      if (tarikhAkhir < tarikhMula) {
+        sendJSON(res, 400, { error: 'Tarikh akhir tidak boleh lebih awal dari tarikh mula' }); return;
+      }
+      if (destinasi.length > 300 || tujuan.length > 200 || nota.length > 1000 || masa.length > 50) {
+        sendJSON(res, 400, { error: 'Input melebihi had panjang' }); return;
+      }
+      const newDates = [];
+      for (let ds = tarikhMula; ds <= tarikhAkhir; ds = addDaysStr(ds, 1)) newDates.push(ds);
+      if (newDates.length > 31) {
+        sendJSON(res, 400, { error: 'Julat tarikh maksimum 31 hari' }); return;
+      }
+
+      const { rows: groupRows } = await pool.query('SELECT * FROM movements WHERE id = ANY($1::text[]) ORDER BY tarikh', [ids]);
+      if (groupRows.length !== new Set(ids).size) { sendJSON(res, 404, { error: 'Rekod tidak dijumpai' }); return; }
+      if (groupRows.some(r => r.submittedby !== email)) {
+        sendJSON(res, 403, { error: 'Anda hanya boleh mengedit rekod sendiri' }); return;
+      }
+
+      // Rekod lain milik staf pada tarikh baharu (bukan dalam urusan ini, bukan Berada di Pejabat yang akan diganti)
+      const { rows: others } = await pool.query(
+        `SELECT id, tarikh, destinasi, tujuan, masa FROM movements
+         WHERE submittedby = $1 AND tarikh = ANY($2::text[]) AND NOT (id = ANY($3::text[])) AND tujuan <> 'Berada di Pejabat'
+         ORDER BY tarikh`,
+        [email, newDates, ids]
+      );
+      const clashes = others.filter(r => masaOverlaps(r.masa, masa));
+      if (clashes.length && body.replace !== true) {
+        sendJSON(res, 409, { conflict: true, error: 'Rekod dengan masa bertindih sudah wujud', existing: clashes });
+        return;
+      }
+      const clashIds = clashes.map(r => r.id);
+      const dupes = others.filter(r => !clashIds.includes(r.id) && r.destinasi === destinasi && r.tujuan === tujuan);
+      if (dupes.length) {
+        sendJSON(res, 409, { error: `Rekod yang sama sudah wujud pada ${dupes.map(r => r.tarikh).join(', ')}` });
+        return;
+      }
+
+      const base = groupRows[0];
+      const keepByDate = new Map();
+      const toRemove = [];
+      for (const r of groupRows) {
+        if (newDates.includes(r.tarikh) && !keepByDate.has(r.tarikh)) keepByDate.set(r.tarikh, r);
+        else toRemove.push(r);
+      }
+      const addDates = newDates.filter(d => !keepByDate.has(d));
+
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        if (clashIds.length) {
+          await client.query('DELETE FROM movements WHERE submittedby = $1 AND id = ANY($2::text[])', [email, clashIds]);
+        }
+        await client.query(
+          `DELETE FROM movements WHERE submittedby = $1 AND tarikh = ANY($2::text[]) AND tujuan = 'Berada di Pejabat' AND NOT (id = ANY($3::text[]))`,
+          [email, newDates, ids]
+        );
+        if (toRemove.length) {
+          await client.query('DELETE FROM movements WHERE id = ANY($1::text[])', [toRemove.map(r => r.id)]);
+        }
+        for (const r of keepByDate.values()) {
+          await client.query('UPDATE movements SET destinasi=$1, tujuan=$2, nota=$3, masa=$4 WHERE id=$5',
+            [destinasi, tujuan, nota, masa, r.id]);
+        }
+        const createdAt = new Date().toISOString();
+        for (const d of addDates) {
+          await client.query(
+            `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [generateId(), base.nama, d, destinasi, tujuan, nota, masa, email, base.sektor || 'SPr', createdAt]
+          );
+        }
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+
+      for (const d of newDates) await removeAutoPejabat(email, base.nama, d);
+      for (const r of toRemove) await refillAutoPejabat(email, r.tarikh);
+      sendJSON(res, 200, { ok: true, replaced: clashIds });
+      return;
+    }
+
     // DELETE /api/movements (clear all — admin)
     if (url.pathname === '/api/movements' && req.method === 'DELETE') {
       const token = req.headers['x-admin-token'];
