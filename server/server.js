@@ -112,48 +112,61 @@ async function sendVerificationEmail(toEmail, code, nama) {
   });
 }
 
-const adminSessions = new Map();
+// Sesi admin dan cubaan PIN disimpan dalam DB supaya kekal merentas instance Cloud Run dan deploy.
+// Hanya hash token disimpan, bukan token itu sendiri.
 const SESSION_TTL = 2 * 60 * 60 * 1000;
-function createAdminSession() {
+const hashToken = t => crypto.createHash('sha256').update(t).digest('hex');
+async function createAdminSession() {
   const token = crypto.randomBytes(24).toString('hex');
-  adminSessions.set(token, Date.now() + SESSION_TTL);
+  await pool.query('INSERT INTO admin_sessions (token_hash, expires_at) VALUES ($1, $2)', [hashToken(token), Date.now() + SESSION_TTL]);
   return token;
 }
-function isValidAdminSession(token) {
-  if (!token) return false;
-  const exp = adminSessions.get(token);
-  if (!exp) return false;
-  if (Date.now() > exp) { adminSessions.delete(token); return false; }
+async function isValidAdminSession(token) {
+  if (!token || typeof token !== 'string' || token.length > 100) return false;
+  const { rows } = await pool.query('SELECT expires_at FROM admin_sessions WHERE token_hash = $1', [hashToken(token)]);
+  if (!rows[0]) return false;
+  if (Date.now() > Number(rows[0].expires_at)) {
+    await pool.query('DELETE FROM admin_sessions WHERE token_hash = $1', [hashToken(token)]);
+    return false;
+  }
   return true;
 }
+async function deleteAdminSession(token) {
+  if (!token || typeof token !== 'string') return;
+  await pool.query('DELETE FROM admin_sessions WHERE token_hash = $1', [hashToken(token)]);
+}
+
+const _MAX_FAILS = 5, _WINDOW_MS = 10 * 60 * 1000, _LOCKOUT_MS = 15 * 60 * 1000;
 setInterval(() => {
   const now = Date.now();
-  for (const [t, exp] of adminSessions) if (now > exp) adminSessions.delete(t);
+  pool.query('DELETE FROM admin_sessions WHERE expires_at < $1', [now]).catch(() => {});
+  pool.query('DELETE FROM admin_login_attempts WHERE locked_until < $1 AND first_attempt < $2', [now, now - _WINDOW_MS]).catch(() => {});
 }, 30 * 60 * 1000);
 
-const _loginAttempts = new Map();
-const _MAX_FAILS = 5, _WINDOW_MS = 10 * 60 * 1000, _LOCKOUT_MS = 15 * 60 * 1000;
-// Bersihkan entri lama setiap 30 minit untuk elak memory leak
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, e] of _loginAttempts) {
-    if (now - e.firstAttempt > _WINDOW_MS && e.lockedUntil < now) _loginAttempts.delete(ip);
-  }
-}, 30 * 60 * 1000);
-function _rateLimitCheck(ip) {
-  const now = Date.now(), e = _loginAttempts.get(ip);
-  if (!e || now - e.firstAttempt > _WINDOW_MS) return { locked: false };
-  if (e.lockedUntil > now) return { locked: true, secondsLeft: Math.ceil((e.lockedUntil - now) / 1000) };
+// Cloud Run berada di belakang proksi Google: IP sebenar ialah entri terakhir X-Forwarded-For
+// (entri awal boleh dipalsukan oleh klien, entri terakhir ditambah oleh proksi)
+function clientIp(req) {
+  const xff = (req.headers['x-forwarded-for'] || '').split(',').map(s => s.trim()).filter(Boolean);
+  return xff.length ? xff[xff.length - 1] : (req.socket.remoteAddress || 'unknown');
+}
+async function _rateLimitCheck(ip) {
+  const { rows } = await pool.query('SELECT locked_until FROM admin_login_attempts WHERE ip = $1', [ip]);
+  const lockedUntil = rows[0] ? Number(rows[0].locked_until) : 0;
+  if (lockedUntil > Date.now()) return { locked: true, secondsLeft: Math.ceil((lockedUntil - Date.now()) / 1000) };
   return { locked: false };
 }
-function _rateLimitFail(ip) {
-  const now = Date.now(), e = _loginAttempts.get(ip) || { count: 0, firstAttempt: now, lockedUntil: 0 };
-  if (now - e.firstAttempt > _WINDOW_MS) { _loginAttempts.set(ip, { count: 1, firstAttempt: now, lockedUntil: 0 }); return; }
-  e.count++;
-  if (e.count >= _MAX_FAILS) e.lockedUntil = now + _LOCKOUT_MS;
-  _loginAttempts.set(ip, e);
+async function _rateLimitFail(ip) {
+  await pool.query(
+    `INSERT INTO admin_login_attempts (ip, count, first_attempt, locked_until) VALUES ($1, 1, $2::bigint, 0)
+     ON CONFLICT (ip) DO UPDATE SET
+       count = CASE WHEN $2::bigint - admin_login_attempts.first_attempt > $3::bigint THEN 1 ELSE admin_login_attempts.count + 1 END,
+       first_attempt = CASE WHEN $2::bigint - admin_login_attempts.first_attempt > $3::bigint THEN $2::bigint ELSE admin_login_attempts.first_attempt END,
+       locked_until = CASE WHEN $2::bigint - admin_login_attempts.first_attempt <= $3::bigint AND admin_login_attempts.count + 1 >= $4::int
+                           THEN $2::bigint + $5::bigint ELSE admin_login_attempts.locked_until END`,
+    [ip, Date.now(), _WINDOW_MS, _MAX_FAILS, _LOCKOUT_MS]
+  );
 }
-function _rateLimitClear(ip) { _loginAttempts.delete(ip); }
+async function _rateLimitClear(ip) { await pool.query('DELETE FROM admin_login_attempts WHERE ip = $1', [ip]); }
 
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
@@ -243,6 +256,16 @@ async function initDb() {
     )
   `);
   await pool.query(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS sektor TEXT DEFAULT 'SPr'`);
+  await pool.query(`ALTER TABLE staff ADD COLUMN IF NOT EXISTS nyahaktif_at TEXT`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS admin_sessions (token_hash TEXT PRIMARY KEY, expires_at BIGINT NOT NULL)`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_login_attempts (
+      ip TEXT PRIMARY KEY,
+      count INT NOT NULL DEFAULT 0,
+      first_attempt BIGINT NOT NULL,
+      locked_until BIGINT NOT NULL DEFAULT 0
+    )
+  `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS jawatan_list (
@@ -422,7 +445,7 @@ async function refillAutoPejabat(email, tarikh) {
   if (!email || email === 'system' || !isWeekdayStr(tarikh)) return;
   const { from, to } = pejabatFillWindow();
   if (tarikh < from || tarikh > to) return;
-  const { rows } = await pool.query('SELECT email, nama, sektor FROM staff WHERE email = $1', [email]);
+  const { rows } = await pool.query('SELECT email, nama, sektor FROM staff WHERE email = $1 AND nyahaktif_at IS NULL', [email]);
   if (!rows[0]) return;
   await insertAutoPejabatIfEmpty(rows[0], tarikh);
 }
@@ -466,7 +489,7 @@ async function autoFillPejabat() {
     }
     if (!weekdays.length) return;
 
-    const { rows: staffList } = await pool.query('SELECT email, nama, sektor FROM staff');
+    const { rows: staffList } = await pool.query('SELECT email, nama, sektor FROM staff WHERE nyahaktif_at IS NULL');
     if (!staffList.length) return;
 
     const { rows: existing } = await pool.query(
@@ -588,7 +611,7 @@ async function logAudit(action, detail) {
 }
 
 async function isStaffEmail(email) {
-  const { rows } = await pool.query('SELECT 1 FROM staff WHERE email = $1', [email]);
+  const { rows } = await pool.query('SELECT 1 FROM staff WHERE email = $1 AND nyahaktif_at IS NULL', [email]);
   return rows.length > 0;
 }
 
@@ -604,7 +627,7 @@ function getCorsHeaders(req) {
   return {
     'Access-Control-Allow-Origin': allow,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS, PATCH',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Pin, X-Admin-Token',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token',
     'Vary': 'Origin',
   };
 }
@@ -656,8 +679,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/movements' && req.method === 'GET') {
       const email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const token = req.headers['x-admin-token'];
-      const pin = req.headers['x-admin-pin'];
-      if (!isValidAdminSession(token) && pin !== ADMIN_PIN) {
+      if (!(await isValidAdminSession(token))) {
         if (!email || !(await isStaffEmail(email))) {
           sendJSON(res, 401, { error: 'Akses tidak dibenarkan. Sila log masuk.' });
           return;
@@ -844,8 +866,7 @@ const server = http.createServer(async (req, res) => {
     // DELETE /api/movements (clear all — admin)
     if (url.pathname === '/api/movements' && req.method === 'DELETE') {
       const token = req.headers['x-admin-token'];
-      const pin = req.headers['x-admin-pin'];
-      if (!isValidAdminSession(token) && pin !== ADMIN_PIN) {
+      if (!(await isValidAdminSession(token))) {
         sendJSON(res, 403, { error: 'Admin session diperlukan untuk memadam semua rekod' });
         return;
       }
@@ -860,7 +881,6 @@ const server = http.createServer(async (req, res) => {
       const id = decodeURIComponent(url.pathname.split('/').pop());
       const requesterEmail = url.searchParams.get('email');
       const token = req.headers['x-admin-token'];
-      const pin = req.headers['x-admin-pin'];
 
       const { rows } = await pool.query('SELECT * FROM movements WHERE id = $1', [id]);
       const record = rows[0];
@@ -870,7 +890,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const isOwner = requesterEmail && record.submittedby === requesterEmail;
-      const isAdmin = isValidAdminSession(token) || (pin && pin === ADMIN_PIN);
+      const isAdmin = await isValidAdminSession(token);
 
       if (!isOwner && !isAdmin) {
         sendJSON(res, 403, { error: 'You may only delete your own records' });
@@ -934,8 +954,13 @@ const server = http.createServer(async (req, res) => {
     // GET /api/staff/check
     if (url.pathname === '/api/staff/check' && req.method === 'GET') {
       const email = (url.searchParams.get('email') || '').toLowerCase();
-      const { rows } = await pool.query('SELECT email, nama, jawatan, sektor FROM staff WHERE email = $1', [email]);
-      const staff = rows[0] || null;
+      const { rows } = await pool.query('SELECT email, nama, jawatan, sektor, nyahaktif_at FROM staff WHERE email = $1', [email]);
+      const row = rows[0];
+      if (row && row.nyahaktif_at) {
+        sendJSON(res, 200, { allowed: false, staff: null, deactivated: true });
+        return;
+      }
+      const staff = row ? { email: row.email, nama: row.nama, jawatan: row.jawatan, sektor: row.sektor } : null;
       sendJSON(res, 200, { allowed: !!staff, staff });
       return;
     }
@@ -944,8 +969,8 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/staff/list' && req.method === 'GET') {
       const sektor = url.searchParams.get('sektor');
       const { rows } = sektor
-        ? await pool.query('SELECT nama, jawatan, sektor FROM staff WHERE sektor = $1 ORDER BY nama', [sektor])
-        : await pool.query('SELECT nama, jawatan, sektor FROM staff ORDER BY sektor, nama');
+        ? await pool.query('SELECT nama, jawatan, sektor FROM staff WHERE sektor = $1 AND nyahaktif_at IS NULL ORDER BY nama', [sektor])
+        : await pool.query('SELECT nama, jawatan, sektor FROM staff WHERE nyahaktif_at IS NULL ORDER BY sektor, nama');
       sendJSON(res, 200, { staff: rows });
       return;
     }
@@ -968,7 +993,11 @@ const server = http.createServer(async (req, res) => {
       }
 
       // Semak jika sudah berdaftar (admin-added staff bypass domain check)
-      const existing = await pool.query('SELECT nama, jawatan FROM staff WHERE email = $1', [email]);
+      const existing = await pool.query('SELECT nama, jawatan, nyahaktif_at FROM staff WHERE email = $1', [email]);
+      if (existing.rows.length > 0 && existing.rows[0].nyahaktif_at) {
+        sendJSON(res, 403, { error: 'Akaun ini telah dinyahaktifkan. Sila hubungi admin.' });
+        return;
+      }
       if (existing.rows.length > 0) {
         // Return nama & jawatan dari DB supaya frontend guna nama yang konsisten
         sendJSON(res, 200, { ok: true, alreadyRegistered: true, nama: existing.rows[0].nama, jawatan: existing.rows[0].jawatan });
@@ -1069,8 +1098,8 @@ const server = http.createServer(async (req, res) => {
 
     // POST /api/admin/verify
     if (url.pathname === '/api/admin/verify' && req.method === 'POST') {
-      const ip = req.socket.remoteAddress || 'unknown';
-      const rateCheck = _rateLimitCheck(ip);
+      const ip = clientIp(req);
+      const rateCheck = await _rateLimitCheck(ip);
       if (rateCheck.locked) {
         const mins = Math.ceil(rateCheck.secondsLeft / 60);
         sendJSON(res, 429, { error: `Terlalu banyak percubaan gagal. Cuba semula dalam ${mins} minit.` });
@@ -1079,22 +1108,28 @@ const server = http.createServer(async (req, res) => {
       const body = await readJsonBody(req);
       const ok = timingSafeEqual(body.pin, ADMIN_PIN);
       if (ok) {
-        _rateLimitClear(ip);
-        const token = createAdminSession();
+        await _rateLimitClear(ip);
+        const token = await createAdminSession();
         sendJSON(res, 200, { ok, token });
       } else {
-        _rateLimitFail(ip);
+        await _rateLimitFail(ip);
         sendJSON(res, 200, { ok: false });
       }
+      return;
+    }
+
+    // POST /api/admin/logout — tamatkan sesi di pelayan
+    if (url.pathname === '/api/admin/logout' && req.method === 'POST') {
+      await deleteAdminSession(req.headers['x-admin-token']);
+      sendJSON(res, 200, { ok: true });
       return;
     }
 
     if (url.pathname.startsWith('/api/admin/')) {
       const bodyForWrite = (req.method === 'POST' || req.method === 'PATCH') ? await readJsonBody(req) : null;
       const token = req.headers['x-admin-token'];
-      const pin = req.headers['x-admin-pin'] || (bodyForWrite && bodyForWrite.pin);
 
-      if (!isValidAdminSession(token) && !timingSafeEqual(pin, ADMIN_PIN)) {
+      if (!(await isValidAdminSession(token))) {
         sendJSON(res, 403, { error: 'Invalid admin session' });
         return;
       }
@@ -1115,10 +1150,10 @@ const server = http.createServer(async (req, res) => {
         }
         const normalizedEmail = email.trim().toLowerCase();
         const newNama = nama.trim().toUpperCase();
-        const { rows: before } = await pool.query('SELECT nama FROM staff WHERE email = $1', [normalizedEmail]);
+        const { rows: before } = await pool.query('SELECT nama, nyahaktif_at FROM staff WHERE email = $1', [normalizedEmail]);
         await pool.query(
           `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (email) DO UPDATE SET nama=EXCLUDED.nama, jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor`,
+           ON CONFLICT (email) DO UPDATE SET nama=EXCLUDED.nama, jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor, nyahaktif_at=NULL`,
           [normalizedEmail, newNama, jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
         );
         // Nama ditukar: ikut sama rekod auto supaya tidak berganda di bawah nama lama dan baharu
@@ -1128,25 +1163,40 @@ const server = http.createServer(async (req, res) => {
             [newNama, normNama(before[0].nama)]
           );
         }
-        await logAudit('add_staff', `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
+        await logAudit('add_staff', before[0] && before[0].nyahaktif_at
+          ? `Admin mengaktifkan semula staf ${newNama} (${normalizedEmail}, ${jawatan})`
+          : `Admin menambah/mengemaskini staf ${nama.trim()} (${normalizedEmail}, ${jawatan})`);
         autoFillPejabat();
         sendJSON(res, 201, { ok: true });
         return;
       }
 
-      // DELETE /api/admin/staff/:email
+      // DELETE /api/admin/staff/:email — nyahaktif: sejarah pergerakan dikekalkan, log masuk disekat
       if (url.pathname.startsWith('/api/admin/staff/') && !url.pathname.includes('/sektor') && !url.pathname.includes('/reset') && req.method === 'DELETE') {
         const email = decodeURIComponent(url.pathname.split('/').pop());
         const { rows } = await pool.query('SELECT * FROM staff WHERE email = $1', [email]);
         const staffMember = rows[0];
-        await pool.query('DELETE FROM movements WHERE submittedby = $1', [email]);
-        if (staffMember) {
-          await pool.query('DELETE FROM movements WHERE nama = $1', [staffMember.nama]);
-        }
-        await pool.query('DELETE FROM staff WHERE email = $1', [email]);
-        if (staffMember) {
-          await logAudit('delete_staff', `Admin memadam staf ${staffMember.nama} (${email}) beserta rekod pergerakan`);
-        }
+        if (!staffMember) { sendJSON(res, 404, { error: 'Staf tidak dijumpai' }); return; }
+        await pool.query('UPDATE staff SET nyahaktif_at = $1 WHERE email = $2', [new Date().toISOString(), email]);
+        // Buang rekod auto akan datang sahaja; rekod lepas (termasuk auto) kekal sebagai sejarah
+        await pool.query(
+          `DELETE FROM movements WHERE submittedby = 'system' AND tarikh > $1 AND UPPER(TRIM(nama)) = $2`,
+          [getMalaysiaDateStr(), normNama(staffMember.nama)]
+        );
+        await logAudit('deactivate_staff', `Admin menyahaktifkan staf ${staffMember.nama} (${email}); rekod pergerakan dikekalkan`);
+        sendJSON(res, 200, { ok: true });
+        return;
+      }
+
+      // POST /api/admin/staff/:email/reactivate
+      if (url.pathname.match(/^\/api\/admin\/staff\/[^/]+\/reactivate$/) && req.method === 'POST') {
+        const email = decodeURIComponent(url.pathname.split('/')[4]);
+        const { rows } = await pool.query('SELECT * FROM staff WHERE email = $1', [email]);
+        const staffMember = rows[0];
+        if (!staffMember) { sendJSON(res, 404, { error: 'Staf tidak dijumpai' }); return; }
+        await pool.query('UPDATE staff SET nyahaktif_at = NULL WHERE email = $1', [email]);
+        await logAudit('reactivate_staff', `Admin mengaktifkan semula staf ${staffMember.nama} (${email})`);
+        autoFillPejabat();
         sendJSON(res, 200, { ok: true });
         return;
       }
@@ -1324,7 +1374,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/notices' && req.method === 'GET') {
       const email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const token = req.headers['x-admin-token'];
-      if (!isValidAdminSession(token) && !(await isStaffEmail(email))) {
+      if (!(await isValidAdminSession(token)) && !(await isStaffEmail(email))) {
         sendJSON(res, 401, { error: 'Akses tidak dibenarkan.' }); return;
       }
       const { rows } = await pool.query('SELECT * FROM notices ORDER BY created_at DESC');
@@ -1358,7 +1408,7 @@ const server = http.createServer(async (req, res) => {
       const { rows } = await pool.query('SELECT * FROM notices WHERE id = $1', [id]);
       const notice = rows[0];
       if (!notice) { sendJSON(res, 404, { error: 'Pemakluman tidak dijumpai.' }); return; }
-      if (!isValidAdminSession(token) && notice.created_by !== email) {
+      if (!(await isValidAdminSession(token)) && notice.created_by !== email) {
         sendJSON(res, 403, { error: 'Hanya pencipta atau admin boleh padam.' }); return;
       }
       await pool.query('DELETE FROM notices WHERE id = $1', [id]);
@@ -1406,7 +1456,7 @@ const server = http.createServer(async (req, res) => {
       // Pengesahan: hanya staf sah boleh guna Ejen
       const chatEmail = (body.email || '').trim().toLowerCase();
       const chatToken = req.headers['x-admin-token'];
-      if (!isValidAdminSession(chatToken) && !(await isStaffEmail(chatEmail))) {
+      if (!(await isValidAdminSession(chatToken)) && !(await isStaffEmail(chatEmail))) {
         sendJSON(res, 401, { error: 'Akses tidak dibenarkan.' }); return;
       }
       const userMessage = (body.message || '').trim();

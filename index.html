@@ -1617,6 +1617,18 @@
       font-size: 1.1rem;
     }
 
+    .staff-action-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; white-space: nowrap; background: transparent;
+    }
+    .staff-action-reset { border: 1px solid #f59e0b; color: #b45309; }
+    .staff-action-off { border: 1px solid #fca5a5; color: #dc2626; }
+    .staff-action-on { border: 1px solid #86efac; color: #15803d; }
+    .staff-action-reset:hover { background: #fef3c7; }
+    .staff-action-off:hover { background: #fee2e2; }
+    .staff-action-on:hover { background: #dcfce7; }
+
     .toast.toast-confirm {
       flex-direction: column;
       align-items: stretch;
@@ -2559,11 +2571,21 @@
               <table>
                 <thead><tr>
                   <th style="width:36px;text-align:center;">#</th><th data-i18n="admin.staff.namaLabel">Nama</th><th data-i18n="admin.staff.emailLabel">E-mel</th><th data-i18n="admin.staff.jawatanLabel">Jawatan</th><th data-i18n="admin.staff.sektorHeader">Sektor</th>
-                  <th style="width:60px;text-align:center;" data-i18n="admin.staff.tindakanHeader">Tindakan</th>
+                  <th style="width:190px;text-align:center;" data-i18n="admin.staff.tindakanHeader">Tindakan</th>
                 </tr></thead>
                 <tbody id="staff-table-body"></tbody>
               </table>
             </div>
+            <details id="inactive-staff-section" style="display:none;margin-top:1rem;">
+              <summary style="cursor:pointer;font-size:0.85rem;font-weight:700;color:var(--text-muted);padding:6px 0;">
+                <i class="fa-solid fa-user-slash" style="margin-right:6px;"></i><span id="inactive-staff-title"></span>
+              </summary>
+              <div class="table-container" style="margin-top:0.5rem;">
+                <table>
+                  <tbody id="inactive-staff-body"></tbody>
+                </table>
+              </div>
+            </details>
           </div>
 
           <div class="insights-panel">
@@ -3239,6 +3261,8 @@
         'audit.add_jawatan': 'Tambah Jawatan',
         'audit.self_register': 'Daftar Diri',
         'audit.reset_staff': 'Reset Staf',
+        'audit.deactivate_staff': 'Nyahaktif Staf',
+        'audit.reactivate_staff': 'Aktif Semula Staf',
         'audit.reset_all': 'Reset Semua',
         'audit.update_sektor': 'Tukar Sektor',
         'loading': 'Memuatkan...',
@@ -3271,12 +3295,17 @@
         'toast.recordDeleted': 'Rekod telah dipadamkan.',
         'toast.deleteAllConfirm': 'AMARAN! Padam semua data pergerakan? Tindakan ini tidak boleh dibatalkan.',
         'toast.staffAdded': 'Staf {name} berjaya ditambah.',
-        'toast.staffDeleted': 'Akses staf telah dipadamkan.',
+        'toast.staffDeleted': 'Staf telah dinyahaktifkan. Rekod pergerakan mereka dikekalkan.',
+        'toast.staffReactivated': '{name} telah diaktifkan semula.',
+        'admin.staff.inactiveTitle': 'Staf Tidak Aktif ({n})',
+        'admin.staff.deactivateBtn': 'Nyahaktif',
+        'admin.staff.reactivateBtn': 'Aktifkan semula',
+        'admin.staff.resetBtn': 'Reset',
         'toast.staffResetted': 'Pendaftaran {name} telah ditetapkan semula.',
         'toast.jawatanAdded': 'Jawatan "{j}" berjaya ditambah.',
         'toast.jawatanDeleted': 'Pilihan jawatan telah dipadamkan.',
         'toast.recordDeletedAdmin': 'Rekod telah dipadamkan oleh admin.',
-        'toast.deleteStaffConfirm': 'Padam akses staf {email}? Mereka tidak akan dapat log masuk lagi.',
+        'toast.deleteStaffConfirm': 'Nyahaktifkan {email}? Mereka tidak dapat log masuk lagi, tetapi rekod pergerakan mereka dikekalkan. Anda boleh mengaktifkan semula bila-bila masa.',
         'toast.sektorUpdated': 'Sektor {name} dikemaskini kepada {sektor}.',
         'toast.deleteJawatanConfirm': 'Padam pilihan jawatan "{j}"?',
         'toast.recordDeletedOfficer': 'Rekod pergerakan {name} telah dikeluarkan dari pangkalan.',
@@ -3293,6 +3322,7 @@
         'auth.emailBlocked': 'Pendaftaran baru hanya untuk e-mel @moe.gov.my. Hubungi admin jika e-mel anda telah ditambah.',
         'auth.fillAll': 'Sila lengkapkan semua medan.',
         'auth.emailNotFound': 'E-mel tidak dijumpai dalam sistem. Sila daftar akaun baru.',
+        'auth.deactivated': 'Akaun ini telah dinyahaktifkan. Sila hubungi admin.',
         'auth.serverError': 'Tidak dapat mendaftar/mengesahkan akses. Sila semak sambungan ke pelayan pangkalan data.',
         'form.tujuanComboPlaceholder': 'Pilih atau taip tujuan...',
         'cal.clock': 'Waktu Semasa',
@@ -3554,6 +3584,8 @@
         'audit.add_jawatan': 'Add Position',
         'audit.self_register': 'Self Register',
         'audit.reset_staff': 'Reset Staff',
+        'audit.deactivate_staff': 'Deactivate Staff',
+        'audit.reactivate_staff': 'Reactivate Staff',
         'audit.reset_all': 'Reset All',
         'audit.update_sektor': 'Change Sector',
         'loading': 'Loading...',
@@ -3586,12 +3618,17 @@
         'toast.recordDeleted': 'Record has been deleted.',
         'toast.deleteAllConfirm': 'WARNING! Delete all movement data? This action cannot be undone.',
         'toast.staffAdded': 'Staff {name} added successfully.',
-        'toast.staffDeleted': 'Staff access has been removed.',
+        'toast.staffDeleted': 'Staff member deactivated. Their movement records are kept.',
+        'toast.staffReactivated': '{name} has been reactivated.',
+        'admin.staff.inactiveTitle': 'Inactive Staff ({n})',
+        'admin.staff.deactivateBtn': 'Deactivate',
+        'admin.staff.reactivateBtn': 'Reactivate',
+        'admin.staff.resetBtn': 'Reset',
         'toast.staffResetted': "Staff {name}'s registration has been reset.",
         'toast.jawatanAdded': 'Position "{j}" added successfully.',
         'toast.jawatanDeleted': 'Position option has been removed.',
         'toast.recordDeletedAdmin': 'Record has been deleted by admin.',
-        'toast.deleteStaffConfirm': 'Remove staff access for {email}? They will no longer be able to sign in.',
+        'toast.deleteStaffConfirm': 'Deactivate {email}? They will no longer be able to sign in, but their movement records are kept. You can reactivate them at any time.',
         'toast.sektorUpdated': '{name}\'s sector updated to {sektor}.',
         'toast.deleteJawatanConfirm': 'Remove position option "{j}"?',
         'toast.recordDeletedOfficer': '{name}\'s movement record has been removed.',
@@ -3608,6 +3645,7 @@
         'auth.emailBlocked': 'New registrations require @moe.gov.my email only. Contact admin if your email was added manually.',
         'auth.fillAll': 'Please fill in all fields.',
         'auth.emailNotFound': 'Email not found in the system. Please register a new account.',
+        'auth.deactivated': 'This account has been deactivated. Please contact the admin.',
         'auth.serverError': 'Unable to register/verify access. Please check the database server connection.',
         'form.tujuanComboPlaceholder': 'Select or type purpose...',
         'cal.clock': 'Current Time',
@@ -4493,10 +4531,10 @@
 
       try {
         const res = await fetch(`${API_BASE}/staff/check?email=${encodeURIComponent(email)}`);
-        const { allowed, staff } = await res.json();
+        const { allowed, staff, deactivated } = await res.json();
 
         if (!allowed || !staff) {
-          errorTxt.textContent = t('auth.emailNotFound');
+          errorTxt.textContent = deactivated ? t('auth.deactivated') : t('auth.emailNotFound');
           errorDiv.style.display = 'flex';
           return;
         }
@@ -4527,6 +4565,8 @@
       errorDiv.style.display = 'none';
 
       const pin = document.getElementById('admin-pin-input').value;
+      const errorSpan = errorDiv.querySelector('span');
+      errorSpan.textContent = t('auth.admin.pinError');
 
       try {
         const res = await fetch(`${API_BASE}/admin/verify`, {
@@ -4537,24 +4577,55 @@
         const data = await res.json();
 
         if (!data.ok) {
+          if (data.error) errorSpan.textContent = data.error;
           errorDiv.style.display = 'flex';
           return;
         }
 
         adminToken = data.token;
+        try { sessionStorage.setItem(ADMIN_TOKEN_KEY, adminToken); } catch(e) {}
         document.getElementById('admin-pin-input').value = '';
-        document.getElementById('auth-panel').style.display = 'none';
-        document.getElementById('app-nav').style.display = 'none';
-        document.getElementById('header-user-tag').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'block';
-        loadAdminDashboard();
+        openAdminPanel();
       } catch (err) {
         console.error(err);
         showToast('Tidak dapat berhubung dengan pelayan pangkalan data.', 'error');
       }
     }
 
+    const ADMIN_TOKEN_KEY = 'egerak_admin_token';
+    function showAdminLayout() {
+      document.getElementById('auth-panel').style.display = 'none';
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('app-nav').style.display = 'none';
+      document.getElementById('header-user-tag').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+    }
+    function openAdminPanel() {
+      showAdminLayout();
+      loadAdminDashboard();
+    }
+
+    // Kekalkan sesi admin selepas muat semula halaman (sehingga tab ditutup), jika masih sah di pelayan
+    async function restoreAdminSession() {
+      let token = null;
+      try { token = sessionStorage.getItem(ADMIN_TOKEN_KEY); } catch(e) {}
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': token } });
+        if (!res.ok) throw new Error('expired');
+        adminToken = token;
+        openAdminPanel();
+      } catch (e) {
+        try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch(_) {}
+      }
+    }
+    window.addEventListener('load', restoreAdminSession);
+
     function handleAdminLogout() {
+      if (adminToken) {
+        fetch(`${API_BASE}/admin/logout`, { method: 'POST', headers: { 'X-Admin-Token': adminToken } }).catch(() => {});
+      }
+      try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch(e) {}
       adminToken = null;
       document.getElementById('admin-panel').style.display = 'none';
       showIdentifyView({ preventDefault: () => {} });
@@ -4655,8 +4726,10 @@
       const tbody = document.getElementById('staff-table-body');
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
-        _staffTableData = sortStaffList(await res.json());
+        const all = await res.json();
+        _staffTableData = sortStaffList(all.filter(s => !s.nyahaktif_at));
         _renderStaffRows(_staffTableData);
+        _renderInactiveStaff(sortStaffList(all.filter(s => s.nyahaktif_at)));
       } catch (err) {
         console.error(err);
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">${t('toast.failLoad')}</td></tr>`;
@@ -4679,17 +4752,53 @@
             </select>
           </td>
           <td style="text-align:center;">
-            <div style="display:flex;gap:4px;justify-content:center;">
-              <button class="action-btn" onclick="resetStaffMember('${escapeHtml(s.email)}','${escapeHtml(s.nama)}')" title="Reset Pendaftaran" style="background:rgba(180,83,9,0.25);border-color:rgba(180,83,9,0.4);">
-                <i class="fa-solid fa-rotate-left"></i>
+            <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+              <button class="staff-action-btn staff-action-reset" onclick="resetStaffMember('${escapeHtml(s.email)}','${escapeHtml(s.nama)}')" title="Reset Pendaftaran">
+                <i class="fa-solid fa-rotate-left"></i> ${t('admin.staff.resetBtn')}
               </button>
-              <button class="action-btn" onclick="deleteStaffMember('${escapeHtml(s.email)}')" title="Padam Pengguna">
-                <i class="fa-solid fa-trash-can"></i>
+              <button class="staff-action-btn staff-action-off" onclick="deleteStaffMember('${escapeHtml(s.email)}')" title="${t('admin.staff.deactivateBtn')}">
+                <i class="fa-solid fa-user-slash"></i> ${t('admin.staff.deactivateBtn')}
               </button>
             </div>
           </td>
         </tr>
-      `).join('') || `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">${t('admin.staff.empty')}</td></tr>`;
+      `).join('') || `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">${t('admin.staff.empty')}</td></tr>`;
+    }
+
+    function _renderInactiveStaff(list) {
+      const section = document.getElementById('inactive-staff-section');
+      section.style.display = list.length ? '' : 'none';
+      document.getElementById('inactive-staff-title').textContent = t('admin.staff.inactiveTitle').replace('{n}', list.length);
+      document.getElementById('inactive-staff-body').innerHTML = list.map(s => `
+        <tr>
+          <td style="font-weight:600;color:var(--text-muted);">${escapeHtml(s.nama)}</td>
+          <td style="color:var(--text-muted);">${escapeHtml(s.email)}</td>
+          <td style="color:var(--text-muted);">${escapeHtml(s.sektor || '-')}</td>
+          <td style="color:var(--text-muted);font-size:0.78rem;">${s.nyahaktif_at ? fmtDate(new Date(Date.parse(s.nyahaktif_at) + 8 * 3600000).toISOString().slice(0, 10)) : '-'}</td>
+          <td style="text-align:center;width:170px;">
+            <button class="staff-action-btn staff-action-on" onclick="reactivateStaffMember('${escapeHtml(s.email)}','${escapeHtml(s.nama)}')">
+              <i class="fa-solid fa-user-check"></i> ${t('admin.staff.reactivateBtn')}
+            </button>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function reactivateStaffMember(email, nama) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/staff/${encodeURIComponent(email)}/reactivate`, {
+          method: 'POST',
+          headers: { 'X-Admin-Token': adminToken }
+        });
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        showToast(t('toast.staffReactivated').replace('{name}', nama), 'success');
+        renderStaffTable();
+        renderAuditLog();
+        renderAdminSummaryCards();
+        renderInactiveStaff();
+      } catch (err) {
+        console.error(err);
+        showToast(t('toast.failUpdate'), 'error');
+      }
     }
 
     function staffSearchFilter(query) {
@@ -4772,9 +4881,11 @@
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-        showToast(t('toast.staffDeleted'), 'warning');
+        showToast(t('toast.staffDeleted'), 'success');
         renderStaffTable();
         renderAuditLog();
+        renderAdminSummaryCards();
+        renderInactiveStaff();
       } catch (err) {
         console.error(err);
         showToast(t('toast.failDelete'), 'error');
@@ -4929,7 +5040,7 @@
       fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } })
         .then(r => r.json()).then(list => {
           const el = document.getElementById('admin-card-staff');
-          if (el) el.textContent = list.length;
+          if (el) el.textContent = list.filter(s => !s.nyahaktif_at).length;
         }).catch(() => {});
     }
 
@@ -5111,7 +5222,7 @@
       if (!container) return;
       try {
         const res = await fetch(`${API_BASE}/admin/staff`, { headers: { 'X-Admin-Token': adminToken } });
-        const staffList = await res.json();
+        const staffList = (await res.json()).filter(s => !s.nyahaktif_at);
 
         // Minggu semasa Isnin–Jumaat (waktu Malaysia); hujung minggu = minggu yang baru tamat
         const shift = (ds, n) => { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
@@ -6010,6 +6121,8 @@
           'add_jawatan':   { icon: 'fa-circle-plus',    color: '#16a34a', bg: '#dcfce7', label: t('audit.add_jawatan')     },
           'self_register': { icon: 'fa-user-check',     color: '#1d4ed8', bg: '#dbeafe', label: t('audit.self_register')   },
           'reset_staff':   { icon: 'fa-rotate-left',    color: '#d97706', bg: '#fef3c7', label: t('audit.reset_staff')     },
+          'deactivate_staff': { icon: 'fa-user-slash',  color: '#dc2626', bg: '#fee2e2', label: t('audit.deactivate_staff') },
+          'reactivate_staff': { icon: 'fa-user-check',  color: '#16a34a', bg: '#dcfce7', label: t('audit.reactivate_staff') },
           'reset_all':     { icon: 'fa-bomb',           color: '#7c3aed', bg: '#ede9fe', label: t('audit.reset_all')       },
           'update_sektor': { icon: 'fa-arrows-rotate',  color: '#0891b2', bg: '#e0f2fe', label: t('audit.update_sektor')   },
         };
@@ -6043,8 +6156,8 @@
       const appNav = document.getElementById('app-nav');
       const headerUserTag = document.getElementById('header-user-tag');
 
-      // Always leave the separate admin panel closed when re-evaluating the
-      // regular staff session (e.g. after admin logout or on page load).
+      // Sesi admin aktif (cth. dipulihkan selepas muat semula): kekalkan panel admin
+      if (adminToken) { showAdminLayout(); return; }
       document.getElementById('admin-panel').style.display = 'none';
 
       const footer = document.getElementById('app-footer');
