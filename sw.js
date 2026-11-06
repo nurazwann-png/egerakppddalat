@@ -1,8 +1,9 @@
-const CACHE_NAME = 'ppd-dalat-v17';
+const CACHE_NAME = 'ppd-dalat-v18';
 
 const APP_SHELL = [
   './',
   './index.html',
+  './tempahan.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',

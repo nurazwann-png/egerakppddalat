@@ -1617,6 +1617,91 @@
       font-size: 1.1rem;
     }
 
+    /* ===== e-Tempahan ===== */
+    .tp-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    .tp-head-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:1rem; }
+    .tp-head-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .tp-hint { font-size:0.78rem; color:var(--text-muted); margin:0.5rem 0 1rem; }
+    .tp-label { display:block; font-size:0.75rem; font-weight:600; color:var(--text-muted); margin-bottom:4px; }
+    .tp-label-inline { font-size:0.78rem; font-weight:600; color:var(--text-muted); }
+    .tp-input-sm { padding:6px 10px !important; font-size:0.82rem; width:auto; }
+    .tp-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:8px; font-size:0.8rem; font-weight:600; cursor:pointer; font-family:inherit; }
+    .tp-btn-outline { border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); }
+    .tp-btn-outline:hover { border-color:var(--primary-blue); color:var(--primary-blue); }
+    .tp-ejen { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid var(--primary-blue); border-radius:12px; background:var(--bg-card); margin-bottom:1rem; }
+    .tp-ejen > i { color:var(--primary-blue); font-size:1.1rem; }
+    .tp-ejen input { flex:1; min-width:0; border:none; outline:none; background:transparent; color:var(--text-main); font-size:0.88rem; font-family:inherit; }
+    .tp-ejen button { border:none; border-radius:8px; padding:8px 14px; background:var(--primary-blue); color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer; font-family:inherit; }
+    .tp-ejen button:disabled { opacity:0.6; cursor:default; }
+    .tp-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .tp-types { display:flex; gap:6px; flex-wrap:wrap; }
+    .tp-type-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:99px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-size:0.8rem; font-weight:600; cursor:pointer; font-family:inherit; }
+    .tp-type-btn.active { background:var(--primary-blue); border-color:var(--primary-blue); color:#fff; }
+    .tp-weeknav { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:0.75rem; }
+    .tp-week-label { font-size:0.85rem; font-weight:700; color:var(--text-main); min-width:170px; text-align:center; }
+    .tp-grid { width:100%; min-width:860px; table-layout:fixed; border-collapse:collapse; }
+    .tp-grid th, .tp-grid td { border:1px solid var(--border-color); vertical-align:top; padding:6px; font-size:0.75rem; }
+    .tp-grid th { background:var(--bg-table-header, var(--bg-card)); font-weight:700; text-align:center; }
+    .tp-grid th.tp-today { color:var(--primary-blue); }
+    .tp-grid td.tp-today { background:rgba(37,99,235,0.04); }
+    .tp-grid td.tp-aset-cell { width:170px; }
+    .tp-aset-name { font-weight:700; color:var(--text-main); font-size:0.8rem; }
+    .tp-aset-meta { color:var(--text-muted); font-size:0.7rem; margin-top:2px; }
+    .tp-cell { min-height:46px; }
+    .tp-cell-click { cursor:pointer; }
+    .tp-cell-click:hover { background:rgba(37,99,235,0.06); }
+    .tp-chip { display:block; padding:3px 6px; margin-bottom:4px; border-radius:6px; background:#f1f5f9; border:1px solid #e2e8f0; color:#334155; font-size:0.7rem; line-height:1.3; overflow-wrap:anywhere; }
+    .tp-chip-mine { background:#dbeafe; border-color:#93c5fd; color:#1e3a8a; }
+    .tp-badge { display:inline-block; padding:1px 7px; border-radius:99px; font-size:0.66rem; font-weight:700; }
+    .tp-badge-warn { background:#fef3c7; color:#92400e; }
+    .tp-badge-off { background:#e5e7eb; color:#4b5563; }
+    .tp-badge-ok { background:#dcfce7; color:#166534; }
+    .tp-badge-done { background:#e0e7ff; color:#3730a3; }
+    .tp-badge-cancel { background:#fee2e2; color:#991b1b; }
+    .tp-section-title { font-size:0.95rem; font-weight:700; color:var(--text-main); margin:1.5rem 0 0.75rem; display:flex; align-items:center; gap:8px; }
+    .tp-mine-group { font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin:0.75rem 0 0.4rem; }
+    .tp-mine-item { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-card); margin-bottom:8px; }
+    .tp-mine-main { min-width:0; flex:1; }
+    .tp-mine-title { font-weight:700; color:var(--text-main); font-size:0.85rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .tp-mine-sub { font-size:0.78rem; color:var(--text-muted); margin-top:3px; overflow-wrap:anywhere; }
+    .tp-mine-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    .tp-warn { margin-top:6px; font-size:0.75rem; color:#92400e; background:#fef3c7; border-radius:6px; padding:5px 8px; }
+    .tp-empty { font-size:0.82rem; color:var(--text-muted); padding:0.5rem 0; }
+    .tp-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:10000; align-items:center; justify-content:center; padding:16px; }
+    .tp-modal { background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); border-radius:16px; padding:20px; width:min(560px,100%); max-height:calc(100vh - 32px); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+    .tp-modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .tp-modal-head h3 { margin:0; font-size:1rem; display:flex; align-items:center; gap:8px; }
+    .tp-close { background:none; border:none; font-size:1.4rem; line-height:1; color:var(--text-muted); cursor:pointer; }
+    .tp-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; }
+    .tp-span-2 { grid-column:span 2; }
+    .tp-modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; flex-wrap:wrap; }
+    .tp-summary { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    .tp-summary td { padding:6px 4px; border-bottom:1px solid var(--border-color); vertical-align:top; }
+    .tp-summary td:first-child { width:120px; color:var(--text-muted); font-weight:600; }
+    .tp-status { margin-top:12px; padding:10px 12px; border-radius:10px; font-size:0.83rem; line-height:1.45; }
+    .tp-status-ok { background:#dcfce7; color:#166534; }
+    .tp-status-bad { background:#fee2e2; color:#991b1b; }
+    .tp-status-warn { background:#fef3c7; color:#92400e; }
+    .tp-alt-list { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .tp-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:1rem; }
+    .tp-card { border:1px solid var(--border-color); border-radius:12px; padding:12px 14px; background:var(--bg-card); }
+    .tp-card-lbl { font-size:0.72rem; color:var(--text-muted); font-weight:600; }
+    .tp-card-val { font-size:1.25rem; font-weight:700; color:var(--text-main); margin-top:4px; font-family:'Outfit',sans-serif; }
+    .tp-an-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1.25rem; }
+    .tp-an-title { font-size:0.8rem; font-weight:700; color:var(--text-main); margin-bottom:0.5rem; }
+    .tp-aset-form { display:grid; grid-template-columns:140px 1fr 1fr 110px auto; gap:10px; align-items:end; margin-bottom:1rem; }
+    .tp-aset-form-actions { display:flex; gap:6px; }
+    .tp-aset-table { width:100%; }
+    .tp-util-row { display:grid; grid-template-columns:1fr 60px; gap:8px; align-items:center; margin-bottom:8px; font-size:0.78rem; }
+    .tp-util-bar { height:8px; border-radius:99px; background:#e2e8f0; overflow:hidden; margin-top:3px; }
+    .tp-util-bar > span { display:block; height:100%; background:var(--primary-blue); }
+    @media (max-width: 700px) {
+      .tp-form-grid { grid-template-columns:1fr; }
+      .tp-span-2 { grid-column:auto; }
+      .tp-aset-form { grid-template-columns:1fr 1fr; }
+      .tp-week-label { min-width:0; }
+    }
+
     .staff-action-btn {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
@@ -2140,6 +2225,9 @@
     <button class="nav-btn float-m" onclick="switchTab('jana')">
       <i class="fa-solid fa-file-excel"></i> <span data-i18n="nav.jana">Jana Fail</span>
     </button>
+    <button class="nav-btn float-f" onclick="switchTab('tempahan')">
+      <i class="fa-solid fa-calendar-check"></i> <span>e-Tempahan</span>
+    </button>
   </nav>
 
   <!-- Main Workspace -->
@@ -2413,6 +2501,7 @@
           <button class="admin-tab-btn" onclick="switchAdminTab('jana',this)"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="admin.tab.jana">Jana Fail</span></button>
           <button class="admin-tab-btn" onclick="switchAdminTab('kalend',this)"><i class="fa-solid fa-calendar-days"></i> <span data-i18n="admin.tab.kalend">Kalendar</span></button>
           <button class="admin-tab-btn" onclick="switchAdminTab('pemakluman',this)"><i class="fa-solid fa-bullhorn"></i> Pemakluman</button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('tempahan',this)"><i class="fa-solid fa-calendar-check"></i> e-Tempahan</button>
         </div>
 
         <!-- ===== TAB: RINGKASAN ===== -->
@@ -2727,6 +2816,83 @@
             </div>
             <div id="admin-notice-list" style="display:flex;flex-direction:column;gap:0.85rem;">
               <div style="text-align:center;color:var(--text-muted);padding:2rem;opacity:.5;">Memuatkan...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== TAB: E-TEMPAHAN ADMIN (lihat & analisis sahaja; tiada kelulusan) ===== -->
+        <div class="admin-tab-content" id="admin-tab-tempahan" style="display:none;">
+          <div class="insights-panel">
+            <div class="tp-head-row">
+              <div class="insights-title" style="margin:0;"><i class="fa-solid fa-chart-column"></i> Analisis Tempahan</div>
+              <div class="tp-head-actions">
+                <label for="tp-an-month" class="tp-label-inline">Bulan</label>
+                <input type="month" id="tp-an-month" class="form-input tp-input-sm" onchange="tpAdminRenderAnalysis()">
+                <button type="button" class="tp-btn tp-btn-outline" onclick="tpAdminExport()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+              </div>
+            </div>
+            <p class="tp-hint">Kadar penggunaan dikira daripada waktu bekerja Isnin–Jumaat, 8:00 pagi–5:00 petang. Tempahan yang dibatalkan tidak dikira.</p>
+            <div id="tp-an-cards" class="tp-cards"></div>
+            <div class="tp-an-grid">
+              <div><div class="tp-an-title">Penggunaan setiap aset</div><div id="tp-an-aset"></div></div>
+              <div><div class="tp-an-title">Tempahan mengikut sektor</div><div id="tp-an-sektor" class="tujuan-breakdown"></div></div>
+              <div><div class="tp-an-title">Hari paling sibuk</div><div id="tp-an-hari" class="tujuan-breakdown"></div></div>
+              <div><div class="tp-an-title">Waktu mula paling kerap</div><div id="tp-an-jam" class="tujuan-breakdown"></div></div>
+              <div><div class="tp-an-title">Tujuan utama</div><div id="tp-an-tujuan" class="tujuan-breakdown"></div></div>
+              <div><div class="tp-an-title">Destinasi kenderaan &amp; bot</div><div id="tp-an-destinasi" class="tujuan-breakdown"></div></div>
+            </div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="tp-head-row">
+              <div class="insights-title" style="margin:0;"><i class="fa-solid fa-calendar-week"></i> Kalendar Tempahan</div>
+              <div class="tp-head-actions">
+                <div class="tp-types" id="tp-admin-types"></div>
+              </div>
+            </div>
+            <div class="tp-weeknav">
+              <button type="button" class="tp-btn tp-btn-outline" onclick="tpAdminShiftWeek(-7)" aria-label="Minggu sebelum"><i class="fa-solid fa-chevron-left"></i></button>
+              <span id="tp-admin-week-label" class="tp-week-label"></span>
+              <button type="button" class="tp-btn tp-btn-outline" onclick="tpAdminShiftWeek(7)" aria-label="Minggu seterusnya"><i class="fa-solid fa-chevron-right"></i></button>
+              <button type="button" class="tp-btn tp-btn-outline" onclick="tpAdminShiftWeek(0)">Minggu ini</button>
+            </div>
+            <div class="table-container"><table class="tp-grid" id="tp-admin-grid"></table></div>
+          </div>
+
+          <div class="insights-panel">
+            <div class="insights-title"><i class="fa-solid fa-boxes-stacked"></i> Urus Aset</div>
+            <form id="tp-aset-form" class="tp-aset-form" onsubmit="tpAdminSaveAset(event)">
+              <input type="hidden" id="tp-a-id">
+              <div>
+                <label for="tp-a-jenis" class="tp-label">Jenis</label>
+                <select id="tp-a-jenis" class="form-select" required>
+                  <option value="kenderaan">Kenderaan</option>
+                  <option value="bot">Bot</option>
+                  <option value="bilik">Bilik</option>
+                </select>
+              </div>
+              <div>
+                <label for="tp-a-nama" class="tp-label">Nama</label>
+                <input id="tp-a-nama" class="form-input" maxlength="100" required placeholder="Cth: Van Toyota Hiace">
+              </div>
+              <div>
+                <label for="tp-a-butiran" class="tp-label">Butiran</label>
+                <input id="tp-a-butiran" class="form-input" maxlength="200" placeholder="No. plat / kemudahan">
+              </div>
+              <div>
+                <label for="tp-a-kapasiti" class="tp-label">Kapasiti</label>
+                <input id="tp-a-kapasiti" class="form-input" type="number" min="1" max="500" placeholder="Orang">
+              </div>
+              <div class="tp-aset-form-actions">
+                <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:11px 18px;"><i class="fa-solid fa-floppy-disk"></i> <span id="tp-a-submit">Tambah</span></button>
+                <button type="button" id="tp-a-cancel" class="tp-btn tp-btn-outline" style="display:none;" onclick="tpAdminResetAsetForm()">Batal</button>
+              </div>
+            </form>
+            <div class="table-container">
+              <table class="tp-aset-table">
+                <thead><tr><th>Jenis</th><th>Nama</th><th>Butiran</th><th style="width:80px;">Kapasiti</th><th style="width:150px;">Tempahan akan datang</th><th style="width:170px;">Status</th><th style="width:80px;"></th></tr></thead>
+                <tbody id="tp-aset-body"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -3078,9 +3244,122 @@
         </div>
       </div>
 
+      <!-- SECTION: E-TEMPAHAN (bot, kenderaan, bilik) -->
+      <div class="glass-card" id="tab-tempahan">
+        <div class="tp-head-row">
+          <div>
+            <h2 class="analysis-title" style="margin:0;"><i class="fa-solid fa-calendar-check"></i> e-Tempahan</h2>
+            <p class="tp-hint" style="margin:4px 0 0;">Tempah bot, kenderaan dan bilik. Tempahan disahkan serta-merta jika slot masih kosong.</p>
+          </div>
+          <button type="button" class="submit-btn" style="margin-top:0;width:auto;padding:10px 18px;" onclick="tpOpenForm()"><i class="fa-solid fa-plus"></i> Tempahan Baharu</button>
+        </div>
+
+        <div class="tp-ejen">
+          <i class="fa-solid fa-robot" aria-hidden="true"></i>
+          <label for="tp-ejen-input" class="tp-sr">Tempah dengan Ejen</label>
+          <input id="tp-ejen-input" type="text" maxlength="500" autocomplete="off"
+            placeholder="Cth: Tempah van Khamis 8 pagi–5 petang ke Mukah, 4 orang"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();tpEjenParse();}">
+          <button type="button" id="tp-ejen-btn" onclick="tpEjenParse()">Sediakan</button>
+        </div>
+
+        <div class="tp-toolbar">
+          <div class="tp-types" id="tp-types"></div>
+          <div class="tp-weeknav">
+            <button type="button" class="tp-btn tp-btn-outline" onclick="tpShiftWeek(-7)" aria-label="Minggu sebelum"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="tp-week-label" class="tp-week-label"></span>
+            <button type="button" class="tp-btn tp-btn-outline" onclick="tpShiftWeek(7)" aria-label="Minggu seterusnya"><i class="fa-solid fa-chevron-right"></i></button>
+            <button type="button" class="tp-btn tp-btn-outline" onclick="tpShiftWeek(0)">Minggu ini</button>
+          </div>
+        </div>
+        <div class="table-container"><table class="tp-grid" id="tp-grid"></table></div>
+        <p class="tp-hint"><span class="tp-chip tp-chip-mine" style="display:inline-block;">Tempahan anda</span> &nbsp; Klik ruang kosong untuk menempah aset itu pada hari tersebut.</p>
+
+        <h3 class="tp-section-title"><i class="fa-solid fa-list-check"></i> Tempahan Saya</h3>
+        <div id="tp-mine"></div>
+      </div>
+
     </div>
 
   </main>
+
+  <!-- e-Tempahan: borang -->
+  <div id="tp-form-overlay" class="tp-overlay" style="display:none;" onclick="if(event.target===this)tpCloseForm()">
+    <div class="tp-modal" role="dialog" aria-modal="true" aria-labelledby="tp-form-title">
+      <div class="tp-modal-head">
+        <h3 id="tp-form-title"><i class="fa-solid fa-calendar-plus"></i> Tempahan Baharu</h3>
+        <button type="button" class="tp-close" onclick="tpCloseForm()" aria-label="Tutup">&times;</button>
+      </div>
+      <form id="tp-form" onsubmit="tpFormSubmit(event)">
+        <div class="tp-form-grid">
+          <div>
+            <label for="tp-f-jenis" class="tp-label">Jenis</label>
+            <select id="tp-f-jenis" class="form-select" onchange="tpFillAsetOptions()" required>
+              <option value="kenderaan">Kenderaan</option>
+              <option value="bot">Bot</option>
+              <option value="bilik">Bilik</option>
+            </select>
+          </div>
+          <div>
+            <label for="tp-f-aset" class="tp-label">Aset</label>
+            <select id="tp-f-aset" class="form-select" required></select>
+          </div>
+          <div>
+            <label for="tp-f-tarikh-mula" class="tp-label">Tarikh mula</label>
+            <input type="date" id="tp-f-tarikh-mula" class="form-input" required onchange="tpSyncEndDate()">
+          </div>
+          <div>
+            <label for="tp-f-masa-mula" class="tp-label">Masa mula</label>
+            <input type="time" id="tp-f-masa-mula" class="form-input" required>
+          </div>
+          <div>
+            <label for="tp-f-tarikh-tamat" class="tp-label">Tarikh tamat</label>
+            <input type="date" id="tp-f-tarikh-tamat" class="form-input" required>
+          </div>
+          <div>
+            <label for="tp-f-masa-tamat" class="tp-label">Masa tamat</label>
+            <input type="time" id="tp-f-masa-tamat" class="form-input" required>
+          </div>
+          <div class="tp-span-2">
+            <label for="tp-f-tujuan" class="tp-label">Tujuan</label>
+            <input id="tp-f-tujuan" class="form-input" maxlength="200" required placeholder="Cth: Lawatan pemantauan ke SK Mukah">
+          </div>
+          <div class="tp-span-2" id="tp-f-destinasi-wrap">
+            <label for="tp-f-destinasi" class="tp-label">Destinasi</label>
+            <input id="tp-f-destinasi" class="form-input" maxlength="300" placeholder="Cth: Mukah">
+          </div>
+          <div>
+            <label for="tp-f-penumpang" class="tp-label" id="tp-f-penumpang-label">Bilangan orang</label>
+            <input type="number" id="tp-f-penumpang" class="form-input" min="0" max="200">
+          </div>
+          <div>
+            <label for="tp-f-catatan" class="tp-label">Catatan (pilihan)</label>
+            <input id="tp-f-catatan" class="form-input" maxlength="500">
+          </div>
+        </div>
+        <div class="tp-modal-actions">
+          <button type="button" class="tp-btn tp-btn-outline" onclick="tpCloseForm()">Batal</button>
+          <button type="submit" class="submit-btn" style="margin-top:0;width:auto;padding:10px 18px;"><i class="fa-solid fa-magnifying-glass"></i> Semak &amp; Teruskan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- e-Tempahan: kad tempahan (borang & Ejen) -->
+  <div id="tp-card-overlay" class="tp-overlay" style="display:none;" onclick="if(event.target===this)tpCloseCard()">
+    <div class="tp-modal" role="dialog" aria-modal="true" aria-labelledby="tp-card-title">
+      <div class="tp-modal-head">
+        <h3 id="tp-card-title"><i class="fa-solid fa-ticket"></i> Sahkan Tempahan</h3>
+        <button type="button" class="tp-close" onclick="tpCloseCard()" aria-label="Tutup">&times;</button>
+      </div>
+      <div id="tp-card-body"></div>
+      <div class="tp-modal-actions">
+        <button type="button" class="tp-btn tp-btn-outline" onclick="tpCloseCard()">Batal</button>
+        <button type="button" class="tp-btn tp-btn-outline" onclick="tpCardEdit()"><i class="fa-solid fa-pen"></i> Ubah</button>
+        <button type="button" id="tp-card-confirm" class="submit-btn" style="margin-top:0;width:auto;padding:10px 18px;" onclick="tpConfirm()"><i class="fa-solid fa-check"></i> Sahkan</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Cosmic Toast Containers -->
   <div class="toast-container" id="toast-container"></div>
@@ -5125,6 +5404,7 @@
       btn.classList.add('active');
       if (tab === 'jana') janaUpdateCount();
       if (tab === 'pemakluman') renderAdminNotices();
+      if (tab === 'tempahan') tpAdminLoad();
     }
 
     async function renderAdminNotices() {
@@ -6382,6 +6662,8 @@
         renderCalendar();
       } else if (tabName === 'jana') {
         updateJanaMetrics();
+      } else if (tabName === 'tempahan') {
+        tpLoad();
       }
     }
 
@@ -7628,7 +7910,7 @@
           _pushSubscription = existing;
           updateNotifBtn(true);
           // Pastikan server juga ada subscription ini (e.g. lepas DB reset)
-          fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: existing }) }).catch(()=>{});
+          fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: existing, email: currentUserSession?.email || '' }) }).catch(()=>{});
           return;
         }
       } catch(e) {}
@@ -7656,7 +7938,7 @@
         const { publicKey } = await keyRes.json();
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(publicKey) });
-        await fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: sub }) });
+        await fetch('/api/push/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: sub, email: currentUserSession?.email || '' }) });
         _pushSubscription = sub;
         updateNotifBtn(true);
         showToast('Notifikasi pergerakan diaktifkan!', 'success');
@@ -8104,6 +8386,13 @@
       addEjenTyping();
 
       try {
+        // Permintaan tempahan: Ejen sediakan kad tempahan untuk disahkan pengguna
+        if (typeof tpIsBookingRequest === 'function' && tpIsBookingRequest(message)) {
+          const reply = await tpHandleEjenBooking(message);
+          document.getElementById('ejen-typing-indicator')?.remove();
+          addEjenMsg('agent', reply);
+          return;
+        }
         const sektor = (typeof selectedSector !== 'undefined' && selectedSector) ? selectedSector.code : '';
         const res = await fetch('/api/chat', {
           method: 'POST',
@@ -8266,5 +8555,6 @@
       }
     }
   </script>
+  <script src="tempahan.js"></script>
 </body>
 </html>

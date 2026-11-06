@@ -206,12 +206,22 @@ const SECURITY_HEADERS = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.deepseek.com;",
 };
 
+// Hanya fail aplikasi ini yang boleh dimuat turun. Kod pelayan, .env, skrip seed dan dokumen
+// dalam folder projek tidak boleh dicapai dari web.
+const STATIC_FILES = new Set(['/index.html', '/manifest.json', '/sw.js', '/tempahan.js']);
+const STATIC_DIRS = ['/icons/', '/images/', '/fa/', '/xlsx/'];
+function isPublicStaticPath(p) {
+  if (STATIC_FILES.has(p)) return true;
+  return STATIC_DIRS.some(dir => p.startsWith(dir)) && !p.includes('..') && !/\/\./.test(p);
+}
+
 function serveStatic(req, res, pathname) {
-  const relativePath = pathname === '/' ? '/index.html' : pathname;
+  let relativePath = pathname === '/' ? '/index.html' : pathname;
+  try { relativePath = decodeURIComponent(relativePath); } catch (e) { relativePath = ''; }
   const fullPath = path.join(STATIC_ROOT, relativePath);
-  if (!fullPath.startsWith(STATIC_ROOT)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain' });
-    res.end('Forbidden');
+  if (!isPublicStaticPath(relativePath) || !fullPath.startsWith(STATIC_ROOT)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not found');
     return;
   }
   fs.readFile(fullPath, (err, data) => {
@@ -317,6 +327,43 @@ async function initDb() {
   // Kolum untuk scheduled notifications
   await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS push_sent_at TEXT`);
   await pool.query(`ALTER TABLE movements ADD COLUMN IF NOT EXISTS created_at TEXT`);
+
+  // e-Tempahan: aset (bot / kenderaan / bilik) dan tempahan. Masa disimpan sebagai
+  // 'YYYY-MM-DDTHH:MM' waktu Malaysia supaya perbandingan teks = perbandingan masa.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS aset (
+      id TEXT PRIMARY KEY,
+      jenis TEXT NOT NULL,
+      nama TEXT NOT NULL,
+      butiran TEXT DEFAULT '',
+      kapasiti INT,
+      status TEXT NOT NULL DEFAULT 'aktif',
+      created_at TEXT NOT NULL
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tempahan (
+      id TEXT PRIMARY KEY,
+      aset_id TEXT NOT NULL REFERENCES aset(id),
+      email TEXT NOT NULL,
+      nama TEXT NOT NULL,
+      sektor TEXT,
+      mula TEXT NOT NULL,
+      tamat TEXT NOT NULL,
+      tujuan TEXT NOT NULL,
+      destinasi TEXT DEFAULT '',
+      penumpang INT,
+      catatan TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'aktif',
+      created_at TEXT NOT NULL,
+      updated_at TEXT,
+      dibatalkan_at TEXT,
+      peringatan_at TEXT
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_tempahan_aset_masa ON tempahan(aset_id, mula, tamat)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_tempahan_email ON tempahan(email)`);
+  await pool.query(`ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS email TEXT`);
 }
 
 let vapidPublicKey = '';
@@ -354,6 +401,230 @@ async function sendPushToAll(payload) {
   if (dead.length) {
     console.log(`[push] Membuang ${dead.length} langganan mati`);
     await Promise.allSettled(dead.map(ep => pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1', [ep])));
+  }
+}
+
+// ── e-Tempahan ───────────────────────────────────────────────────────────────
+const TEMPAHAN_JENIS = ['bot', 'kenderaan', 'bilik'];
+const ASET_STATUS = ['aktif', 'penyelenggaraan', 'tidak_aktif'];
+const TEMPAHAN_MAX_HARI_KEHADAPAN = 60;
+const TEMPAHAN_MAX_TEMPOH_HARI = 14;
+const DT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+const dtToMs = s => Date.parse(s + ':00Z');
+const msToDt = ms => new Date(ms).toISOString().slice(0, 16);
+const mytNowDt = () => msToDt(Date.now() + 8 * 3600000);
+const isValidDt = s => typeof s === 'string' && DT_RE.test(s) && !isNaN(dtToMs(s));
+
+async function sendPushToEmail(email, payload) {
+  const { rows } = await pool.query('SELECT endpoint, subscription FROM push_subscriptions WHERE email = $1', [email]);
+  for (const row of rows) {
+    try {
+      await webpush.sendNotification(JSON.parse(row.subscription), JSON.stringify(payload));
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 410) {
+        await pool.query('DELETE FROM push_subscriptions WHERE endpoint = $1', [row.endpoint]).catch(() => {});
+      }
+    }
+  }
+}
+
+async function findTempahanClashes(asetId, mula, tamat, excludeId) {
+  const { rows } = await pool.query(
+    `SELECT id, nama, sektor, mula, tamat FROM tempahan
+     WHERE aset_id = $1 AND status = 'aktif' AND mula < $3 AND tamat > $2 AND id <> $4
+     ORDER BY mula`,
+    [asetId, mula, tamat, excludeId || '']
+  );
+  return rows;
+}
+
+// Cadangan apabila slot sudah ditempah: aset lain jenis sama yang kosong, dan slot kosong
+// terdekat bagi aset yang sama (tempoh sama)
+async function suggestTempahanAlternatives(aset, mula, tamat, excludeId) {
+  const { rows: others } = await pool.query(
+    `SELECT a.id, a.nama FROM aset a
+     WHERE a.jenis = $1 AND a.status = 'aktif' AND a.id <> $2
+       AND NOT EXISTS (SELECT 1 FROM tempahan t WHERE t.aset_id = a.id AND t.status = 'aktif'
+                       AND t.mula < $4 AND t.tamat > $3 AND t.id <> $5)
+     ORDER BY a.nama`,
+    [aset.jenis, aset.id, mula, tamat, excludeId || '']
+  );
+  const dur = dtToMs(tamat) - dtToMs(mula);
+  const limit = msToDt(dtToMs(mula) + TEMPAHAN_MAX_TEMPOH_HARI * 86400000);
+  const { rows: booked } = await pool.query(
+    `SELECT mula, tamat FROM tempahan WHERE aset_id = $1 AND status = 'aktif' AND tamat > $2 AND mula < $3 AND id <> $4 ORDER BY mula`,
+    [aset.id, mula, limit, excludeId || '']
+  );
+  let cand = dtToMs(mula);
+  for (const b of booked) {
+    if (dtToMs(b.mula) < cand + dur && dtToMs(b.tamat) > cand) cand = Math.max(cand, dtToMs(b.tamat));
+  }
+  const nextMula = msToDt(cand);
+  return {
+    aset_lain: others,
+    slot_seterusnya: nextMula < limit ? { mula: nextMula, tamat: msToDt(cand + dur) } : null,
+  };
+}
+
+// Sahkan input tempahan. Pulangkan { error } atau { data, aset }
+async function validateTempahan(body, { email, excludeId } = {}) {
+  const data = {
+    aset_id: String(body.aset_id || ''),
+    mula: String(body.mula || ''),
+    tamat: String(body.tamat || ''),
+    tujuan: String(body.tujuan || '').trim(),
+    destinasi: String(body.destinasi || '').trim(),
+    catatan: String(body.catatan || '').trim(),
+    penumpang: body.penumpang === '' || body.penumpang == null ? null : Number(body.penumpang),
+  };
+  const { rows } = await pool.query('SELECT * FROM aset WHERE id = $1', [data.aset_id]);
+  const aset = rows[0];
+  if (!aset) return { error: 'Sila pilih aset.' };
+  if (aset.status !== 'aktif') return { error: `${aset.nama} tidak boleh ditempah (${aset.status === 'penyelenggaraan' ? 'dalam penyelenggaraan' : 'tidak aktif'}).` };
+  if (!isValidDt(data.mula) || !isValidDt(data.tamat)) return { error: 'Sila isi tarikh dan masa mula serta tamat.' };
+  if (data.tamat <= data.mula) return { error: 'Masa tamat mesti selepas masa mula.' };
+  const now = mytNowDt();
+  if (data.mula < msToDt(dtToMs(now) - 15 * 60000)) return { error: 'Masa mula sudah lepas.' };
+  if (data.mula > msToDt(dtToMs(now) + TEMPAHAN_MAX_HARI_KEHADAPAN * 86400000)) return { error: `Tempahan hanya boleh dibuat sehingga ${TEMPAHAN_MAX_HARI_KEHADAPAN} hari ke hadapan.` };
+  if (dtToMs(data.tamat) - dtToMs(data.mula) > TEMPAHAN_MAX_TEMPOH_HARI * 86400000) return { error: `Tempoh tempahan maksimum ${TEMPAHAN_MAX_TEMPOH_HARI} hari.` };
+  if (!data.tujuan) return { error: 'Sila nyatakan tujuan.' };
+  if (data.tujuan.length > 200 || data.destinasi.length > 300 || data.catatan.length > 500) return { error: 'Input melebihi had panjang.' };
+  if (data.penumpang != null && (!Number.isInteger(data.penumpang) || data.penumpang < 0 || data.penumpang > 200)) return { error: 'Bilangan penumpang tidak sah.' };
+  if (data.penumpang != null && aset.kapasiti && data.penumpang > aset.kapasiti) return { error: `${aset.nama} memuatkan maksimum ${aset.kapasiti} orang.` };
+  return { data, aset };
+}
+
+// Semak ketersediaan; pulangkan maklumat pertindihan + cadangan jika ada
+async function checkTempahanAvailability(aset, data, excludeId) {
+  const clashes = await findTempahanClashes(aset.id, data.mula, data.tamat, excludeId);
+  if (!clashes.length) return { tersedia: true };
+  return {
+    tersedia: false,
+    bertindih: clashes.map(c => ({ nama: c.nama, sektor: c.sektor, mula: c.mula, tamat: c.tamat })),
+    cadangan: await suggestTempahanAlternatives(aset, data.mula, data.tamat, excludeId),
+  };
+}
+
+// Ejen: DeepSeek hanya mengekstrak butiran; pelayan yang sahkan, pilih aset dan semak ketersediaan.
+// Tiada tempahan disimpan di sini — pengguna mesti tekan Sahkan.
+const HARI_BM = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+async function parseTempahanMessage(message, email) {
+  if (!message) return [400, { error: 'Mesej kosong.' }];
+  if (message.length > 500) return [400, { error: 'Mesej terlalu panjang.' }];
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) return [503, { error: 'Ejen tidak tersedia buat masa ini. Sila guna borang tempahan.' }];
+
+  const { rows: asets } = await pool.query(
+    `SELECT id, jenis, nama, butiran, kapasiti FROM aset WHERE status = 'aktif' ORDER BY jenis, nama`);
+  const today = getMalaysiaDateStr();
+  const system = `Anda mengekstrak butiran tempahan aset daripada mesej staf. Pulangkan JSON SAHAJA dengan kunci:
+{"jenis": "bot"|"kenderaan"|"bilik"|null, "aset_id": string|null, "tarikh_mula": "YYYY-MM-DD"|null, "masa_mula": "HH:MM"|null, "tarikh_tamat": "YYYY-MM-DD"|null, "masa_tamat": "HH:MM"|null, "tujuan": string|null, "destinasi": string|null, "penumpang": number|null}
+Hari ini ${today} (${HARI_BM[new Date(today + 'T00:00:00Z').getUTCDay()]}), waktu Malaysia.
+Senarai aset (id | jenis | nama):
+${asets.map(a => `${a.id} | ${a.jenis} | ${a.nama}${a.butiran ? ' (' + a.butiran + ')' : ''}`).join('\n') || '(tiada)'}
+Peraturan:
+- Tafsir tarikh relatif BM/EN: esok, lusa, Isnin depan, minggu depan, "20hb".
+- van, kereta, pacuan empat roda, 4x4, pickup = kenderaan. bot, perahu = bot. bilik, bilik mesyuarat, dewan = bilik.
+- aset_id jika mesej menyebut aset tertentu dalam senarai, termasuk perkataan yang sepadan dengan nama aset (cth "van" → aset bernama "Van ..."). Jika hanya jenis umum disebut (cth "kenderaan"), aset_id null.
+- Masa format 24 jam: "8 pagi" = 08:00, "2 petang" = 14:00, "5 ptg" = 17:00. Jika masa tidak disebut, null. Jangan meneka masa.
+- Jika tarikh tamat tidak disebut, null.
+- tujuan ialah tujuan tempahan (cth "Mesyuarat SPS", "Lawatan ke SK Mukah"). destinasi hanya untuk kenderaan/bot.
+- Jangan reka maklumat.`;
+
+  let parsed;
+  try {
+    const r = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [{ role: 'system', content: system }, { role: 'user', content: message }],
+        response_format: { type: 'json_object' },
+        temperature: 0,
+        max_tokens: 300,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const j = await r.json();
+    parsed = JSON.parse(j.choices[0].message.content);
+  } catch (err) {
+    console.error('[tempahan] Ralat Ejen:', err.message);
+    return [502, { error: 'Ejen tidak dapat memahami permintaan buat masa ini. Sila guna borang tempahan.' }];
+  }
+
+  const asetById = new Map(asets.map(a => [a.id, a]));
+  const dateOk = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const timeOk = s => typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+  let asetId = asetById.has(parsed.aset_id) ? parsed.aset_id : null;
+  let jenis = asetId ? asetById.get(asetId).jenis : (TEMPAHAN_JENIS.includes(parsed.jenis) ? parsed.jenis : null);
+  const tMula = dateOk(parsed.tarikh_mula) ? parsed.tarikh_mula : null;
+  const tTamat = dateOk(parsed.tarikh_tamat) ? parsed.tarikh_tamat : tMula;
+  const mMula = timeOk(parsed.masa_mula) ? parsed.masa_mula : null;
+  const mTamat = timeOk(parsed.masa_tamat) ? parsed.masa_tamat : null;
+  const penumpang = Number.isInteger(parsed.penumpang) && parsed.penumpang >= 0 ? parsed.penumpang : null;
+  const draft = {
+    jenis,
+    aset_id: asetId,
+    mula: tMula && mMula ? `${tMula}T${mMula}` : '',
+    tamat: tTamat && mTamat ? `${tTamat}T${mTamat}` : '',
+    tarikh_mula: tMula || '', masa_mula: mMula || '', tarikh_tamat: tTamat || '', masa_tamat: mTamat || '',
+    tujuan: typeof parsed.tujuan === 'string' ? parsed.tujuan.slice(0, 200) : '',
+    destinasi: typeof parsed.destinasi === 'string' ? parsed.destinasi.slice(0, 300) : '',
+    penumpang,
+  };
+
+  // Hanya jenis disebut: pilih aset jenis itu yang kosong dan muat; utamakan nama yang
+  // mengandungi perkataan daripada mesej (cth "van")
+  let dipilihAuto = false;
+  if (!asetId && jenis && draft.mula && draft.tamat && draft.tamat > draft.mula) {
+    const { rows: free } = await pool.query(
+      `SELECT a.id, a.nama FROM aset a
+       WHERE a.jenis = $1 AND a.status = 'aktif' AND (a.kapasiti IS NULL OR $4::int IS NULL OR a.kapasiti >= $4::int)
+         AND NOT EXISTS (SELECT 1 FROM tempahan t WHERE t.aset_id = a.id AND t.status = 'aktif' AND t.mula < $3 AND t.tamat > $2)
+       ORDER BY a.nama`,
+      [jenis, draft.mula, draft.tamat, penumpang]
+    );
+    const words = (message.toLowerCase().match(/[a-z0-9]{3,}/g) || []);
+    const match = free.find(a => words.some(w => a.nama.toLowerCase().split(/\s+/).includes(w))) || free[0];
+    if (match) { draft.aset_id = match.id; dipilihAuto = true; }
+  }
+
+  const kurang = [];
+  if (!draft.aset_id && !jenis) kurang.push('aset');
+  if (!tMula) kurang.push('tarikh');
+  if (!mMula) kurang.push('masa mula');
+  if (!mTamat) kurang.push('masa tamat');
+  if (!draft.tujuan) kurang.push('tujuan');
+
+  let semak = null;
+  if (!kurang.length && draft.aset_id) {
+    const v = await validateTempahan(draft, { email });
+    semak = v.error ? { sah: false, error: v.error } : { sah: true, ...(await checkTempahanAvailability(v.aset, v.data)) };
+  }
+  return [200, { draft, kurang, dipilih_auto: dipilihAuto, semak }];
+}
+
+// Peringatan sehari sebelum (selepas 5 petang waktu Malaysia)
+async function sendTempahanReminders() {
+  try {
+    const now = mytNowDt();
+    if (now.slice(11, 13) < '17') return;
+    const besok = addDaysStr(now.slice(0, 10), 1);
+    const { rows } = await pool.query(
+      `SELECT t.id, t.email, t.mula, t.tamat, a.nama AS aset_nama FROM tempahan t JOIN aset a ON a.id = t.aset_id
+       WHERE t.status = 'aktif' AND t.peringatan_at IS NULL AND t.mula >= $1 AND t.mula < $2`,
+      [besok + 'T00:00', addDaysStr(besok, 1) + 'T00:00']
+    );
+    for (const t of rows) {
+      await sendPushToEmail(t.email, {
+        title: 'Peringatan e-Tempahan',
+        body: `Esok: ${t.aset_nama}, ${t.mula.slice(11)}–${t.tamat.slice(11)}`,
+        tag: `tempahan-${t.id}`,
+      });
+      await pool.query('UPDATE tempahan SET peringatan_at = $1 WHERE id = $2', [new Date().toISOString(), t.id]);
+    }
+  } catch (err) {
+    console.error('[tempahan] Ralat peringatan:', err.message);
   }
 }
 
@@ -912,6 +1183,134 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // ── e-Tempahan (staf) ───────────────────────────────────────────────────
+    if (url.pathname === '/api/aset' || url.pathname.startsWith('/api/tempahan')) {
+      const isAdminReq = await isValidAdminSession(req.headers['x-admin-token']);
+      const body = (req.method === 'POST' || req.method === 'PATCH') ? await readJsonBody(req) : {};
+      const email = String(url.searchParams.get('email') || body.email || '').trim().toLowerCase();
+      const isStaff = email && await isStaffEmail(email);
+      if (!isStaff && !isAdminReq) { sendJSON(res, 401, { error: 'Akses tidak dibenarkan. Sila log masuk.' }); return; }
+
+      // GET /api/aset — aset yang boleh dilihat dalam kalendar (aktif + penyelenggaraan)
+      if (url.pathname === '/api/aset' && req.method === 'GET') {
+        const { rows } = await pool.query(
+          `SELECT id, jenis, nama, butiran, kapasiti, status FROM aset WHERE status <> 'tidak_aktif' ORDER BY jenis, nama`);
+        sendJSON(res, 200, rows);
+        return;
+      }
+
+      // GET /api/tempahan?from=YYYY-MM-DD&to=YYYY-MM-DD — tempahan aktif dalam julat (untuk kalendar)
+      if (url.pathname === '/api/tempahan' && req.method === 'GET') {
+        const from = url.searchParams.get('from') || '';
+        const to = url.searchParams.get('to') || '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+          sendJSON(res, 400, { error: 'Julat tarikh tidak sah' }); return;
+        }
+        const { rows } = await pool.query(
+          `SELECT id, aset_id, nama, sektor, mula, tamat, tujuan, email FROM tempahan
+           WHERE status = 'aktif' AND mula < $2 AND tamat > $1 ORDER BY mula`,
+          [from + 'T00:00', addDaysStr(to, 1) + 'T00:00']
+        );
+        sendJSON(res, 200, rows.map(({ email: owner, ...r }) => ({ ...r, milik_saya: owner === email })));
+        return;
+      }
+
+      // GET /api/tempahan/saya — semua tempahan pengguna
+      if (url.pathname === '/api/tempahan/saya' && req.method === 'GET') {
+        const { rows } = await pool.query(
+          `SELECT t.id, t.aset_id, t.mula, t.tamat, t.tujuan, t.destinasi, t.penumpang, t.catatan, t.status, t.created_at,
+                  a.nama AS aset_nama, a.jenis AS aset_jenis, a.status AS aset_status
+           FROM tempahan t JOIN aset a ON a.id = t.aset_id
+           WHERE t.email = $1 ORDER BY t.mula DESC LIMIT 200`, [email]);
+        sendJSON(res, 200, rows);
+        return;
+      }
+
+      if (!isStaff) { sendJSON(res, 403, { error: 'Hanya staf boleh membuat tempahan.' }); return; }
+
+      // POST /api/tempahan/semak — semak tanpa simpan (untuk kad tempahan)
+      if (url.pathname === '/api/tempahan/semak' && req.method === 'POST') {
+        const v = await validateTempahan(body, { email });
+        if (v.error) { sendJSON(res, 200, { sah: false, error: v.error }); return; }
+        sendJSON(res, 200, { sah: true, ...(await checkTempahanAvailability(v.aset, v.data, body.id)) });
+        return;
+      }
+
+      // POST /api/tempahan — buat tempahan (disahkan serta-merta jika slot kosong)
+      if (url.pathname === '/api/tempahan' && req.method === 'POST') {
+        const v = await validateTempahan(body, { email });
+        if (v.error) { sendJSON(res, 400, { error: v.error }); return; }
+        const avail = await checkTempahanAvailability(v.aset, v.data);
+        if (!avail.tersedia) { sendJSON(res, 409, { conflict: true, error: `${v.aset.nama} sudah ditempah pada masa itu.`, ...avail }); return; }
+        const { rows: st } = await pool.query('SELECT nama, sektor FROM staff WHERE email = $1', [email]);
+        const id = generateId();
+        const d = v.data;
+        await pool.query(
+          `INSERT INTO tempahan (id, aset_id, email, nama, sektor, mula, tamat, tujuan, destinasi, penumpang, catatan, status, created_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'aktif',$12)`,
+          [id, d.aset_id, email, st[0].nama, st[0].sektor, d.mula, d.tamat, d.tujuan, d.destinasi, d.penumpang, d.catatan, new Date().toISOString()]
+        );
+        // Semakan semula selepas simpan: jika dua orang menempah serentak, yang terkemudian ditarik balik
+        if ((await findTempahanClashes(d.aset_id, d.mula, d.tamat, id)).length) {
+          const { rows: firstRow } = await pool.query(
+            `SELECT id FROM tempahan WHERE aset_id = $1 AND status = 'aktif' AND mula < $3 AND tamat > $2 ORDER BY created_at, id LIMIT 1`,
+            [d.aset_id, d.mula, d.tamat]);
+          if (firstRow[0] && firstRow[0].id !== id) {
+            await pool.query('DELETE FROM tempahan WHERE id = $1', [id]);
+            sendJSON(res, 409, { conflict: true, error: `${v.aset.nama} baru sahaja ditempah oleh orang lain.`, ...(await checkTempahanAvailability(v.aset, d)) });
+            return;
+          }
+        }
+        sendJSON(res, 201, { ok: true, id, aset: { id: v.aset.id, nama: v.aset.nama, jenis: v.aset.jenis } });
+        return;
+      }
+
+      // PATCH /api/tempahan/:id — ubah tempahan sendiri sebelum bermula
+      const editMatch = url.pathname.match(/^\/api\/tempahan\/([^/]+)$/);
+      if (editMatch && req.method === 'PATCH') {
+        const id = decodeURIComponent(editMatch[1]);
+        const { rows } = await pool.query('SELECT * FROM tempahan WHERE id = $1', [id]);
+        const cur = rows[0];
+        if (!cur || cur.email !== email) { sendJSON(res, 404, { error: 'Tempahan tidak dijumpai.' }); return; }
+        if (cur.status !== 'aktif' || cur.mula <= mytNowDt()) { sendJSON(res, 400, { error: 'Tempahan yang sudah bermula atau dibatalkan tidak boleh diubah.' }); return; }
+        const v = await validateTempahan(body, { email, excludeId: id });
+        if (v.error) { sendJSON(res, 400, { error: v.error }); return; }
+        const avail = await checkTempahanAvailability(v.aset, v.data, id);
+        if (!avail.tersedia) { sendJSON(res, 409, { conflict: true, error: `${v.aset.nama} sudah ditempah pada masa itu.`, ...avail }); return; }
+        const d = v.data;
+        await pool.query(
+          `UPDATE tempahan SET aset_id=$1, mula=$2, tamat=$3, tujuan=$4, destinasi=$5, penumpang=$6, catatan=$7,
+             updated_at=$8, peringatan_at=CASE WHEN mula <> $2 THEN NULL ELSE peringatan_at END
+           WHERE id=$9`,
+          [d.aset_id, d.mula, d.tamat, d.tujuan, d.destinasi, d.penumpang, d.catatan, new Date().toISOString(), id]
+        );
+        sendJSON(res, 200, { ok: true, id, aset: { id: v.aset.id, nama: v.aset.nama, jenis: v.aset.jenis } });
+        return;
+      }
+
+      // POST /api/tempahan/:id/batal — batal tempahan sendiri sebelum bermula
+      const batalMatch = url.pathname.match(/^\/api\/tempahan\/([^/]+)\/batal$/);
+      if (batalMatch && req.method === 'POST') {
+        const id = decodeURIComponent(batalMatch[1]);
+        const { rows } = await pool.query('SELECT * FROM tempahan WHERE id = $1', [id]);
+        const cur = rows[0];
+        if (!cur || cur.email !== email) { sendJSON(res, 404, { error: 'Tempahan tidak dijumpai.' }); return; }
+        if (cur.status !== 'aktif' || cur.mula <= mytNowDt()) { sendJSON(res, 400, { error: 'Tempahan yang sudah bermula atau dibatalkan tidak boleh dibatalkan.' }); return; }
+        await pool.query(`UPDATE tempahan SET status = 'dibatalkan', dibatalkan_at = $1 WHERE id = $2`, [new Date().toISOString(), id]);
+        sendJSON(res, 200, { ok: true });
+        return;
+      }
+
+      // POST /api/tempahan/parse — Ejen sediakan draf tempahan daripada ayat biasa
+      if (url.pathname === '/api/tempahan/parse' && req.method === 'POST') {
+        sendJSON(res, ...(await parseTempahanMessage(String(body.message || '').trim(), email)));
+        return;
+      }
+
+      sendJSON(res, 404, { error: 'Not found' });
+      return;
+    }
+
     // DELETE /api/movements (clear all — admin)
     if (url.pathname === '/api/movements' && req.method === 'DELETE') {
       const token = req.headers['x-admin-token'];
@@ -1299,6 +1698,80 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // ── e-Tempahan (admin): urus aset, lihat & analisis tempahan ──────────
+      if (url.pathname === '/api/admin/aset' && req.method === 'GET') {
+        const { rows } = await pool.query(
+          `SELECT a.*, (SELECT count(*)::int FROM tempahan t WHERE t.aset_id = a.id AND t.status = 'aktif' AND t.mula > $1) AS tempahan_akan_datang
+           FROM aset a ORDER BY a.jenis, a.nama`, [mytNowDt()]);
+        sendJSON(res, 200, rows);
+        return;
+      }
+
+      if (url.pathname === '/api/admin/aset' && req.method === 'POST') {
+        const jenis = String(bodyForWrite.jenis || '');
+        const nama = String(bodyForWrite.nama || '').trim();
+        const butiran = String(bodyForWrite.butiran || '').trim();
+        const kapasiti = bodyForWrite.kapasiti === '' || bodyForWrite.kapasiti == null ? null : Number(bodyForWrite.kapasiti);
+        if (!TEMPAHAN_JENIS.includes(jenis) || !nama || nama.length > 100 || butiran.length > 200
+            || (kapasiti != null && (!Number.isInteger(kapasiti) || kapasiti < 1 || kapasiti > 500))) {
+          sendJSON(res, 400, { error: 'Maklumat aset tidak sah.' }); return;
+        }
+        if (bodyForWrite.id) {
+          const { rowCount } = await pool.query('UPDATE aset SET jenis=$1, nama=$2, butiran=$3, kapasiti=$4 WHERE id=$5',
+            [jenis, nama, butiran, kapasiti, String(bodyForWrite.id)]);
+          if (!rowCount) { sendJSON(res, 404, { error: 'Aset tidak dijumpai.' }); return; }
+          await logAudit('edit_aset', `Admin mengemaskini aset ${nama} (${jenis})`);
+        } else {
+          await pool.query('INSERT INTO aset (id, jenis, nama, butiran, kapasiti, status, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+            [generateId(), jenis, nama, butiran, kapasiti, 'aktif', new Date().toISOString()]);
+          await logAudit('add_aset', `Admin menambah aset ${nama} (${jenis})`);
+        }
+        sendJSON(res, 201, { ok: true });
+        return;
+      }
+
+      const asetStatusMatch = url.pathname.match(/^\/api\/admin\/aset\/([^/]+)\/status$/);
+      if (asetStatusMatch && req.method === 'PATCH') {
+        const id = decodeURIComponent(asetStatusMatch[1]);
+        const status = String(bodyForWrite.status || '');
+        if (!ASET_STATUS.includes(status)) { sendJSON(res, 400, { error: 'Status tidak sah.' }); return; }
+        const { rows } = await pool.query('SELECT * FROM aset WHERE id = $1', [id]);
+        const aset = rows[0];
+        if (!aset) { sendJSON(res, 404, { error: 'Aset tidak dijumpai.' }); return; }
+        await pool.query('UPDATE aset SET status = $1 WHERE id = $2', [status, id]);
+        // Aset tidak boleh digunakan: maklumkan pemilik tempahan akan datang supaya tempah semula.
+        // Tempahan tidak dipadam; pengguna nampak amaran dalam "Tempahan Saya".
+        let affected = [];
+        if (status !== 'aktif') {
+          ({ rows: affected } = await pool.query(
+            `SELECT id, email, mula, tamat FROM tempahan WHERE aset_id = $1 AND status = 'aktif' AND mula > $2`, [id, mytNowDt()]));
+          for (const t of affected) {
+            sendPushToEmail(t.email, {
+              title: 'e-Tempahan: sila tempah semula',
+              body: `${aset.nama} tidak boleh digunakan pada ${t.mula.slice(0, 10)}. Sila buat tempahan lain.`,
+              tag: `tempahan-${t.id}`,
+            }).catch(() => {});
+          }
+        }
+        await logAudit('aset_status', `Admin menukar status ${aset.nama} kepada ${status}${affected.length ? ` (${affected.length} tempahan terjejas dimaklumkan)` : ''}`);
+        sendJSON(res, 200, { ok: true, terjejas: affected.length });
+        return;
+      }
+
+      if (url.pathname === '/api/admin/tempahan' && req.method === 'GET') {
+        const from = url.searchParams.get('from') || '';
+        const to = url.searchParams.get('to') || '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+          sendJSON(res, 400, { error: 'Julat tarikh tidak sah' }); return;
+        }
+        const { rows } = await pool.query(
+          `SELECT t.*, a.nama AS aset_nama, a.jenis AS aset_jenis FROM tempahan t JOIN aset a ON a.id = t.aset_id
+           WHERE t.mula < $2 AND t.tamat > $1 ORDER BY t.mula`,
+          [from + 'T00:00', addDaysStr(to, 1) + 'T00:00']);
+        sendJSON(res, 200, rows);
+        return;
+      }
+
       // GET /api/admin/audit
       if (url.pathname === '/api/admin/audit' && req.method === 'GET') {
         const { rows } = await pool.query(`SELECT id, action, detail, performedat AS "performedAt" FROM audit_log ORDER BY performedat DESC LIMIT 200`);
@@ -1478,10 +1951,13 @@ const server = http.createServer(async (req, res) => {
       if (!body.subscription || !body.subscription.endpoint) {
         sendJSON(res, 400, { error: 'Subscription tidak sah' }); return;
       }
+      // E-mel staf dikaitkan supaya peringatan e-Tempahan boleh dihantar kepada pemilik sahaja
+      const subEmail = String(body.email || '').trim().toLowerCase();
+      const linkEmail = subEmail && await isStaffEmail(subEmail) ? subEmail : null;
       await pool.query(
-        `INSERT INTO push_subscriptions(endpoint, subscription, created_at)
-         VALUES($1,$2,$3) ON CONFLICT(endpoint) DO UPDATE SET subscription=$2`,
-        [body.subscription.endpoint, JSON.stringify(body.subscription), new Date().toISOString()]
+        `INSERT INTO push_subscriptions(endpoint, subscription, created_at, email)
+         VALUES($1,$2,$3,$4) ON CONFLICT(endpoint) DO UPDATE SET subscription=$2, email=COALESCE($4, push_subscriptions.email)`,
+        [body.subscription.endpoint, JSON.stringify(body.subscription), new Date().toISOString(), linkEmail]
       );
       sendJSON(res, 201, { ok: true });
       return;
@@ -1750,6 +2226,8 @@ initDb()
     // Scheduled push: semak setiap 5 minit
     checkScheduledPush();
     setInterval(checkScheduledPush, 5 * 60 * 1000);
+    sendTempahanReminders();
+    setInterval(sendTempahanReminders, 30 * 60 * 1000);
     server.listen(PORT, () => {
       console.log(`e-Gerak PPD backend (PostgreSQL) listening on port ${PORT}`);
     });
