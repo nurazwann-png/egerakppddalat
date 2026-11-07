@@ -1179,6 +1179,21 @@
     }
 
     .day-event-item:last-child { margin-bottom: 0; }
+    .day-event-tajuk { font-size:0.76rem; color:var(--text-main); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .day-more-btn { align-self:flex-start; margin-top:2px; padding:4px 0; min-height:28px; border:none; background:none; color:var(--primary-blue, #1d4ed8); font-size:0.74rem; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px; }
+    .day-more-btn i { font-size:0.65rem; }
+    .day-event-details { margin-top:4px; padding:8px 10px; border-radius:8px; background:rgba(29,78,216,0.05); border:1px solid rgba(29,78,216,0.12); display:flex; flex-direction:column; gap:6px; }
+    .day-event-details[hidden] { display:none; }
+    .day-detail-row { display:grid; grid-template-columns:16px 78px 1fr; gap:6px; align-items:start; font-size:0.76rem; line-height:1.4; }
+    .day-detail-row > i { color:var(--text-muted); margin-top:2px; font-size:0.72rem; text-align:center; }
+    .day-detail-label { color:var(--text-muted); font-weight:600; }
+    .day-detail-value { color:var(--text-main); word-break:break-word; }
+    .day-detail-value.muted, .day-detail-value .muted { color:var(--text-muted); font-style:italic; }
+    .day-auto-group { padding:0; overflow:hidden; border-left:3px solid #16a34a !important; }
+    .day-auto-head { width:100%; display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; min-height:44px; border:none; background:transparent; cursor:pointer; font-family:inherit; font-size:0.8rem; font-weight:700; color:var(--text-main); text-align:left; }
+    .day-auto-toggle { font-size:0.72rem; color:var(--primary-blue, #1d4ed8); white-space:nowrap; }
+    .day-auto-list { list-style:none; margin:0; padding:0 12px 10px; display:flex; flex-direction:column; gap:5px; font-size:0.78rem; color:var(--text-muted); }
+    .day-auto-list[hidden] { display:none; }
 
     .day-event-name {
       color: #bfdbfe;
@@ -3793,6 +3808,11 @@
         'cal.clockDays': 'Ahad,Isnin,Selasa,Rabu,Khamis,Jumaat,Sabtu',
         'cal.movements': 'pergerakan',
         'cal.movDate': 'Pergerakan Tarikh:',
+        'cal.more': 'Lihat lagi', 'cal.less': 'Tutup',
+        'cal.tajuk': 'Tajuk', 'cal.nota': 'Nota', 'cal.masa': 'Masa', 'cal.tempoh': 'Tempoh',
+        'cal.noNota': 'Tiada tajuk / nota', 'cal.noMasa': 'Tidak dinyatakan', 'cal.oneDay': 'Sehari sahaja',
+        'cal.dayOf': 'hari ke-{i} daripada {n}',
+        'cal.autoGroup': '{n} pegawai berada di pejabat', 'cal.autoShow': 'Lihat senarai', 'cal.autoHide': 'Sembunyi',
         'cal.noMov': 'Tiada pergerakan berjadual pada tarikh ini. Semua berada di pangkalan.',
         'cal.year': 'Tahun',
         'period.all.label': 'Sepanjang masa',
@@ -4164,6 +4184,11 @@
         'cal.clockDays': 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
         'cal.movements': 'movements',
         'cal.movDate': 'Movements on:',
+        'cal.more': 'See more', 'cal.less': 'Close',
+        'cal.tajuk': 'Title', 'cal.nota': 'Notes', 'cal.masa': 'Time', 'cal.tempoh': 'Duration',
+        'cal.noNota': 'No title / notes', 'cal.noMasa': 'Not stated', 'cal.oneDay': 'One day only',
+        'cal.dayOf': 'day {i} of {n}',
+        'cal.autoGroup': '{n} officers in the office', 'cal.autoShow': 'Show list', 'cal.autoHide': 'Hide',
         'cal.noMov': 'No scheduled movements on this date. All officers are at base.',
         'cal.year': 'Year',
         'period.all.label': 'All time',
@@ -6914,25 +6939,7 @@
         return;
       }
 
-      allEntries.forEach(r => {
-        const sc = r.sektor ? (SECTOR_COLORS[r.sektor] || SECTOR_COLORS['SPr']) : null;
-        const sektorBadge = sc ? `<span style="font-size:0.65rem;background:${sc.primary}22;color:${sc.primary};border:1px solid ${sc.primary}44;border-radius:4px;padding:0 6px;margin-left:4px;font-weight:700;">${escapeHtml(r.sektor)}</span>` : '';
-        const li = document.createElement('li');
-        li.className = 'day-event-item';
-        if (r._auto) {
-          li.style.opacity = '0.6';
-          li.style.borderLeft = '3px solid #16a34a';
-        } else if (sc) {
-          li.style.borderLeft = `3px solid ${sc.primary}`;
-        }
-        li.innerHTML = `
-          <span class="day-event-name"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.5;"></i>${escapeHtml(r.nama)}${sektorBadge}</span>
-          <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
-          <span class="day-event-tujuan"><span class="tujuan-badge ${getTujuanBadgeClass(r.tujuan||'')}">${escapeHtml(r.tujuan||'')}</span></span>
-          ${r.masa ? `<span style="font-size:0.68rem;color:var(--text-muted);margin-top:1px;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${escapeHtml(r.masa)}</span>` : ''}
-        `;
-        list.appendChild(li);
-      });
+      renderDayEntries(list, allEntries, adminMovementData, dateString);
     }
 
     function adminAdjustMonth(offset) {
@@ -8113,6 +8120,85 @@
       renderCalendar();
     }
 
+    // --- Senarai pergerakan sehari (kalendar staf & admin) ---
+    // Rekod sebenar dahulu dengan butang "Lihat lagi"; rekod "Berada di Pejabat" digabung dalam satu baris
+    function dayEntryIsAuto(r) { return !!r._auto || r.submittedBy === 'system'; }
+
+    function dayEntrySektorBadge(r) {
+      const sc = r.sektor ? (SECTOR_COLORS[r.sektor] || SECTOR_COLORS['SPr']) : null;
+      return sc ? `<span style="font-size:0.65rem;background:${sc.primary}22;color:${sc.primary};border:1px solid ${sc.primary}44;border-radius:4px;padding:0 6px;margin-left:4px;font-weight:700;">${escapeHtml(r.sektor)}</span>` : '';
+    }
+
+    // Tempoh perjalanan berbilang hari yang merangkumi rekod ini (jika ada)
+    function dayEntryTrip(r, source) {
+      if (!r.id || !Array.isArray(source)) return null;
+      const mine = source.filter(x => x.nama === r.nama && x.submittedBy === r.submittedBy && x.submittedBy !== 'system');
+      const group = groupConsecutiveRecords(mine).find(g => g.some(x => x.id === r.id));
+      if (!group || group.length < 2) return null;
+      return { first: group[0].tarikh, last: group[group.length - 1].tarikh, idx: group.findIndex(x => x.id === r.id) + 1, n: group.length };
+    }
+
+    function toggleDayDetails(btn) {
+      const box = btn.parentElement.querySelector('.day-event-details');
+      const open = box.hidden;
+      box.hidden = !open;
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.querySelector('span').textContent = t(open ? 'cal.less' : 'cal.more');
+      btn.querySelector('i').className = open ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+    }
+
+    function renderDayEntries(list, entries, source, dateString) {
+      const real = entries.filter(r => !dayEntryIsAuto(r));
+      const autos = entries.filter(dayEntryIsAuto);
+
+      real.forEach(r => {
+        const sc = r.sektor ? (SECTOR_COLORS[r.sektor] || SECTOR_COLORS['SPr']) : null;
+        const li = document.createElement('li');
+        li.className = 'day-event-item';
+        if (sc) li.style.borderLeft = `3px solid ${sc.primary}`;
+        const trip = dayEntryTrip(r, source);
+        const nota = (r.nota || '').trim();
+        const tajukLabel = tajukKeyFor(r.tujuan) ? t('cal.tajuk') : t('cal.nota');
+        const row = (icon, label, value, muted) => `<div class="day-detail-row"><i class="${icon}"></i><span class="day-detail-label">${label}</span><span class="day-detail-value${muted ? ' muted' : ''}">${value}</span></div>`;
+        li.innerHTML = `
+          <span class="day-event-name"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.5;"></i>${escapeHtml(r.nama)}${dayEntrySektorBadge(r)}</span>
+          <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
+          <span class="day-event-tujuan"><span class="tujuan-badge ${getTujuanBadgeClass(r.tujuan||'')}">${escapeHtml(r.tujuan||'')}</span></span>
+          ${nota ? `<span class="day-event-tajuk">${escapeHtml(nota)}</span>` : ''}
+          <button type="button" class="day-more-btn" aria-expanded="false" onclick="toggleDayDetails(this)"><span>${t('cal.more')}</span> <i class="fa-solid fa-chevron-down"></i></button>
+          <div class="day-event-details" hidden>
+            ${row('fa-solid fa-heading', tajukLabel, nota ? escapeHtml(nota) : t('cal.noNota'), !nota)}
+            ${row('fa-regular fa-clock', t('cal.masa'), r.masa ? escapeHtml(r.masa) : t('cal.noMasa'), !r.masa)}
+            ${row('fa-regular fa-calendar', t('cal.tempoh'), trip
+              ? `${fmtDate(trip.first)} – ${fmtDate(trip.last)} <span class="muted">(${t('cal.dayOf').replace('{i}', trip.idx).replace('{n}', trip.n)})</span>`
+              : t('cal.oneDay'))}
+          </div>
+        `;
+        list.appendChild(li);
+      });
+
+      if (autos.length) {
+        const li = document.createElement('li');
+        li.className = 'day-event-item day-auto-group';
+        li.innerHTML = `
+          <button type="button" class="day-auto-head" aria-expanded="false">
+            <span><i class="fa-solid fa-building" style="margin-right:6px;color:#16a34a;"></i>${t('cal.autoGroup').replace('{n}', autos.length)}</span>
+            <span class="day-auto-toggle">${t('cal.autoShow')} <i class="fa-solid fa-chevron-down"></i></span>
+          </button>
+          <ul class="day-auto-list" hidden>
+            ${autos.map(r => `<li>${escapeHtml(r.nama)}${dayEntrySektorBadge(r)}</li>`).join('')}
+          </ul>`;
+        const head = li.querySelector('.day-auto-head');
+        head.onclick = () => {
+          const ul = li.querySelector('.day-auto-list');
+          ul.hidden = !ul.hidden;
+          head.setAttribute('aria-expanded', ul.hidden ? 'false' : 'true');
+          li.querySelector('.day-auto-toggle').innerHTML = `${t(ul.hidden ? 'cal.autoShow' : 'cal.autoHide')} <i class="fa-solid fa-chevron-${ul.hidden ? 'down' : 'up'}"></i>`;
+        };
+        list.appendChild(li);
+      }
+    }
+
     async function updateSelectedDayEvents(dateString) {
       const title = document.getElementById('selected-day-title');
       const list = document.getElementById('selected-day-list');
@@ -8155,25 +8241,7 @@
         return;
       }
 
-      allEntries.forEach(r => {
-        const sc = r.sektor ? (SECTOR_COLORS[r.sektor] || SECTOR_COLORS['SPr']) : null;
-        const sektorBadge = sc ? `<span style="font-size:0.65rem;background:${sc.primary}22;color:${sc.primary};border:1px solid ${sc.primary}44;border-radius:4px;padding:0 6px;margin-left:4px;font-weight:700;">${escapeHtml(r.sektor)}</span>` : '';
-        const li = document.createElement('li');
-        li.className = 'day-event-item';
-        if (r._auto) {
-          li.style.opacity = '0.6';
-          li.style.borderLeft = '3px solid #16a34a';
-        } else if (sc) {
-          li.style.borderLeft = `3px solid ${sc.primary}`;
-        }
-        li.innerHTML = `
-          <span class="day-event-name"><i class="fa-solid fa-user" style="font-size:0.7rem;margin-right:5px;opacity:0.5;"></i>${escapeHtml(r.nama)}${sektorBadge}</span>
-          <span class="day-event-dest"><i class="fa-solid fa-location-dot" style="margin-right:5px;"></i>${escapeHtml(r.destinasi||'PPD Dalat')}</span>
-          <span class="day-event-tujuan"><span class="tujuan-badge ${getTujuanBadgeClass(r.tujuan||'')}">${escapeHtml(r.tujuan||'')}</span></span>
-          ${r.masa ? `<span style="font-size:0.68rem;color:var(--text-muted);margin-top:1px;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${escapeHtml(r.masa)}</span>` : ''}
-        `;
-        list.appendChild(li);
-      });
+      renderDayEntries(list, allEntries, allMovementRecords, dateString);
     }
 
     // Fetch staff jawatan map: nama (uppercase) → { jawatan, sektor }
