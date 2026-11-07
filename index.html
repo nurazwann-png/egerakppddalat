@@ -1322,6 +1322,10 @@
       overflow: hidden;
       overflow-wrap: break-word;
     }
+    .req-star { color:#dc2626; font-weight:700; }
+    .tajuk-hint { font-size:0.75rem; color:#b45309; margin-top:5px; line-height:1.4; }
+    .tajuk-hint i { margin-right:4px; }
+    textarea.tajuk-missing { border-color:#dc2626 !important; box-shadow:0 0 0 3px rgba(220,38,38,0.15); }
     .nota-clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; line-height:1.45; }
     .nota-clamp.nota-long { cursor:pointer; }
     .nota-clamp.open { display:block; -webkit-line-clamp:unset; }
@@ -3214,8 +3218,12 @@
 
             <!-- Nota -->
             <div class="form-group">
-              <label class="form-label" for="nota" data-i18n="form.notaLabel">Nota Tambahan</label>
+              <label class="form-label" for="nota">
+                <span class="nota-lbl-normal" data-i18n="form.notaLabel">Nota Tambahan</span>
+                <span class="nota-lbl-tajuk" style="display:none;"><span data-i18n="form.tajukLabel">Tajuk Program / Aktiviti</span> <span class="req-star">*</span></span>
+              </label>
               <textarea class="form-textarea" id="nota" placeholder="Masukkan ulasan ringkas mengenai agenda pergerakan..." data-i18n-placeholder="form.notaPlaceholder"></textarea>
+              <p class="tajuk-hint" id="nota-tajuk-hint" style="display:none;"><i class="fa-solid fa-circle-info"></i> <span data-i18n="form.tajukHint">Wajib diisi untuk Mesyuarat, Bengkel, Kursus dan Tugas Rasmi Lain. Tulis tajuk penuh; butiran lain boleh ditambah selepas tajuk.</span></p>
             </div>
 
             <button type="submit" class="submit-btn">
@@ -3556,6 +3564,13 @@
         'form.masaOptional': '(Pilihan)',
         'form.masaHint': 'Masa Bertolak · Masa Balik',
         'form.notaLabel': 'Nota Tambahan',
+        'toast.customTujuan': '"{custom}" tiada dalam senarai tujuan. Simpan sebagai {lain} dengan tajuk "{custom}"?',
+        'toast.customTujuanSub': 'Tajuk akan dimasukkan ke ruangan Tajuk/Nota supaya statistik kekal kemas.',
+        'toast.customTujuanYes': 'Ya, simpan',
+        'toast.customTujuanNo': 'Pilih semula',
+        'form.tajukLabel': 'Tajuk Program / Aktiviti',
+        'form.tajukHint': 'Wajib diisi untuk Mesyuarat, Bengkel, Kursus dan Tugas Rasmi Lain. Tulis tajuk penuh; butiran lain boleh ditambah selepas tajuk.',
+        'toast.tajukRequired': 'Sila isi tajuk {tujuan} dalam ruangan Tajuk (sekurang-kurangnya 5 aksara).',
         'form.notaPlaceholder': 'Masukkan ulasan ringkas mengenai agenda pergerakan...',
         'form.submit': 'Hantar Rekod',
         'tujuan.pejabat': 'Berada di Pejabat',
@@ -3920,6 +3935,13 @@
         'form.masaOptional': '(Optional)',
         'form.masaHint': 'Departure Time · Return Time',
         'form.notaLabel': 'Additional Notes',
+        'toast.customTujuan': '"{custom}" is not in the purpose list. Save it as {lain} with the title "{custom}"?',
+        'toast.customTujuanSub': 'The title goes into the Title/Notes field so the statistics stay tidy.',
+        'toast.customTujuanYes': 'Yes, save',
+        'toast.customTujuanNo': 'Choose again',
+        'form.tajukLabel': 'Programme / Activity Title',
+        'form.tajukHint': 'Required for Meetings, Workshops, Courses and Other Official Duties. Write the full title; other details can follow it.',
+        'toast.tajukRequired': 'Please enter the title of the {tujuan} in the Title field (at least 5 characters).',
         'form.notaPlaceholder': 'Enter a brief description of the movement agenda...',
         'form.submit': 'Submit Record',
         'tujuan.pejabat': 'In Office',
@@ -7262,7 +7284,59 @@
     let borangSessionCount = 0;
     let borangSessionDate = '';
 
+    // Tujuan yang memerlukan tajuk (diisi dalam ruangan Nota). Diterima dalam BM dan EN.
+    const TAJUK_KEYS = ['tujuan.mesyuarat', 'tujuan.bengkel', 'tujuan.kursus', 'tujuan.lain'];
+    const TAJUK_CONTOH = {
+      'tujuan.mesyuarat': 'Cth: Mesyuarat Jawatankuasa Kurikulum PPD Dalat',
+      'tujuan.bengkel': 'Cth: Bengkel Penataran Kurikulum Matematik',
+      'tujuan.kursus': 'Cth: Kursus Induksi Guru Baharu 2026',
+      'tujuan.lain': 'Cth: Program Prestij SK Kg Teh',
+    };
+    const TAJUK_MIN = 5;
+    function tajukKeyFor(tujuan) {
+      const v = (tujuan || '').trim().toLowerCase();
+      if (!v) return null;
+      for (const k of TAJUK_KEYS) {
+        const names = [LANG_STRINGS.bm[k], LANG_STRINGS.en && LANG_STRINGS.en[k]].filter(Boolean).map(x => x.toLowerCase());
+        if (names.includes(v)) return k;
+      }
+      if (v === 'mesyuarat') return 'tujuan.mesyuarat';
+      if (v === 'kursus') return 'tujuan.kursus';
+      return null;
+    }
+    function updateTajukRequirement(notaId, tujuan) {
+      const nota = document.getElementById(notaId);
+      if (!nota) return;
+      const group = nota.parentElement;
+      const key = tajukKeyFor(tujuan);
+      group.querySelector('.nota-lbl-normal').style.display = key ? 'none' : '';
+      group.querySelector('.nota-lbl-tajuk').style.display = key ? '' : 'none';
+      document.getElementById(notaId + '-tajuk-hint').style.display = key ? '' : 'none';
+      nota.required = !!key;
+      nota.minLength = key ? TAJUK_MIN : 0;
+      if (key) nota.placeholder = TAJUK_CONTOH[key];
+      else if (notaId === 'nota') nota.placeholder = t('form.notaPlaceholder');
+      else nota.placeholder = '';
+      if (!key) nota.classList.remove('tajuk-missing');
+    }
+    // Pulangkan true jika tajuk lengkap; jika tidak, tunjuk mesej dan fokus pada ruangan
+    function checkTajuk(notaId, tujuan) {
+      if (!tajukKeyFor(tujuan)) return true;
+      const nota = document.getElementById(notaId);
+      if (nota.value.trim().length >= TAJUK_MIN) { nota.classList.remove('tajuk-missing'); return true; }
+      nota.classList.add('tajuk-missing');
+      nota.focus();
+      showToast(t('toast.tajukRequired').replace('{tujuan}', tujuan), 'error');
+      return false;
+    }
+    document.addEventListener('input', e => {
+      if (e.target && (e.target.id === 'nota' || e.target.id === 'edit-nota') && e.target.value.trim().length >= TAJUK_MIN) {
+        e.target.classList.remove('tajuk-missing');
+      }
+    });
+
     function handleTujuanChange(val) {
+      updateTajukRequirement('nota', val);
       const isPejabat = val === 'Berada di Pejabat';
       const desField = document.getElementById('destinasi');
       const masaBertolak = document.getElementById('masa_bertolak');
@@ -7317,8 +7391,10 @@
       const isMultiday = document.getElementById('multiday-toggle').checked;
       const tarikhAkhir = isMultiday ? document.getElementById('tarikh_akhir').value : tarikhMula;
       const destinasi = document.getElementById('destinasi').value.trim();
+      if (!(await resolveCustomTujuan('tujuan', 'nota', t('tujuan.lain')))) return;
       const tujuan = document.getElementById('tujuan').value;
       const nota = document.getElementById('nota').value.trim();
+      if (!checkTajuk('nota', tujuan)) return;
       const masaBertolak = document.getElementById('masa_bertolak').value;
       const masaBalik = document.getElementById('masa_balik').value;
       const masa = masaBertolak && masaBalik ? `${masaBertolak} - ${masaBalik}` : masaBertolak || masaBalik || '';
@@ -7394,6 +7470,7 @@
         document.getElementById('destinasi').value = '';
         document.getElementById('tujuan').value = '';
         document.getElementById('nota').value = '';
+        updateTajukRequirement('nota', '');
 
         // Update title
         const fmtMula = new Date(tarikhMula + 'T00:00:00').toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -7479,6 +7556,73 @@
       container.appendChild(toast);
       setTimeout(() => toast.classList.add('show'), 50);
       setTimeout(close, 8000);
+    }
+
+    // --- Tujuan di luar senarai: tukar kepada "Tugas Rasmi Lain" dan pindahkan teks ke ruangan Tajuk ---
+    const TUJUAN_KEYS_ALL = ['tujuan.pejabat','tujuan.mesyuarat','tujuan.bengkel','tujuan.kursus',
+      'tujuan.pemantauan','tujuan.cutiUmum','tujuan.pelepasan','tujuan.cuti','tujuan.lain'];
+    const TUJUAN_LAMA = ['mesyuarat', 'kursus', 'cuti', 'bengkel', 'pemantauan'];
+    function isKnownTujuan(val) {
+      const v = (val || '').trim().toLowerCase();
+      if (!v) return true;
+      if (TUJUAN_LAMA.includes(v)) return true;
+      return TUJUAN_KEYS_ALL.some(k => [LANG_STRINGS.bm[k], LANG_STRINGS.en && LANG_STRINGS.en[k]]
+        .filter(Boolean).some(x => x.toLowerCase() === v));
+    }
+    // Pulangkan true jika boleh teruskan simpan; false jika pengguna batal
+    async function resolveCustomTujuan(tujuanId, notaId, lainValue) {
+      const tujuanEl = document.getElementById(tujuanId);
+      const notaEl = document.getElementById(notaId);
+      const custom = (tujuanEl.value || '').trim();
+      if (isKnownTujuan(custom)) return true;
+      const yes = await confirmCustomTujuanToast(custom, lainValue);
+      if (!yes) { tujuanEl.focus(); return false; }
+      const nota = notaEl.value.trim();
+      if (!nota) notaEl.value = custom;
+      else if (!nota.toLowerCase().startsWith(custom.toLowerCase())) notaEl.value = `${custom} — ${nota}`;
+      if (tujuanEl.tagName === 'SELECT' && ![...tujuanEl.options].some(o => o.value === lainValue)) {
+        tujuanEl.add(new Option(lainValue, lainValue));
+      }
+      tujuanEl.value = lainValue;
+      if (tujuanId === 'tujuan') handleTujuanChange(lainValue);
+      else updateTajukRequirement(notaId, lainValue);
+      return true;
+    }
+    function confirmCustomTujuanToast(custom, lainValue) {
+      return new Promise(resolve => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-confirm';
+        toast.setAttribute('role', 'alertdialog');
+        const head = document.createElement('div');
+        head.className = 'toast-confirm-head';
+        head.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+        const text = document.createElement('div');
+        text.append(t('toast.customTujuan').split('{custom}').join(custom).replace('{lain}', lainValue));
+        const sub = document.createElement('span');
+        sub.className = 'toast-confirm-old';
+        sub.textContent = t('toast.customTujuanSub');
+        text.appendChild(sub);
+        head.appendChild(text);
+        const actions = document.createElement('div');
+        actions.className = 'toast-confirm-actions';
+        const no = document.createElement('button');
+        no.type = 'button'; no.className = 'toast-btn-no'; no.textContent = t('toast.customTujuanNo');
+        const yes = document.createElement('button');
+        yes.type = 'button'; yes.className = 'toast-btn-yes'; yes.textContent = t('toast.customTujuanYes');
+        actions.append(no, yes);
+        toast.append(head, actions);
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 50);
+        yes.focus();
+        const close = answer => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 500);
+          resolve(answer);
+        };
+        yes.onclick = () => close(true);
+        no.onclick = () => close(false);
+      });
     }
 
     // Toast pengesahan untuk rekod bertindih; kekal sehingga pengguna memilih
@@ -8545,7 +8689,7 @@
         </div>
         <div style="margin-bottom:12px;">
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="col.tujuan">Tujuan</label>
-          <select id="edit-tujuan" class="form-select" required style="width:100%;box-sizing:border-box;">
+          <select id="edit-tujuan" class="form-select" required style="width:100%;box-sizing:border-box;" onchange="updateTajukRequirement('edit-nota', this.value)">
             <option value="Mesyuarat">Mesyuarat</option>
             <option value="Mesyuarat / Perbincangan">Mesyuarat / Perbincangan</option>
             <option value="Pemantauan Sekolah">Pemantauan Sekolah</option>
@@ -8569,8 +8713,12 @@
           </div>
         </div>
         <div style="margin-bottom:18px;">
-          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;" data-i18n="modal.edit.notaLabel">Nota (pilihan)</label>
+          <label for="edit-nota" style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:4px;">
+            <span class="nota-lbl-normal" data-i18n="modal.edit.notaLabel">Nota (pilihan)</span>
+            <span class="nota-lbl-tajuk" style="display:none;"><span data-i18n="form.tajukLabel">Tajuk Program / Aktiviti</span> <span class="req-star">*</span></span>
+          </label>
           <textarea id="edit-nota" class="form-textarea" maxlength="1000" rows="2" style="width:100%;box-sizing:border-box;"></textarea>
+          <p class="tajuk-hint" id="edit-nota-tajuk-hint" style="display:none;"><i class="fa-solid fa-circle-info"></i> <span data-i18n="form.tajukHint">Wajib diisi untuk Mesyuarat, Bengkel, Kursus dan Tugas Rasmi Lain. Tulis tajuk penuh; butiran lain boleh ditambah selepas tajuk.</span></p>
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
           <button type="button" onclick="closeEditModal()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:0.85rem;" data-i18n="modal.edit.cancel">Batal</button>
@@ -8913,6 +9061,7 @@
         tujuanSel.appendChild(opt);
         tujuanSel.value = record.tujuan;
       }
+      updateTajukRequirement('edit-nota', tujuanSel.value);
       const overlay = document.getElementById('edit-modal-overlay');
       overlay.style.display = 'flex';
     }
@@ -8921,6 +9070,7 @@
     }
     async function submitEditModal(event) {
       event.preventDefault();
+      if (!(await resolveCustomTujuan('edit-tujuan', 'edit-nota', 'Tugas Rasmi Lain'))) return;
       const masaMula = document.getElementById('edit-masa-mula').value;
       const masaBalik = document.getElementById('edit-masa-balik').value;
       const body = {
@@ -8936,6 +9086,7 @@
         showToast('Tarikh akhir tidak boleh lebih awal dari tarikh mula.', 'error');
         return;
       }
+      if (!checkTajuk('edit-nota', body.tujuan)) return;
       if (masaMula && masaBalik && masaBalik <= masaMula) {
         showToast('Masa balik mesti selepas masa bertolak.', 'error');
         return;
