@@ -859,16 +859,22 @@ async function syncStaffRecords() {
     s.nama = clean;
     renamed++;
   }
-  // Rekod lama yang masih bergelaran tetapi nama tanpa gelaran wujud dalam jadual staf
-  const { rows: names } = await pool.query(`SELECT DISTINCT nama FROM movements`);
+  // SEMUA rekod yang masih bergelaran (termasuk rekod staf yang tiada lagi dalam senarai):
+  // buang gelaran sahaja; rekod tidak dipadam
   let orphanFixed = 0;
-  for (const { nama } of names) {
-    const clean = stripGelaran(nama);
-    if (clean && clean !== nama && taken.has(clean)) {
-      const r = await pool.query('UPDATE movements SET nama = $1 WHERE nama = $2', [clean, nama]);
-      orphanFixed += r.rowCount;
+  for (const [table, col] of [['movements', 'nama'], ['tempahan', 'nama'], ['notices', 'nama']]) {
+    const { rows: names } = await pool.query(`SELECT DISTINCT ${col} AS nama FROM ${table}`);
+    for (const { nama } of names) {
+      const clean = stripGelaran(nama);
+      if (clean && clean !== nama && GELARAN_RE.test(String(nama).toUpperCase().replace(/\s+/g, ' ').trim())) {
+        const r = await pool.query(`UPDATE ${table} SET ${col} = $1 WHERE ${col} = $2`, [clean, nama]);
+        orphanFixed += r.rowCount;
+      }
     }
   }
+  const { rows: [baki] } = await pool.query(
+    `SELECT COUNT(*)::int n FROM movements WHERE UPPER(nama) ~ '^(ENCIK|EN|CIK|CIKGU|PUAN|PN|TUAN|TN|DR|HAJI|HJ|HAJAH|HJH|USTAZ|USTAZAH|MR|MRS|MS|MDM|MADAM|DATO|DATUK|DATIN)[. ]'`);
+  console.log(`[selaras] Rekod pergerakan yang masih bergelaran: ${baki.n}`);
   let sektorFixed = 0;
   for (const s of staff) {
     if (!VALID_SEKTOR.includes(s.sektor)) continue;
