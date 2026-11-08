@@ -24,7 +24,8 @@ const shift = (ds, n) => { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d
 const today = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
 const MON = shift(today, -((new Date(today + 'T00:00:00Z').getUTCDay() + 6) % 7));
 const [TUE, WED, THU] = [1, 2, 3].map(n => shift(MON, n));
-const NEXT_WEEK = shift(MON, 9);
+// Dua minggu ke hadapan: sentiasa di luar julat isian auto (minggu depan diisi mulai Jumaat 5 petang)
+const NEXT_WEEK = shift(MON, 16);
 
 async function call(method, p, { body, headers = {} } = {}) {
   const res = await fetch(BASE + p, { method, headers: { 'Content-Type': 'application/json', ...headers }, body: body && JSON.stringify(body) });

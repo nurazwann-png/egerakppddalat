@@ -666,7 +666,7 @@ function masaOverlaps(a, b) {
 const PEJABAT = 'Berada di Pejabat';
 const AUTO_LOOKBACK_DAYS = 28;
 
-function normNama(n) { return (n || '').toUpperCase().trim(); }
+function normNama(n) { return (n || '').toUpperCase().replace(/\s+/g, ' ').trim(); }
 
 function isWeekdayStr(ds) {
   const dow = new Date(ds + 'T00:00:00Z').getUTCDay();
@@ -680,11 +680,30 @@ function addDaysStr(ds, n) {
 }
 
 // Julat isian: 4 minggu lepas hingga Jumaat minggu semasa (waktu Malaysia)
+// Julat isian auto: 4 minggu lepas hingga Jumaat minggu semasa (waktu Malaysia).
+// Mulai Jumaat 5 petang, Sabtu dan Ahad: julat dipanjangkan hingga Jumaat minggu DEPAN,
+// supaya laporan yang dijana hujung minggu sudah lengkap untuk minggu berikutnya.
+const NEXT_WEEK_FILL_HOUR = 17;
 function pejabatFillWindow() {
-  const today = getMalaysiaDateStr();
-  const dow = new Date(today + 'T00:00:00Z').getUTCDay();
+  const myt = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const today = myt.toISOString().slice(0, 10);
+  const dow = myt.getUTCDay();
   const monday = addDaysStr(today, -((dow + 6) % 7));
-  return { from: addDaysStr(today, -AUTO_LOOKBACK_DAYS), to: addDaysStr(monday, 4) };
+  const includeNextWeek = dow === 6 || dow === 0 || (dow === 5 && myt.getUTCHours() >= NEXT_WEEK_FILL_HOUR);
+  return { from: addDaysStr(today, -AUTO_LOOKBACK_DAYS), to: addDaysStr(monday, includeNextWeek ? 11 : 4) };
+}
+
+// Isian auto juga dicetuskan apabila pelayan menerima permintaan dan julat sudah berubah
+// (Cloud Run boleh "tidur" ketika tiada pengguna, jadi pemasa sahaja tidak cukup)
+let _lastAutoFillTo = null;
+let _autoFillRunning = null;
+async function ensureAutoFillCurrent() {
+  const { to } = pejabatFillWindow();
+  if (_lastAutoFillTo === to) return;
+  if (!_autoFillRunning) {
+    _autoFillRunning = autoFillPejabat().finally(() => { _autoFillRunning = null; });
+  }
+  await _autoFillRunning;
 }
 
 // NOT EXISTS dalam INSERT supaya rekod auto tidak masuk jika staf sudah ada rekod hari itu
@@ -758,6 +777,7 @@ async function autoFillPejabat() {
     await cleanupAutoPejabat();
 
     const { from, to } = pejabatFillWindow();
+    _lastAutoFillTo = to;
     const weekdays = [];
     for (let ds = from; ds <= to; ds = addDaysStr(ds, 1)) {
       if (isWeekdayStr(ds)) weekdays.push(ds);
@@ -859,14 +879,14 @@ async function syncStaffRecords() {
     s.nama = clean;
     renamed++;
   }
-  // SEMUA rekod yang masih bergelaran (termasuk rekod staf yang tiada lagi dalam senarai):
-  // buang gelaran sahaja; rekod tidak dipadam
+  // SEMUA rekod yang masih bergelaran atau berjarak berganda (termasuk rekod staf yang tiada lagi
+  // dalam senarai): seragamkan nama sahaja; rekod tidak dipadam
   let orphanFixed = 0;
   for (const [table, col] of [['movements', 'nama'], ['tempahan', 'nama'], ['notices', 'nama']]) {
     const { rows: names } = await pool.query(`SELECT DISTINCT ${col} AS nama FROM ${table}`);
     for (const { nama } of names) {
       const clean = stripGelaran(nama);
-      if (clean && clean !== nama && GELARAN_RE.test(String(nama).toUpperCase().replace(/\s+/g, ' ').trim())) {
+      if (clean && clean !== nama) {
         const r = await pool.query(`UPDATE ${table} SET ${col} = $1 WHERE ${col} = $2`, [clean, nama]);
         orphanFixed += r.rowCount;
       }
@@ -883,7 +903,7 @@ async function syncStaffRecords() {
   }
   const badSektor = staff.filter(s => !VALID_SEKTOR.includes(s.sektor)).map(s => `${s.nama} (${s.sektor})`);
   if (renamed || orphanFixed || sektorFixed || skipped.length || badSektor.length) {
-    console.log(`[selaras] ${renamed} nama staf dibuang gelaran (${renamedRecs} rekod dikemas kini), ${orphanFixed} rekod lama dibetulkan nama, ${sektorFixed} rekod dibetulkan sektor.`);
+    console.log(`[selaras] ${renamed} nama staf diseragamkan (gelaran/jarak; ${renamedRecs} rekod dikemas kini), ${orphanFixed} rekod lain diseragamkan nama, ${sektorFixed} rekod dibetulkan sektor.`);
     skipped.forEach(x => console.log(`[selaras] Dilangkau (nama bertembung): ${x}`));
     if (badSektor.length) console.log(`[selaras] Staf dengan sektor tidak sah: ${badSektor.join(', ')}`);
   }
@@ -995,20 +1015,23 @@ async function buildChatRecords(message, today) {
 }
 
 // Jadual: setiap Isnin ~00:05 MYT (Ahad 16:05 UTC), isi seluruh minggu baharu
+// Jadual: Jumaat 5:05 petang MYT (isi minggu depan) dan Isnin 12:05 pagi MYT (semakan minggu baharu)
 function scheduleAutoFillPejabat() {
   const nowUtc = Date.now();
-  const nextRun = new Date(nowUtc);
-  nextRun.setUTCHours(16, 5, 0, 0);
-  const daysUntilSunday = (7 - nextRun.getUTCDay()) % 7;
-  nextRun.setUTCDate(nextRun.getUTCDate() + daysUntilSunday);
-  if (nextRun.getTime() <= nowUtc) nextRun.setUTCDate(nextRun.getUTCDate() + 7);
-  const msUntilNext = nextRun.getTime() - nowUtc;
-
+  // [hari UTC, jam UTC, minit] — Jumaat 09:05 UTC = Jumaat 17:05 MYT; Ahad 16:05 UTC = Isnin 00:05 MYT
+  const targets = [[5, 9, 5], [0, 16, 5]].map(([dow, h, m]) => {
+    const t = new Date(nowUtc);
+    t.setUTCHours(h, m, 0, 0);
+    t.setUTCDate(t.getUTCDate() + ((dow - t.getUTCDay() + 7) % 7));
+    if (t.getTime() <= nowUtc) t.setUTCDate(t.getUTCDate() + 7);
+    return t.getTime();
+  });
+  const msUntilNext = Math.min(...targets) - nowUtc;
   setTimeout(async () => {
     await autoFillPejabat();
-    setInterval(autoFillPejabat, 7 * 24 * 60 * 60 * 1000);
+    scheduleAutoFillPejabat();
   }, msUntilNext);
-  console.log(`[auto-pejabat] Isian mingguan seterusnya dalam ${Math.round(msUntilNext / 3600000)} jam.`);
+  console.log(`[auto-pejabat] Isian seterusnya dalam ${Math.round(msUntilNext / 3600000)} jam.`);
 }
 
 async function checkScheduledPush() {
@@ -1155,6 +1178,7 @@ const server = http.createServer(async (req, res) => {
   try {
     // GET /api/movements
     if (url.pathname === '/api/movements' && req.method === 'GET') {
+      await ensureAutoFillCurrent().catch(e => console.error('[auto-pejabat]', e.message));
       const email = (url.searchParams.get('email') || '').trim().toLowerCase();
       const token = req.headers['x-admin-token'];
       if (!(await isValidAdminSession(token))) {
