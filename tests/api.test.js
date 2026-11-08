@@ -172,3 +172,33 @@ test('renaming staff in Urus renames their records too', async () => {
   const { rows } = await pool.query(`SELECT DISTINCT nama FROM movements WHERE submittedby = $1`, [A.email]);
   assert.deepEqual(rows.map(x => x.nama), ['UJIAN SATU BARU']);
 });
+
+// --- Sektor & nama rekod sentiasa ikut jadual staf (elak rekod tersalah sektor seperti "SPP/SPsK") ---
+const OLD_DAY = shift(MON, -10);
+
+test('a record takes its sector and name from the staff roster, not from the browser', async () => {
+  const r = await post(B, { id: 'test-sektor-1', tarikh: OLD_DAY, destinasi: 'SK Dalat', tujuan: 'Pemantauan Sekolah',
+    sektor: 'SPP/SPsK', nama: 'Puan Ujian Dua Binti Test' });
+  assert.equal(r.status, 201);
+  const { rows } = await pool.query(`SELECT nama, sektor FROM movements WHERE id = 'test-sektor-1'`);
+  assert.deepEqual(rows[0], { nama: B.nama, sektor: B.sektor });
+});
+
+test('admin changing a staff member\'s sector moves all their records; combined sectors are refused', async () => {
+  const H = { 'X-Admin-Token': adminToken };
+  const bad = await call('PATCH', `/admin/staff/${encodeURIComponent(B.email)}/sektor`, { headers: H, body: { sektor: 'SPP/SPsK' } });
+  assert.equal(bad.status, 400);
+  const r = await call('PATCH', `/admin/staff/${encodeURIComponent(B.email)}/sektor`, { headers: H, body: { sektor: 'SPsK' } });
+  assert.equal(r.status, 200);
+  const { rows } = await pool.query(`SELECT DISTINCT sektor FROM movements WHERE submittedby = $1`, [B.email]);
+  assert.deepEqual(rows.map(x => x.sektor), ['SPsK']);
+  await call('PATCH', `/admin/staff/${encodeURIComponent(B.email)}/sektor`, { headers: H, body: { sektor: B.sektor } });
+});
+
+test('titles such as Encik, Puan and Dr are removed from staff names', async () => {
+  const r = await call('POST', '/admin/staff', { headers: { 'X-Admin-Token': adminToken },
+    body: { email: B.email, nama: 'Dr. Hjh. Ujian Dua Binti Test', jawatan: 'Ujian', sektor: B.sektor } });
+  assert.equal(r.status, 201);
+  const { rows } = await pool.query(`SELECT nama FROM staff WHERE email = $1`, [B.email]);
+  assert.equal(rows[0].nama, B.nama);
+});

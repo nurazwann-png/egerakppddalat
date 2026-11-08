@@ -796,14 +796,91 @@ async function autoFillPejabat() {
 const CHAT_NAME_STOPWORDS = new Set(['ENCIK', 'PUAN', 'CIK', 'BIN', 'BINTI', 'ANAK', 'HAJI', 'HAJAH', 'DR', 'IBNI']);
 // --- Sektor sah. "SPP/SPsK" (gabungan lama) tidak lagi diterima. ---
 const VALID_SEKTOR = ['SPr', 'SPb', 'SPbM', 'SP', 'SPS', 'SPP', 'SPsK', 'PTIS'];
-// Gunakan sektor yang dihantar jika sah; jika tidak, ambil sektor staf dari jadual staf
+// Sektor rekod SENTIASA ikut sektor staf dalam jadual staf (sumber sah tunggal).
+// Nilai dari pelayar hanya digunakan jika staf tiada dalam jadual dan nilainya sah.
 async function resolveSektor(sektor, email) {
-  if (VALID_SEKTOR.includes(sektor)) return sektor;
   if (email) {
     const { rows } = await pool.query('SELECT sektor FROM staff WHERE LOWER(email) = LOWER($1)', [email]);
     if (rows[0] && VALID_SEKTOR.includes(rows[0].sektor)) return rows[0].sektor;
   }
-  return null;
+  return VALID_SEKTOR.includes(sektor) ? sektor : null;
+}
+
+// --- Nama standard: huruf besar, tanpa gelaran (Encik, Cik, Puan, Dr, Haji, dll.) di hadapan ---
+const GELARAN_RE = /^(?:ENCIK|EN|CIK|CIKGU|PUAN|PN|TUAN|TN|DR|DOKTOR|PROF|PROFESOR|HAJI|HJ|HAJAH|HJH|USTAZ|USTAZAH|IR|TS|SR|MR|MRS|MS|MISS|MADAM|MDM|DATO'? SRI|DATUK SERI|DATUK SRI|DATO'? SERI|DATO'?|DATUK|DATIN SRI|DATIN|TAN SRI|PUAN SRI)\.?\s+/;
+function stripGelaran(nama) {
+  let v = String(nama || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < 4; i++) {
+    const next = v.replace(GELARAN_RE, '').trim();
+    if (next === v || !next) break;
+    v = next;
+  }
+  return v;
+}
+
+// Kemas kini sektor semua rekod seorang staf (selepas sektor staf ditukar)
+async function applyStaffSektorToRecords(email, nama, sektor) {
+  const mv = await pool.query(
+    `UPDATE movements SET sektor = $1
+     WHERE sektor IS DISTINCT FROM $1
+       AND (LOWER(submittedby) = LOWER($2) OR (submittedby = 'system' AND UPPER(TRIM(nama)) = $3))`,
+    [sektor, email, normNama(nama)]);
+  const tp = await pool.query(`UPDATE tempahan SET sektor = $1 WHERE sektor IS DISTINCT FROM $1 AND LOWER(email) = LOWER($2)`, [sektor, email]);
+  const nt = await pool.query(`UPDATE notices SET sektor = $1 WHERE sektor IS DISTINCT FROM $1 AND LOWER(created_by) = LOWER($2)`, [sektor, email]);
+  return { movements: mv.rowCount, tempahan: tp.rowCount, notices: nt.rowCount };
+}
+
+// Tukar nama staf (cth. buang gelaran) dan ikut sama nama dalam semua rekodnya
+async function applyStaffRename(email, oldNama, newNama) {
+  await pool.query('UPDATE staff SET nama = $1 WHERE email = $2', [newNama, email]);
+  const mv = await pool.query(
+    `UPDATE movements SET nama = $1
+     WHERE LOWER(submittedby) = LOWER($2) OR (submittedby = 'system' AND UPPER(TRIM(nama)) = $3)`,
+    [newNama, email, normNama(oldNama)]);
+  await pool.query('UPDATE tempahan SET nama = $1 WHERE LOWER(email) = LOWER($2)', [newNama, email]);
+  await pool.query('UPDATE notices SET nama = $1 WHERE LOWER(created_by) = LOWER($2)', [newNama, email]);
+  return mv.rowCount;
+}
+
+// Semasa pelayan bermula: pastikan nama & sektor semua rekod selaras dengan jadual staf.
+// Tiada rekod dipadam. Selamat dijalankan berulang kali.
+async function syncStaffRecords() {
+  const { rows: staff } = await pool.query('SELECT email, nama, sektor FROM staff');
+  const taken = new Map(staff.map(s => [normNama(s.nama), s.email]));
+  let renamed = 0, renamedRecs = 0, skipped = [];
+  for (const s of staff) {
+    const clean = stripGelaran(s.nama);
+    if (!clean || clean === s.nama) continue;
+    const owner = taken.get(clean);
+    if (owner && owner !== s.email) { skipped.push(`${s.nama} (${s.email}) → ${clean} sudah digunakan oleh ${owner}`); continue; }
+    renamedRecs += await applyStaffRename(s.email, s.nama, clean);
+    taken.delete(normNama(s.nama));
+    taken.set(clean, s.email);
+    s.nama = clean;
+    renamed++;
+  }
+  // Rekod lama yang masih bergelaran tetapi nama tanpa gelaran wujud dalam jadual staf
+  const { rows: names } = await pool.query(`SELECT DISTINCT nama FROM movements`);
+  let orphanFixed = 0;
+  for (const { nama } of names) {
+    const clean = stripGelaran(nama);
+    if (clean && clean !== nama && taken.has(clean)) {
+      const r = await pool.query('UPDATE movements SET nama = $1 WHERE nama = $2', [clean, nama]);
+      orphanFixed += r.rowCount;
+    }
+  }
+  let sektorFixed = 0;
+  for (const s of staff) {
+    if (!VALID_SEKTOR.includes(s.sektor)) continue;
+    const r = await applyStaffSektorToRecords(s.email, s.nama, s.sektor);
+    sektorFixed += r.movements + r.tempahan + r.notices;
+  }
+  const badSektor = staff.filter(s => !VALID_SEKTOR.includes(s.sektor)).map(s => `${s.nama} (${s.sektor})`);
+  if (renamed || orphanFixed || sektorFixed || skipped.length || badSektor.length) {
+    console.log(`[selaras] ${renamed} nama staf dibuang gelaran (${renamedRecs} rekod dikemas kini), ${orphanFixed} rekod lama dibetulkan nama, ${sektorFixed} rekod dibetulkan sektor.`);
+    skipped.forEach(x => console.log(`[selaras] Dilangkau (nama bertembung): ${x}`));
+    if (badSektor.length) console.log(`[selaras] Staf dengan sektor tidak sah: ${badSektor.join(', ')}`);
+  }
 }
 
 // Pindahkan rekod berlabel "SPP/SPsK" ke sektor sebenar staf (SPP atau SPsK).
@@ -1091,7 +1168,8 @@ const server = http.createServer(async (req, res) => {
     // POST /api/movements
     if (url.pathname === '/api/movements' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      const { id, nama, tarikh, destinasi, tujuan, nota, masa, submittedBy, sektor } = body;
+      const { id, tarikh, destinasi, tujuan, nota, masa, submittedBy, sektor } = body;
+      let nama = body.nama;
 
       if (!id || !nama || !tarikh || !destinasi || !tujuan || !submittedBy) {
         sendJSON(res, 400, { error: 'Missing required fields' });
@@ -1108,6 +1186,11 @@ const server = http.createServer(async (req, res) => {
       if (!(await isStaffEmail(submittedBy))) {
         sendJSON(res, 403, { error: 'This e-mail is not on the staff roster' });
         return;
+      }
+      // Nama rekod ikut nama rasmi dalam jadual staf (bukan apa yang ditaip / disimpan dalam pelayar)
+      {
+        const { rows: who } = await pool.query('SELECT nama FROM staff WHERE LOWER(email) = LOWER($1)', [submittedBy]);
+        nama = who[0] && who[0].nama ? who[0].nama : stripGelaran(nama);
       }
 
       // Rekod sendiri pada hari sama dengan masa bertindih: minta pengesahan, ganti jika replace=true
@@ -1523,9 +1606,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/staff/request-verification' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const email = (body.email || '').trim().toLowerCase();
-      const nama = (body.nama || '').trim().toUpperCase();
+      const nama = stripGelaran(body.nama);
       const jawatan = body.jawatan || '';
-      const sektor = body.sektor || 'SPr';
+      const sektor = VALID_SEKTOR.includes(body.sektor) ? body.sektor : 'SPr';
 
       if (!email || !nama || !jawatan) {
         sendJSON(res, 400, { error: 'Maklumat pendaftaran tidak lengkap.' });
@@ -1615,9 +1698,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/staff/register' && req.method === 'POST') {
       const body = await readJsonBody(req);
       const email = (body.email || '').trim().toLowerCase();
-      const nama = (body.nama || '').trim().toUpperCase();
+      const nama = stripGelaran(body.nama);
       const jawatan = body.jawatan || '';
-      const sektor = body.sektor || 'SPr';
+      const sektor = VALID_SEKTOR.includes(body.sektor) ? body.sektor : 'SPr';
 
       if (!email || !nama || !jawatan) {
         sendJSON(res, 400, { error: 'Invalid registration details' });
@@ -1693,20 +1776,23 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         const normalizedEmail = email.trim().toLowerCase();
-        const newNama = nama.trim().toUpperCase();
-        const { rows: before } = await pool.query('SELECT nama, nyahaktif_at FROM staff WHERE email = $1', [normalizedEmail]);
+        const newNama = stripGelaran(nama);
+        const newSektor = VALID_SEKTOR.includes(bodyForWrite.sektor) ? bodyForWrite.sektor : 'SPr';
+        if (!newNama) { sendJSON(res, 400, { error: 'Nama tidak sah' }); return; }
+        const { rows: before } = await pool.query('SELECT nama, sektor, nyahaktif_at FROM staff WHERE email = $1', [normalizedEmail]);
         await pool.query(
           `INSERT INTO staff (email, nama, jawatan, addedat, sektor) VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (email) DO UPDATE SET nama=EXCLUDED.nama, jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor, nyahaktif_at=NULL`,
-          [normalizedEmail, newNama, jawatan, new Date().toISOString(), bodyForWrite.sektor || 'SPr']
+           ON CONFLICT (email) DO UPDATE SET jawatan=EXCLUDED.jawatan, sektor=EXCLUDED.sektor, nyahaktif_at=NULL`,
+          [normalizedEmail, newNama, jawatan, new Date().toISOString(), newSektor]
         );
-        // Nama ditukar: ikut sama rekod auto supaya tidak berganda di bawah nama lama dan baharu
+        // Nama ditukar: ikut sama semua rekod staf ini supaya tidak berganda di bawah nama lama dan baharu
         if (before[0] && normNama(before[0].nama) !== newNama) {
-          await pool.query(
-            `UPDATE movements SET nama = $1
-             WHERE (submittedby = 'system' AND UPPER(TRIM(nama)) = $2) OR submittedby = $3`,
-            [newNama, normNama(before[0].nama), normalizedEmail]
-          );
+          await applyStaffRename(normalizedEmail, before[0].nama, newNama);
+        }
+        // Sektor ditukar: semua rekod staf ini dipindah ke sektor baharu
+        if (before[0] && before[0].sektor !== newSektor) {
+          const moved = await applyStaffSektorToRecords(normalizedEmail, newNama, newSektor);
+          await logAudit('update_sektor', `Admin menukar sektor ${newNama} (${normalizedEmail}) daripada ${before[0].sektor} kepada ${newSektor}; ${moved.movements} rekod pergerakan dipindah`);
         }
         await logAudit('add_staff', before[0] && before[0].nyahaktif_at
           ? `Admin mengaktifkan semula staf ${newNama} (${normalizedEmail}, ${jawatan})`
@@ -1772,13 +1858,15 @@ const server = http.createServer(async (req, res) => {
       if (url.pathname.match(/^\/api\/admin\/staff\/[^/]+\/sektor$/) && req.method === 'PATCH') {
         const email = decodeURIComponent(url.pathname.split('/')[4]);
         const { sektor } = bodyForWrite;
-        if (!sektor) { sendJSON(res, 400, { error: 'Missing sektor' }); return; }
+        if (!VALID_SEKTOR.includes(sektor)) { sendJSON(res, 400, { error: 'Sektor tidak sah' }); return; }
         const { rows } = await pool.query('SELECT * FROM staff WHERE email = $1', [email]);
         const staffMember = rows[0];
         if (!staffMember) { sendJSON(res, 404, { error: 'Staf tidak dijumpai' }); return; }
         await pool.query('UPDATE staff SET sektor = $1 WHERE email = $2', [sektor, email]);
-        await logAudit('update_sektor', `Admin menukar sektor ${staffMember.nama} (${email}) daripada ${staffMember.sektor} kepada ${sektor}`);
-        sendJSON(res, 200, { ok: true });
+        // Semua rekod staf ini (pergerakan, tempahan, pemakluman) ikut sektor baharu
+        const moved = await applyStaffSektorToRecords(email, staffMember.nama, sektor);
+        await logAudit('update_sektor', `Admin menukar sektor ${staffMember.nama} (${email}) daripada ${staffMember.sektor} kepada ${sektor}; ${moved.movements} rekod pergerakan dipindah`);
+        sendJSON(res, 200, { ok: true, dipindah: moved.movements });
         return;
       }
 
@@ -2009,13 +2097,14 @@ const server = http.createServer(async (req, res) => {
       if (!(await isStaffEmail(email.trim().toLowerCase()))) { sendJSON(res, 403, { error: 'Akses tidak dibenarkan.' }); return; }
       const id = crypto.randomUUID();
       const created_at = new Date().toISOString();
-      const { rows: staffRows } = await pool.query('SELECT nama FROM staff WHERE email=$1', [email.trim().toLowerCase()]);
-      const resolvedNama = (staffRows[0] && staffRows[0].nama) ? staffRows[0].nama : (nama || email).trim();
+      const { rows: staffRows } = await pool.query('SELECT nama, sektor FROM staff WHERE email=$1', [email.trim().toLowerCase()]);
+      const resolvedNama = (staffRows[0] && staffRows[0].nama) ? staffRows[0].nama : stripGelaran(nama || email);
+      const resolvedSektor = (staffRows[0] && VALID_SEKTOR.includes(staffRows[0].sektor)) ? staffRows[0].sektor : (sektor || '').trim();
       await pool.query(
         `INSERT INTO notices (id,tajuk,isi,created_by,nama,sektor,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), resolvedNama, (sektor||'').trim(), created_at]
+        [id, tajuk.trim(), isi.trim(), email.trim().toLowerCase(), resolvedNama, resolvedSektor, created_at]
       );
-      sendJSON(res, 201, { id, tajuk, isi, nama: resolvedNama, sektor, created_at });
+      sendJSON(res, 201, { id, tajuk, isi, nama: resolvedNama, sektor: resolvedSektor, created_at });
       return;
     }
 
@@ -2331,6 +2420,7 @@ initDb()
       await runOnce('once_uppercase_names_v1', fixStaffNamesUppercase);
       await runOnce('once_merge_prefix_names_v1', fixDuplicateStaffNames);
       await fixCombinedSppSpsk().catch(e => console.error('[sektor] Gagal memindah rekod SPP/SPsK:', e.message));
+      await syncStaffRecords().catch(e => console.error('[selaras] Gagal menyelaraskan rekod staf:', e.message));
       await autoFillPejabat();
     })();
     scheduleAutoFillPejabat();

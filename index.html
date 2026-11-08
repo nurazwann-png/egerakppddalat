@@ -1338,6 +1338,11 @@
       overflow-wrap: break-word;
     }
     .req-star { color:#dc2626; font-weight:700; }
+    .field-note { font-size:0.74rem; color:var(--text-muted); margin-top:5px; line-height:1.4; }
+    .field-note i { margin-right:4px; }
+    .auto-pejabat-note { display:flex; gap:12px; align-items:flex-start; padding:12px 14px; margin-bottom:1.25rem; border-radius:10px; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:0.82rem; line-height:1.5; }
+    .auto-pejabat-note > i { font-size:1.1rem; color:#059669; margin-top:2px; }
+    .auto-pejabat-note strong { display:block; font-size:0.86rem; margin-bottom:2px; }
     .tajuk-hint { font-size:0.75rem; color:#b45309; margin-top:5px; line-height:1.4; }
     .tajuk-hint i { margin-right:4px; }
     textarea.tajuk-missing { border-color:#dc2626 !important; box-shadow:0 0 0 3px rgba(220,38,38,0.15); }
@@ -2416,9 +2421,10 @@
           <div class="form-group">
             <label class="form-label" for="identify-name" data-i18n="auth.id.namaLabel">Nama Penuh</label>
             <div class="input-wrapper">
-              <input class="form-input" type="text" id="identify-name" placeholder="Cth: Encik Mohamad Fauzi bin Suhaili" data-i18n-placeholder="auth.id.namaPlaceholder" required>
+              <input class="form-input" type="text" id="identify-name" placeholder="Cth: Mohamad Fauzi bin Suhaili" data-i18n-placeholder="auth.id.namaPlaceholder" required>
               <i class="fa-solid fa-user"></i>
             </div>
+            <p class="field-note"><i class="fa-solid fa-circle-info"></i> <span data-i18n="note.gelaran">Tulis nama penuh tanpa gelaran. Gelaran seperti Encik, Cik, Puan, Dr atau Haji akan dibuang secara automatik.</span></p>
           </div>
 
           <div class="form-group">
@@ -2755,7 +2761,7 @@
             <form id="staff-form" onsubmit="handleAddStaff(event)" class="admin-staff-form" style="display:none;grid-template-columns:1fr 1fr 1fr auto auto auto;gap:10px;align-items:end;margin-bottom:1.25rem;">
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" for="staff-nama" data-i18n="admin.staff.namaLabel">Nama</label>
-                <input class="form-input" style="padding-left:14px;" type="text" id="staff-nama" placeholder="Nama penuh" data-i18n-placeholder="admin.staff.namaPlaceholder" required>
+                <input class="form-input" style="padding-left:14px;" type="text" id="staff-nama" placeholder="Nama penuh" data-i18n-placeholder="admin.staff.namaPlaceholder" title="Gelaran seperti Encik, Cik, Puan, Dr atau Haji akan dibuang secara automatik" required>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" for="staff-email" data-i18n="admin.staff.emailLabel">E-mel</label>
@@ -3145,6 +3151,14 @@
             </div>
           </div>
 
+          <div class="auto-pejabat-note" role="note">
+            <i class="fa-solid fa-building-circle-check"></i>
+            <div>
+              <strong data-i18n="note.autoPejabat.title">"Berada di Pejabat" diisi secara automatik</strong>
+              <span data-i18n="note.autoPejabat.body">Anda tidak perlu mengisi borang jika berada di pejabat. Sistem merekodkan "Berada di Pejabat" bagi setiap hari bekerja. Isi borang ini hanya apabila anda keluar pejabat, bercuti atau bertugas di luar; rekod anda akan menggantikan rekod automatik pada hari tersebut.</span>
+            </div>
+          </div>
+
           <form id="movement-form" onsubmit="handleFormSubmit(event)">
 
             <!-- Nama Pegawai -->
@@ -3531,7 +3545,7 @@
         'auth.id.title': 'Kenal Pasti Pegawai',
         'auth.id.sub': 'Sila nyatakan maklumat ringkas anda untuk meneruskan',
         'auth.id.namaLabel': 'Nama Penuh',
-        'auth.id.namaPlaceholder': 'Cth: Encik Mohamad Fauzi bin Suhaili',
+        'auth.id.namaPlaceholder': 'Cth: Mohamad Fauzi bin Suhaili',
         'auth.id.emailLabel': 'Alamat E-mel (MOE)',
         'auth.id.emailPlaceholder': 'nama@moe.gov.my',
         'auth.id.jawatanLabel': 'Jawatan',
@@ -3579,6 +3593,10 @@
         'form.masaOptional': '(Pilihan)',
         'form.masaHint': 'Masa Bertolak · Masa Balik',
         'form.notaLabel': 'Nota Tambahan',
+        'note.gelaran': 'Tulis nama penuh tanpa gelaran. Gelaran seperti Encik, Cik, Puan, Dr atau Haji akan dibuang secara automatik.',
+        'note.autoPejabat.title': '"Berada di Pejabat" diisi secara automatik',
+        'note.autoPejabat.body': 'Anda tidak perlu mengisi borang jika berada di pejabat. Sistem merekodkan "Berada di Pejabat" bagi setiap hari bekerja. Isi borang ini hanya apabila anda keluar pejabat, bercuti atau bertugas di luar; rekod anda akan menggantikan rekod automatik pada hari tersebut.',
+        'toast.sektorMoved': '{n} rekod pergerakan turut dipindah ke sektor baharu.',
         'toast.customTujuan': '"{custom}" tiada dalam senarai tujuan. Simpan sebagai {lain} dengan tajuk "{custom}"?',
         'toast.customTujuanSub': 'Tajuk akan dimasukkan ke ruangan Tajuk/Nota supaya statistik kekal kemas.',
         'toast.customTujuanYes': 'Ya, simpan',
@@ -3693,7 +3711,7 @@
         'admin.records.deleteTripConfirm': 'Padam rekod ini ({n} hari)? Tindakan ini tidak boleh dibatalkan.',
         'admin.staff.title': 'Urus Staf (Tambah / Padam Pengguna)',
         'admin.staff.namaLabel': 'Nama',
-        'admin.staff.namaPlaceholder': 'Nama penuh',
+        'admin.staff.namaPlaceholder': 'Nama penuh (tanpa gelaran)',
         'admin.staff.emailLabel': 'E-mel',
         'admin.staff.jawatanLabel': 'Jawatan',
         'admin.staff.sektorHeader': 'Sektor',
@@ -3907,7 +3925,7 @@
         'auth.id.title': 'Officer Identification',
         'auth.id.sub': 'Please provide your basic information to continue',
         'auth.id.namaLabel': 'Full Name',
-        'auth.id.namaPlaceholder': 'e.g. Mr. Mohamad Fauzi bin Suhaili',
+        'auth.id.namaPlaceholder': 'e.g. Mohamad Fauzi bin Suhaili',
         'auth.id.emailLabel': 'Email Address (MOE)',
         'auth.id.emailPlaceholder': 'name@moe.gov.my',
         'auth.id.jawatanLabel': 'Position',
@@ -3955,6 +3973,10 @@
         'form.masaOptional': '(Optional)',
         'form.masaHint': 'Departure Time · Return Time',
         'form.notaLabel': 'Additional Notes',
+        'note.gelaran': 'Write your full name without titles. Titles such as Encik, Cik, Puan, Dr or Haji are removed automatically.',
+        'note.autoPejabat.title': '"At the Office" is filled in automatically',
+        'note.autoPejabat.body': 'You do not need to fill in this form when you are at the office. The system records "At the Office" for every working day. Only fill it in when you leave the office, are on leave or on duty elsewhere; your record replaces the automatic one for that day.',
+        'toast.sektorMoved': '{n} movement records were moved to the new sector too.',
         'toast.customTujuan': '"{custom}" is not in the purpose list. Save it as {lain} with the title "{custom}"?',
         'toast.customTujuanSub': 'The title goes into the Title/Notes field so the statistics stay tidy.',
         'toast.customTujuanYes': 'Yes, save',
@@ -4069,7 +4091,7 @@
         'admin.records.deleteTripConfirm': 'Delete this record ({n} days)? This cannot be undone.',
         'admin.staff.title': 'Manage Staff (Add / Remove Users)',
         'admin.staff.namaLabel': 'Name',
-        'admin.staff.namaPlaceholder': 'Full name',
+        'admin.staff.namaPlaceholder': 'Full name (no titles)',
         'admin.staff.emailLabel': 'Email',
         'admin.staff.jawatanLabel': 'Position',
         'admin.staff.sektorHeader': 'Sector',
@@ -4649,14 +4671,20 @@
         } catch (e) {
           localStorage.removeItem('ppd_dalat_session');
         }
-        // Tiada sektor sah yang tersimpan (cth. "SPP/SPsK" lama dibuang): ambil sektor staf dari pelayan
-        if (currentUserSession && !selectedSector) {
+        // Selaraskan sesi dengan jadual staf setiap kali dibuka: nama standard (tanpa gelaran),
+        // jawatan dan sektor terkini (cth. selepas admin menukar sektor)
+        if (currentUserSession) {
           try {
             const res = await fetch(`${API_BASE}/staff/check?email=${encodeURIComponent(currentUserSession.email)}`);
             const { staff } = await res.json();
-            if (staff && SEKTOR_MAP[staff.sektor]) {
-              selectedSector = SEKTOR_MAP[staff.sektor];
-              localStorage.setItem(`ppd_dalat_sektor_${currentUserSession.email}`, JSON.stringify(selectedSector));
+            if (staff) {
+              currentUserSession.name = (staff.nama || currentUserSession.name).toUpperCase();
+              if (staff.jawatan) currentUserSession.position = staff.jawatan;
+              localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
+              if (SEKTOR_MAP[staff.sektor]) {
+                selectedSector = SEKTOR_MAP[staff.sektor];
+                localStorage.setItem(`ppd_dalat_sektor_${currentUserSession.email}`, JSON.stringify(selectedSector));
+              }
             }
           } catch (e) {}
         }
@@ -5098,11 +5126,11 @@
         localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
         localStorage.setItem('ppd_dalat_remembered_email', email);
         const savedSektor = readSavedSector(email);
-        if (savedSektor) {
-          selectedSector = savedSektor;
-        } else if (staff.sektor && SEKTOR_MAP[staff.sektor]) {
+        if (staff.sektor && SEKTOR_MAP[staff.sektor]) {
           selectedSector = SEKTOR_MAP[staff.sektor];
           localStorage.setItem(`ppd_dalat_sektor_${email}`, JSON.stringify(selectedSector));
+        } else if (savedSektor) {
+          selectedSector = savedSektor;
         }
 
         showToast(t('toast.welcomeBack').replace('{name}', staff.nama), 'success');
@@ -5554,8 +5582,11 @@
           body: JSON.stringify({ sektor: newSektor })
         });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
-        showToast(t('toast.sektorUpdated').replace('{name}', nama).replace('{sektor}', newSektor), 'success');
+        const out = await res.json().catch(() => ({}));
+        showToast(t('toast.sektorUpdated').replace('{name}', nama).replace('{sektor}', newSektor)
+          + (out.dipindah ? ' ' + t('toast.sektorMoved').replace('{n}', out.dipindah) : ''), 'success');
         renderAuditLog();
+        refreshAdminData();
       } catch (err) {
         console.error(err);
         showToast(t('toast.failUpdate'), 'error');
