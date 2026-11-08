@@ -60,9 +60,9 @@ const STAFF = [
   { email: 'nonita.jidi@ppddalat.edu.my',        nama: 'NONITA BINTI MOHAMAD JIDI',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
   { email: 'sahran.sahren@ppddalat.edu.my',      nama: 'SAHRAN BIN SAHREN',                   jawatan: 'Pembantu Tadbir',            sektor: 'SPS' },
   { email: 'tan.miangseng@ppddalat.edu.my',      nama: 'TAN MIANG SENG',                      jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
-  { email: 'loo.ahsing@ppddalat.edu.my',         nama: 'LOO AH SING',                         jawatan: 'Kaunselor Pendidikan',       sektor: 'SPP/SPsK' },
-  { email: 'johari.moshidi@ppddalat.edu.my',     nama: 'JOHARI BIN MOSHIDI',                  jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP/SPsK' },
-  { email: 'kettlin.ason@ppddalat.edu.my',       nama: 'KETTLIN SAFIYA BINTI ASON',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP/SPsK' },
+  { email: 'loo.ahsing@ppddalat.edu.my',         nama: 'LOO AH SING',                         jawatan: 'Kaunselor Pendidikan',       sektor: 'SPsK' },
+  { email: 'johari.moshidi@ppddalat.edu.my',     nama: 'JOHARI BIN MOSHIDI',                  jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP' },
+  { email: 'kettlin.ason@ppddalat.edu.my',       nama: 'KETTLIN SAFIYA BINTI ASON',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP' },
   { email: 'amriee.yusup@ppddalat.edu.my',       nama: 'AMRIEE BIN YUSUP',                    jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
   { email: 'iswandy.ho@ppddalat.edu.my',         nama: 'ISWANDY HO BIN AHMAD HO',             jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
   { email: 'mohammad.tawfik@ppddalat.edu.my',    nama: 'MOHAMMAD TAWFIK BIN HAMBALI',         jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
@@ -82,11 +82,11 @@ const DESTINATIONS = [
 
 const TUJUANS = [
   { t: 'Pemantauan Sekolah',        sektors: ['SPb', 'SPbM', 'SPS', 'SPr'] },
-  { t: 'Mesyuarat / Perbincangan',  sektors: ['SPr', 'SP', 'SPS', 'SPbM', 'SPb', 'SPP/SPsK'] },
+  { t: 'Mesyuarat / Perbincangan',  sektors: ['SPr', 'SP', 'SPS', 'SPbM', 'SPb', 'SPP', 'SPsK'] },
   { t: 'Kursus / Latihan',          sektors: ['SPb', 'SPS', 'SPbM', 'PTIS', 'SP'] },
-  { t: 'Bengkel Kerja',             sektors: ['SPb', 'SPS', 'SPbM', 'SPr', 'SPP/SPsK'] },
+  { t: 'Bengkel Kerja',             sektors: ['SPb', 'SPS', 'SPbM', 'SPr', 'SPP', 'SPsK'] },
   { t: 'Tugas Rasmi Lain',          sektors: ['SP', 'PTIS', 'SPr', 'SPS'] },
-  { t: 'Berada di Pejabat',         sektors: ['SP', 'PTIS', 'SPP/SPsK'] },
+  { t: 'Berada di Pejabat',         sektors: ['SP', 'PTIS', 'SPP', 'SPsK'] },
   { t: 'Cuti Rehat / Cuti Sakit',   sektors: null },
   { t: 'Kebenaran Keluar Pejabat',  sektors: null },
 ];

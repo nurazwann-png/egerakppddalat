@@ -794,6 +794,46 @@ async function autoFillPejabat() {
 // Rekod untuk Ejen: hanya yang berkaitan, supaya data lokasi staf yang dihantar ke DeepSeek minimum.
 // Rekod sebenar -7..+14 hari; rekod auto hari ini sahaja; staf yang disebut dalam soalan -60..+60 hari.
 const CHAT_NAME_STOPWORDS = new Set(['ENCIK', 'PUAN', 'CIK', 'BIN', 'BINTI', 'ANAK', 'HAJI', 'HAJAH', 'DR', 'IBNI']);
+// --- Sektor sah. "SPP/SPsK" (gabungan lama) tidak lagi diterima. ---
+const VALID_SEKTOR = ['SPr', 'SPb', 'SPbM', 'SP', 'SPS', 'SPP', 'SPsK', 'PTIS'];
+// Gunakan sektor yang dihantar jika sah; jika tidak, ambil sektor staf dari jadual staf
+async function resolveSektor(sektor, email) {
+  if (VALID_SEKTOR.includes(sektor)) return sektor;
+  if (email) {
+    const { rows } = await pool.query('SELECT sektor FROM staff WHERE LOWER(email) = LOWER($1)', [email]);
+    if (rows[0] && VALID_SEKTOR.includes(rows[0].sektor)) return rows[0].sektor;
+  }
+  return null;
+}
+
+// Pindahkan rekod berlabel "SPP/SPsK" ke sektor sebenar staf (SPP atau SPsK).
+// Tiada rekod dipadam. Selamat dijalankan setiap kali pelayan bermula.
+async function fixCombinedSppSpsk() {
+  const OLD = 'SPP/SPsK';
+  const byEmail = await pool.query(
+    `UPDATE movements m SET sektor = s.sektor FROM staff s
+     WHERE m.sektor = $1 AND s.sektor = ANY($2::text[]) AND LOWER(m.submittedby) = LOWER(s.email)`,
+    [OLD, ['SPP', 'SPsK']]);
+  const byName = await pool.query(
+    `UPDATE movements m SET sektor = s.sektor FROM staff s
+     WHERE m.sektor = $1 AND s.sektor = ANY($2::text[]) AND UPPER(TRIM(m.nama)) = UPPER(TRIM(s.nama))`,
+    [OLD, ['SPP', 'SPsK']]);
+  const tp = await pool.query(
+    `UPDATE tempahan t SET sektor = s.sektor FROM staff s
+     WHERE t.sektor = $1 AND s.sektor = ANY($2::text[]) AND LOWER(t.email) = LOWER(s.email)`,
+    [OLD, ['SPP', 'SPsK']]);
+  const nt = await pool.query(
+    `UPDATE notices n SET sektor = s.sektor FROM staff s
+     WHERE n.sektor = $1 AND s.sektor = ANY($2::text[]) AND LOWER(n.created_by) = LOWER(s.email)`,
+    [OLD, ['SPP', 'SPsK']]);
+  const moved = byEmail.rowCount + byName.rowCount;
+  const { rows: [left] } = await pool.query(`SELECT COUNT(*)::int n FROM movements WHERE sektor = $1`, [OLD]);
+  const { rows: [staffLeft] } = await pool.query(`SELECT COUNT(*)::int n FROM staff WHERE sektor = $1`, [OLD]);
+  if (moved || tp.rowCount || nt.rowCount || left.n || staffLeft.n) {
+    console.log(`[sektor] SPP/SPsK: ${moved} rekod pergerakan, ${tp.rowCount} tempahan, ${nt.rowCount} pemakluman dipindah ke sektor sebenar. Baki rekod SPP/SPsK: ${left.n}. Staf masih SPP/SPsK: ${staffLeft.n}.`);
+  }
+}
+
 // Cari tarikh dalam mesej chat. Pulangkan sehingga 5 tarikh 'YYYY-MM-DD'; tahun lalai = tahun semasa.
 const CHAT_MONTHS = {
   jan: 1, januari: 1, january: 1, feb: 2, februari: 2, february: 2, mac: 3, march: 3, mar: 3,
@@ -1108,7 +1148,7 @@ const server = http.createServer(async (req, res) => {
       await pool.query(
         `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, sektor || 'SPr', createdAt]
+        [id, nama, tarikh, destinasi, tujuan, nota || '', masa || '', submittedBy, (await resolveSektor(sektor, submittedBy)) || 'SPr', createdAt]
       );
       await removeAutoPejabat(submittedBy, nama, tarikh);
       sendJSON(res, 201, { ok: true, replaced: clashIds });
@@ -1210,7 +1250,7 @@ const server = http.createServer(async (req, res) => {
           await client.query(
             `INSERT INTO movements (id, nama, tarikh, destinasi, tujuan, nota, masa, submittedby, sektor, created_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-            [generateId(), base.nama, d, destinasi, tujuan, nota, masa, email, base.sektor || 'SPr', createdAt]
+            [generateId(), base.nama, d, destinasi, tujuan, nota, masa, email, (await resolveSektor(base.sektor, email)) || 'SPr', createdAt]
           );
         }
         await client.query('COMMIT');
@@ -1878,9 +1918,9 @@ const server = http.createServer(async (req, res) => {
           { email: 'nonita.jidi@ppddalat.edu.my',        nama: 'NONITA BINTI MOHAMAD JIDI',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
           { email: 'sahran.sahren@ppddalat.edu.my',      nama: 'SAHRAN BIN SAHREN',                   jawatan: 'Pembantu Tadbir',            sektor: 'SPS' },
           { email: 'tan.miangseng@ppddalat.edu.my',      nama: 'TAN MIANG SENG',                      jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPS' },
-          { email: 'loo.ahsing@ppddalat.edu.my',         nama: 'LOO AH SING',                         jawatan: 'Kaunselor Pendidikan',       sektor: 'SPP/SPsK' },
-          { email: 'johari.moshidi@ppddalat.edu.my',     nama: 'JOHARI BIN MOSHIDI',                  jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP/SPsK' },
-          { email: 'kettlin.ason@ppddalat.edu.my',       nama: 'KETTLIN SAFIYA BINTI ASON',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP/SPsK' },
+          { email: 'loo.ahsing@ppddalat.edu.my',         nama: 'LOO AH SING',                         jawatan: 'Kaunselor Pendidikan',       sektor: 'SPsK' },
+          { email: 'johari.moshidi@ppddalat.edu.my',     nama: 'JOHARI BIN MOSHIDI',                  jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP' },
+          { email: 'kettlin.ason@ppddalat.edu.my',       nama: 'KETTLIN SAFIYA BINTI ASON',           jawatan: 'Penolong Pegawai Pendidikan', sektor: 'SPP' },
           { email: 'amriee.yusup@ppddalat.edu.my',       nama: 'AMRIEE BIN YUSUP',                    jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
           { email: 'iswandy.ho@ppddalat.edu.my',         nama: 'ISWANDY HO BIN AHMAD HO',             jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
           { email: 'mohammad.tawfik@ppddalat.edu.my',    nama: 'MOHAMMAD TAWFIK BIN HAMBALI',         jawatan: 'Juruteknik Komputer',        sektor: 'PTIS' },
@@ -1893,9 +1933,9 @@ const server = http.createServer(async (req, res) => {
           { t: 'Pemantauan Sekolah',       s: ['SPb','SPbM','SPS','SPr'] },
           { t: 'Mesyuarat / Perbincangan', s: null },
           { t: 'Kursus / Latihan',         s: ['SPb','SPS','SPbM','PTIS','SP'] },
-          { t: 'Bengkel Kerja',            s: ['SPb','SPS','SPbM','SPr','SPP/SPsK'] },
+          { t: 'Bengkel Kerja',            s: ['SPb','SPS','SPbM','SPr','SPP','SPsK'] },
           { t: 'Tugas Rasmi Lain',         s: ['SP','PTIS','SPr','SPS'] },
-          { t: 'Berada di Pejabat',        s: ['SP','PTIS','SPP/SPsK'] },
+          { t: 'Berada di Pejabat',        s: ['SP','PTIS','SPP','SPsK'] },
           { t: 'Cuti Rehat / Cuti Sakit',  s: null },
         ];
         const MASA_DEMO = [['07:30','17:00'],['08:00','17:00'],['08:00','13:00'],['09:00','17:00'],['07:30','13:00'],['','']];
@@ -2290,6 +2330,7 @@ initDb()
       await runOnce('once_fix_name_typos_v1', fixSpecificNameTypos);
       await runOnce('once_uppercase_names_v1', fixStaffNamesUppercase);
       await runOnce('once_merge_prefix_names_v1', fixDuplicateStaffNames);
+      await fixCombinedSppSpsk().catch(e => console.error('[sektor] Gagal memindah rekod SPP/SPsK:', e.message));
       await autoFillPejabat();
     })();
     scheduleAutoFillPejabat();

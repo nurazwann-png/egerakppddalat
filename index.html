@@ -4542,9 +4542,19 @@
       'SPS':     { code: 'SPS',      name: 'Sektor Pengurusan Sekolah' },
       'SPP':     { code: 'SPP',     name: 'Sektor Pentaksiran dan Peperiksaan' },
       'SPsK':    { code: 'SPsK',    name: 'Sektor Psikologi dan Kaunseling' },
-      'SPP/SPsK':{ code: 'SPP/SPsK', name: 'Pentaksiran & Psikologi Kaunseling' },
       'PTIS':    { code: 'PTIS',     name: 'Pasukan Teknikal ICT Sekolah' },
     };
+
+    // Pilihan sektor yang disimpan dalam pelayar mesti sektor yang masih wujud (cth. bukan "SPP/SPsK" lama)
+    function readSavedSector(email) {
+      const key = `ppd_dalat_sektor_${email}`;
+      try {
+        const v = JSON.parse(localStorage.getItem(key) || 'null');
+        if (v && SEKTOR_MAP[v.code]) return SEKTOR_MAP[v.code];
+      } catch (e) {}
+      localStorage.removeItem(key);
+      return null;
+    }
 
     // ===== SECTOR SELECTION =====
     function selectSector(code, name, el) {
@@ -4634,10 +4644,21 @@
         try {
           currentUserSession = JSON.parse(session);
           if (currentUserSession.name) currentUserSession.name = currentUserSession.name.toUpperCase();
-          const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${currentUserSession.email}`);
-          if (savedSektor) selectedSector = JSON.parse(savedSektor);
+          const savedSektor = readSavedSector(currentUserSession.email);
+          if (savedSektor) selectedSector = savedSektor;
         } catch (e) {
           localStorage.removeItem('ppd_dalat_session');
+        }
+        // Tiada sektor sah yang tersimpan (cth. "SPP/SPsK" lama dibuang): ambil sektor staf dari pelayan
+        if (currentUserSession && !selectedSector) {
+          try {
+            const res = await fetch(`${API_BASE}/staff/check?email=${encodeURIComponent(currentUserSession.email)}`);
+            const { staff } = await res.json();
+            if (staff && SEKTOR_MAP[staff.sektor]) {
+              selectedSector = SEKTOR_MAP[staff.sektor];
+              localStorage.setItem(`ppd_dalat_sektor_${currentUserSession.email}`, JSON.stringify(selectedSector));
+            }
+          } catch (e) {}
         }
       }
 
@@ -5076,9 +5097,9 @@
         currentUserSession = { name: (staff.nama || '').toUpperCase(), email: staff.email, position: staff.jawatan };
         localStorage.setItem('ppd_dalat_session', JSON.stringify(currentUserSession));
         localStorage.setItem('ppd_dalat_remembered_email', email);
-        const savedSektor = localStorage.getItem(`ppd_dalat_sektor_${email}`);
+        const savedSektor = readSavedSector(email);
         if (savedSektor) {
-          try { selectedSector = JSON.parse(savedSektor); } catch(e){}
+          selectedSector = savedSektor;
         } else if (staff.sektor && SEKTOR_MAP[staff.sektor]) {
           selectedSector = SEKTOR_MAP[staff.sektor];
           localStorage.setItem(`ppd_dalat_sektor_${email}`, JSON.stringify(selectedSector));
@@ -7416,7 +7437,7 @@
       try {
         const records = dates.map(tarikh => ({
           id: generateId(), nama, tarikh, destinasi, tujuan, nota, masa, submittedBy: currentUserSession.email,
-          sektor: selectedSector ? selectedSector.code : 'SPr'
+          sektor: selectedSector ? selectedSector.code : ''
         }));
 
         const postRecord = payload => fetch(`${API_BASE}/movements`, {
