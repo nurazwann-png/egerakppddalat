@@ -697,7 +697,12 @@ function pejabatFillWindow() {
 // (Cloud Run boleh "tidur" ketika tiada pengguna, jadi pemasa sahaja tidak cukup)
 let _lastAutoFillTo = null;
 let _autoFillRunning = null;
+// Diselesaikan selepas pembetulan nama/sektor semasa pelayan bermula, supaya isian auto
+// tidak berjalan sebelum data diselaraskan
+let _markStartupReady;
+const _startupReady = new Promise(r => { _markStartupReady = r; });
 async function ensureAutoFillCurrent() {
+  await _startupReady;
   const { to } = pejabatFillWindow();
   if (_lastAutoFillTo === to) return;
   if (!_autoFillRunning) {
@@ -2446,12 +2451,19 @@ initDb()
     // Berturutan: nama mesti dibetulkan dahulu sebelum auto-fill memadankan nama.
     // Pembetulan sekali sahaja; ditanda dalam jadual config selepas berjaya.
     (async () => {
-      await runOnce('once_fix_name_typos_v1', fixSpecificNameTypos);
-      await runOnce('once_uppercase_names_v1', fixStaffNamesUppercase);
-      await runOnce('once_merge_prefix_names_v1', fixDuplicateStaffNames);
-      await fixCombinedSppSpsk().catch(e => console.error('[sektor] Gagal memindah rekod SPP/SPsK:', e.message));
-      await syncStaffRecords().catch(e => console.error('[selaras] Gagal menyelaraskan rekod staf:', e.message));
-      await autoFillPejabat();
+      try {
+        await runOnce('once_fix_name_typos_v1', fixSpecificNameTypos);
+        await runOnce('once_uppercase_names_v1', fixStaffNamesUppercase);
+        await runOnce('once_merge_prefix_names_v1', fixDuplicateStaffNames);
+        await fixCombinedSppSpsk().catch(e => console.error('[sektor] Gagal memindah rekod SPP/SPsK:', e.message));
+        await syncStaffRecords().catch(e => console.error('[selaras] Gagal menyelaraskan rekod staf:', e.message));
+      } catch (e) {
+        console.error('[mula] Pembetulan data semasa mula gagal:', e.message);
+      } finally {
+        // Sentiasa dilepaskan supaya permintaan rekod tidak tergantung walaupun pembetulan gagal
+        _markStartupReady();
+      }
+      await ensureAutoFillCurrent().catch(e => console.error('[auto-pejabat]', e.message));
     })();
     scheduleAutoFillPejabat();
     // Scheduled push: semak setiap 5 minit
